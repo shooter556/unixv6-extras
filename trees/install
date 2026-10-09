@@ -1,3 +1,5 @@
 : install the commands
+cc -s -O cptree.c
+mv a.out cptree
 cp cptree /bin
-cp rmtree /bin
+cp rmtree /usr/bin
