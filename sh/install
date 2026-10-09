@@ -8,6 +8,7 @@ if -r /bin/sh.bak goto skipbak
 cp /bin/sh /bin/sh.bak
 echo '/bin/sh saved into /bin/sh.bak'
 : skipbak
+rm -f /bin/sh
 cp a.out /bin/sh
 rm a.out
 echo '/bin/sh installed'
