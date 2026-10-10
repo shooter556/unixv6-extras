@@ -1,4 +1,4 @@
-echo "Making getty ""
+echo "Making getty"
 cc -s -O getty.c
 mv a.out getty
 echo "Making login"
