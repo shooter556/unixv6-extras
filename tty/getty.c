@@ -35,7 +35,7 @@
 #define	NLCRDELAYS	 5, 10, 8, 6
 #define	DATA100DELAY	 2,  0, 8, 6
 /* added */
- #define NODELAY 	 0,  0, 0, 0
+#define NODELAY 	 0,  0, 0, 0
 
 /*
  * speeds
