@@ -5,6 +5,7 @@ echo cp devices /usr/sys/conf
 cp installux /usr/sys/conf/install
 echo cp installux /usr/sys/conf/install
 cp rebuild /usr/sys/conf
+cp rebuild-new /usr/sys/conf
 echo cp rebuild /usr/sys/conf
 cp replace /usr/sys/conf
 echo cp replace /usr/sys/conf
