@@ -1,11 +1,13 @@
 chdir ../ken
 cc -c -O *.c
 : file order is important
+rm -f ../lib1
 ar r ../lib1 main.o alloc.o iget.o prf.o rdwri.o slp.o subr.o text.o trap.o sig.o sysent.o clock.o fio.o malloc.o nami.o pipe.o sys1.o sys2.o sys3.o sys4.o
 rm *.o
 
 chdir ../dmr
 cc -c -O *.c
+rm -f ../lib2
 ar r ../lib2 *.o
 rm *.o
 

@@ -1,0 +1,39 @@
+chdir ../ken
+cc -c -O *.c
+: file order is important
+rm -f ../lib1
+ar r ../lib1 main.o alloc.o iget.o prf.o rdwri.o slp.o subr.o text.o trap.o sig.o sysent.o clock.o fio.o malloc.o nami.o pipe.o sys1.o sys2.o sys3.o sys4.o acct.o
+rm *.o
+
+chdir ../dmr
+cc -c -O *.c
+rm -f ../lib2
+ar r ../lib2 *.o
+ar x ../lib2 partab.o
+ar d ../lib2 partab.o
+ar r ../lib2 partab.o
+rm *.o
+
+chdir ../conf
+echo "Compiling m40.s"
+as m40.s
+mv a.out m40.o
+: as m45.s
+: mv a.out m45.o
+: cc sysfix.c
+: mv a.out sysfix
+echo "Making mkconf"
+cc mkconf.c
+mv a.out mkconf
+echo "Creating device tables in c.c"
+mkconf < devices
+cc -c c.c
+echo "Loading the system into a.out"
+as l.s
+ld -x a.out m40.o c.o ../lib1 ../lib2
+: as data.s l.s
+: ld -x -r -d a.out m45.o c.o ../lib1 ../lib2
+: nm -ug
+: sysfix a.out x
+: mv x a.out
+echo 'Now run install to install and backup, or replace'
