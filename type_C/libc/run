@@ -1,0 +1,62 @@
+: run -- build a V6 libc.a with the runtime the typesetter compiler needs
+: usage -- sh run  in this directory, as root, after tc is installed
+: see ../READ_ME for details
+
+if ! -r save mkdir save
+if ! -r new mkdir new
+if ! -r save/libc.a cp /lib/libc.a save/libc.a
+
+echo step 1 -- compile the new members
+cc -c -O lseek.c
+cc -c -O mktemp.c
+as longops.s; mv a.out lops.o
+as itol.s; mv a.out itol.o
+as exit.s; mv a.out exit.o
+as _exit.s; mv a.out _exit.o
+as cleanup.s; mv a.out clean.o
+as csv.s; mv a.out csv.o
+
+echo step 2 -- work out the member order of the new library
+ar t save/libc.a >order
+ed order
+/^seek.o$/i
+lseek.o
+.
+/^stat.o$/i
+mktemp.o
+.
+/^csv.o$/i
+lops.o
+itol.o
+.
+$a
+clean.o
+_exit.o
+.
+1,$s/.*/ar r libc.a &; rm &/
+w mklib
+q
+
+echo step 3 -- build new/libc.a
+mkdir tmp
+chdir tmp
+ar x ../save/libc.a
+mv ../lseek.o lseek.o
+mv ../mktemp.o mktemp.o
+mv ../lops.o lops.o
+mv ../itol.o itol.o
+mv ../exit.o exit.o
+mv ../_exit.o _exit.o
+mv ../clean.o clean.o
+mv ../csv.o csv.o
+sh ../mklib
+mv libc.a ../new/libc.a
+chdir ..
+rmdir tmp
+rm order mklib
+
+echo step 4 -- test the new library
+cc -O ltest.c new/libc.a
+echo the next line must be: long ops ok
+a.out
+rm a.out
