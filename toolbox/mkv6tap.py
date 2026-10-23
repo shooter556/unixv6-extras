@@ -62,10 +62,17 @@ def member(name, path, data=None):
     """Header plus block-padded data for one regular file."""
     if len(name) > 99:
         sys.exit(f"name too long for V7 tar (max 99): {name!r}")
-    if data is None:
-        with open(path, "rb") as f:
-            data = f.read()
     st = os.stat(path)
+    if data is None:
+        # some distribution files are mode 0; read them anyway,
+        # the tape keeps the original mode
+        if not os.access(path, os.R_OK):
+            os.chmod(path, st.st_mode | 0o400)
+        try:
+            with open(path, "rb") as f:
+                data = f.read()
+        finally:
+            os.chmod(path, st.st_mode)
     hdr = v7_header(name, st.st_mode & 0o7777, len(data), int(st.st_mtime))
     return hdr + data + bytes(-len(data) % BLOCK)
 
