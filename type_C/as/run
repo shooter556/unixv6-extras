@@ -1,0 +1,40 @@
+: run -- build the UNSW assembler with the V6 one, then rebuild it with itself
+: usage -- sh run  in this directory, as root
+: see ../READ_ME for details
+
+if ! -r /usr/tcboot mkdir /usr/tcboot
+if ! -r /usr/tcboot/as mkdir /usr/tcboot/as
+
+echo step 1 -- make a copy of as11.s whose pass 1 runs /usr/tcboot/as/as2
+ed as11.s
+/lib.as2/s/\/lib\/as2/\/usr\/tcboot\/as\/as2/
+w tas11.s
+q
+
+echo step 2 -- stage1 -- assemble with the V6 assembler
+as tas11.s as1[2-9].s
+ld -s -n a.out
+mv a.out /usr/tcboot/as/as1
+as as2?.s
+ld -s -n a.out
+mv a.out /usr/tcboot/as/as2
+
+echo step 3 -- stage2 -- assemble with stage1, using -u and -o
+/usr/tcboot/as/as1 -u -o as1.o tas11.s as1[2-9].s
+ld -s -n as1.o
+mv a.out tas1
+/usr/tcboot/as/as1 -u -o as2.o as2?.s
+ld -s -n as2.o
+mv a.out as2
+
+echo step 4 -- stage1 and stage2 must be identical
+echo any output between here and done means failure
+cmp tas1 /usr/tcboot/as/as1
+cmp as2 /usr/tcboot/as/as2
+echo done
+
+echo step 5 -- the final pass 1, which runs /lib/as2
+/usr/tcboot/as/as1 -o as1.o as1?.s
+ld -s -n as1.o
+mv a.out as1
+rm tas11.s tas1 as1.o as2.o
