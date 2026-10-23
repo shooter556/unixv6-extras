@@ -1,0 +1,181 @@
+BOOTSTRAPPING THE UNSW TYPESETTER C COMPILER FROM STOCK V6
+==========================================================
+
+This directory builds the "typesetter" C compiler (c0, c1, c2)
+distributed on the UNSW 3 tape, starting from nothing but a stock
+Sixth Edition system.  No binary from the UNSW tape is used.
+
+The stock V6 compiler cannot compile the UNSW sources as they are.
+A small number of changes to the V6 driver (cc.c) and to the V6
+first pass (c0) are enough.  Those changes are applied by run with
+ed, to fresh copies of the pristine V6 sources, so the V6 source
+tree itself is never modified.
+
+
+FILES
+
+	READ_ME		this file
+	run		builds everything, see below
+	install		installs the result, see below
+	itol.s		runtime routine needed by c1, see CHANGES
+	c0?.c c0.h	UNSW 3 compiler sources, unchanged
+	c1?.c c1.h
+	c2?.c c2.h
+	cvopt.c table.s
+
+The UNSW sources are taken unchanged from the c_compiler
+directory of the UNSW 3 tape.
+
+
+REQUIREMENTS
+
+1. A stock V6 system with pristine /usr/source/c and
+   /usr/source/s1/cc.c (run copies them, it does not edit them).
+
+2. Disk space.  V6 programs (cc, as, ar, cat ...) do NOT report
+   write errors; a full file system silently produces truncated
+   files and confusing compiler errors.  Check with df first.
+   About 600 free blocks are needed on the file system holding
+   this directory, and about 300 on the one holding /usr/tcboot.
+
+3. No floating point hardware is required.  The compiler passes
+   are linked with -f (software floating point, fptrap), so they
+   run on an 11/40 without FPP.
+
+
+HOW TO USE
+
+	chdir <this directory>
+	sh run
+
+run takes several minutes.  Watch the output: apart from the
+lines echoed by ed and the step messages, there must be no error
+messages.  At the end, run compares stage2 with stage3; nothing
+may be printed between the lines
+
+	any output between here and done means failure
+	done
+
+If that is the case, install the compiler with
+
+	sh install
+
+install saves the V6 originals in /usr/tcboot/orig and installs
+
+	/bin/cc		the patched V6 driver
+	/lib/c0		stage2 c0
+	/lib/c1		stage2 c1
+	/lib/c2		stage2 c2
+	/lib/fc0	same as /lib/c0
+	/lib/fc1	same as /lib/c1
+
+To go back to the V6 compiler, copy the files in /usr/tcboot/orig
+back to /bin and /lib.
+
+
+WHAT RUN DOES
+
+step 1	copies the V6 sources of cc.c and c0 into the subdirectory v6
+step 2	patches cc.c (see CHANGES)
+step 3	makes three variants of the driver which differ only in
+	where they look for the compiler passes:
+
+	/usr/tcboot/ncc		c0 = /usr/tcboot/v6/c0,
+				c1 and c2 = stock /lib/c1 /lib/c2
+	/usr/tcboot/scc		passes in /usr/tcboot/s1 (stage1)
+	/usr/tcboot/s2cc	passes in /usr/tcboot/s2 (stage2)
+
+	and the final driver /usr/tcboot/cc, which uses /lib.
+	All four are compiled by the stock V6 cc.
+step 4	patches c0 (see CHANGES) and builds /usr/tcboot/v6/c0
+	with the stock V6 cc
+step 5	assembles itol.s into /usr/tcboot/itol.o
+step 6	stage1: the UNSW sources compiled by the patched V6
+	compiler (ncc), installed in /usr/tcboot/s1
+step 7	stage2: the UNSW sources compiled by stage1 (scc),
+	installed in /usr/tcboot/s2
+step 8	stage3: the UNSW sources compiled by stage2 (s2cc),
+	left in this directory
+step 9	compares stage3 with stage2; they must be identical,
+	then removes stage3
+
+Stage1 is built without -O.  Stage2 and stage3 are built with -O,
+as in the original UNSW run script.  Intermediate files are
+removed as soon as they are no longer needed.
+
+Stage2 equal to stage3 shows that the bootstrapped compiler
+reproduces itself.  A stronger check, still to be done, is to
+compile the UNSW sources with -S on a UNSW 3 system using the
+compiler from the tape, and compare the assembler output with
+that of /usr/tcboot/s2cc -S.  The two must be identical.
+
+
+CHANGES
+
+cc.c (the V6 driver)
+
+1. The preprocessor tables are too small for c0.h, which has
+   about 210 defines.  The symbol table size, written as 200 in
+   three places (int symsiz, stab[], and the loop clearing it),
+   is now the macro SYMSIZ, 400.  SBSIZE, the space for macro
+   bodies, goes from 2000 to 10000.  These are the values used
+   by the UNSW cc.c.
+
+2. The V6 driver preprocesses a file only if its first character
+   is '#'.  c13.c starts with a comment, so its #include was
+   passed straight to c0.  The test is removed: every file is
+   preprocessed, as in the UNSW cc.c.  Files without any '#'
+   line come out unchanged, apart from comments.
+
+c02.c and c04.c (V6 c0)
+
+3. V6 c0 complains about every structure tag that is not yet
+   defined each time a top level structure declaration is seen
+   (in blkhed).  c0.h refers to struct hshtab before defining
+   it, and c04.c declares a pointer to struct tname, which c0
+   never defines.  The check is removed from blkhed, and length()
+   now reports an undefined structure when its size is actually
+   needed, which is what the UNSW c0 does.
+
+c03.c (V6 c0)
+
+4. The UNSW sources declare formal arguments as register, which
+   V6 does not allow.  The register keyword on an argument is
+   now simply ignored.  This changes only the speed of stage1,
+   never its behaviour; stage2 is produced by the UNSW c0, which
+   implements register arguments properly.
+
+c0t.s (V6 c0)
+
+5. fpp is set to 0, exactly as the V6 run script does for /lib/c0.
+
+itol.s
+
+6. c1 calls itol(hi, lo) to build a long from two ints.  It is
+   not in the V6 C library, and not among the UNSW sources.  It
+   returns the long in r0 (high word) and r1 (low word).
+
+Linking
+
+7. c0 and c1 use floating point to handle floating constants.
+   They are linked with -f, so that fptrap simulates the FP11 on
+   machines without it.  c2 and cvopt do not need it.
+
+
+KNOWN LIMITATIONS
+
+- Programs compiled with the new compiler are linked with the V6
+  C library.  Code generated for long multiply, divide and
+  remainder calls lmul, ldiv, lrem, almul, aldiv and alrem; these
+  are not provided here, and the V6 library has a different,
+  older ldiv/lrem with three int arguments.  The compiler itself
+  does not need them.
+
+- The driver is the V6 one with the changes above.  It does not
+  have the features of the UNSW cc (#else, #if expressions,
+  nested includes, -D, -I, -E, listings, line markers for c0).
+  The UNSW cc.c can be compiled with this compiler, but it calls
+  the assembler as "as -u -o", which the V6 as does not accept.
+
+- The V6 driver ignores .s files given on the command line; they
+  are passed to ld instead of being assembled.

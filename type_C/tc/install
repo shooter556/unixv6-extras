@@ -1,0 +1,24 @@
+: install -- install the bootstrapped compiler built by run
+: usage -- sh install  as root, only after run reported no differences
+: the V6 originals are saved in /usr/tcboot/orig
+
+mkdir /usr/tcboot/orig
+cp /bin/cc /usr/tcboot/orig/cc
+cp /lib/c0 /usr/tcboot/orig/c0
+cp /lib/c1 /usr/tcboot/orig/c1
+cp /lib/c2 /usr/tcboot/orig/c2
+cp /lib/fc0 /usr/tcboot/orig/fc0
+cp /lib/fc1 /usr/tcboot/orig/fc1
+
+: remove before copying so that a busy or sticky text is not overwritten
+rm /bin/cc /lib/c0 /lib/c1 /lib/c2 /lib/fc0 /lib/fc1
+cp /usr/tcboot/cc /bin/cc
+cp /usr/tcboot/s2/c0 /lib/c0
+cp /usr/tcboot/s2/c1 /lib/c1
+cp /usr/tcboot/s2/c2 /lib/c2
+
+: c0 and c1 already carry the floating point simulator
+: so the -f passes are simply the same programs
+cp /usr/tcboot/s2/c0 /lib/fc0
+cp /usr/tcboot/s2/c1 /lib/fc1
+ls -l /bin/cc /lib/c0 /lib/c1 /lib/c2 /lib/fc0 /lib/fc1

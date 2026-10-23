@@ -1,0 +1,149 @@
+: run -- bootstrap the UNSW typesetter C compiler with the stock V6 compiler
+: usage -- sh run  in this directory, as root
+: see READ_ME for details
+
+mkdir /usr/tcboot
+mkdir /usr/tcboot/v6
+mkdir /usr/tcboot/s1
+mkdir /usr/tcboot/s2
+mkdir v6
+
+echo step 1 -- copy pristine V6 sources
+cp /usr/source/s1/cc.c v6/cc.c
+cp /usr/source/c/c00.c v6/c00.c
+cp /usr/source/c/c01.c v6/c01.c
+cp /usr/source/c/c02.c v6/c02.c
+cp /usr/source/c/c03.c v6/c03.c
+cp /usr/source/c/c04.c v6/c04.c
+cp /usr/source/c/c05.c v6/c05.c
+cp /usr/source/c/c0h.c v6/c0h.c
+cp /usr/source/c/c0t.s v6/c0t.s
+chdir v6
+
+echo step 2 -- patch the V6 driver cc.c
+ed cc.c
+1s/2000/10000/
+1a
+#define	SYMSIZ	400
+.
+/symsiz.200/s/200/SYMSIZ/
+/stab.200/s/200/SYMSIZ/
+/c<200/s/200/SYMSIZ/
+/getc(ibuf1)/
+.,+5d
+w
+q
+
+echo step 3 -- make the driver variants
+ed cc.c
+/"\/lib\/c0"/s/\/lib\//\/usr\/tcboot\/v6\//
+w ncc.c
+q
+ed cc.c
+g/"\/lib\/c[012]"/s/\/lib\//\/usr\/tcboot\/s1\//
+w scc.c
+q
+ed cc.c
+g/"\/lib\/c[012]"/s/\/lib\//\/usr\/tcboot\/s2\//
+w s2cc.c
+q
+cc -O ncc.c; mv a.out /usr/tcboot/ncc
+cc -O scc.c; mv a.out /usr/tcboot/scc
+cc -O s2cc.c; mv a.out /usr/tcboot/s2cc
+cc -O cc.c; mv a.out /usr/tcboot/cc
+
+echo step 4 -- patch and build the V6 c0
+ed c02.c
+/Undefined structure/
+-,.d
+w
+q
+ed c03.c
+/Conflict in storage class/-1
+i
+			/* register on a formal argument: ignore it */
+			if (skw==ARG && cval==REG)
+				break;
+.
+w
+q
+ed c04.c
+/n \* dimtab/
+c
+		if ((t = dimtab[cs->lenp&0377]) == 0)
+			error("Undefined structure");
+		return(n * t);
+.
+w
+q
+ed c0t.s
+g/fpp =/s/1/0/
+w
+q
+cc -c -O c0[012345].c
+as c0t.s; mv a.out c0t.o
+cc -s -n c0?.o
+mv a.out /usr/tcboot/v6/c0
+rm *.o
+chdir ..
+
+echo step 5 -- runtime routine itol
+as itol.s; mv a.out /usr/tcboot/itol.o
+
+echo step 6 -- stage1 -- tc sources compiled by the patched V6 compiler
+/usr/tcboot/ncc -c c0?.c
+/usr/tcboot/ncc -f -n -s c0?.o
+mv a.out /usr/tcboot/s1/c0
+/usr/tcboot/ncc cvopt.c
+mv a.out cvopt
+./cvopt table.s table.i
+as table.i; mv a.out table.o
+/usr/tcboot/ncc -c c1?.c
+/usr/tcboot/ncc -f -n -s c1?.o table.o /usr/tcboot/itol.o
+mv a.out /usr/tcboot/s1/c1
+/usr/tcboot/ncc -c c2?.c
+/usr/tcboot/ncc -n -s c2?.o
+mv a.out /usr/tcboot/s1/c2
+rm *.o cvopt table.i
+
+echo step 7 -- stage2 -- tc sources compiled by stage1
+/usr/tcboot/scc -c -O c0?.c
+/usr/tcboot/scc -f -n -s c0?.o
+mv a.out /usr/tcboot/s2/c0
+/usr/tcboot/scc cvopt.c
+mv a.out /usr/tcboot/s2/cvopt
+/usr/tcboot/s2/cvopt table.s table.i
+as table.i; mv a.out /usr/tcboot/s2/table.o
+/usr/tcboot/scc -c -O c1?.c
+/usr/tcboot/scc -f -n -s c1?.o /usr/tcboot/s2/table.o /usr/tcboot/itol.o
+mv a.out /usr/tcboot/s2/c1
+/usr/tcboot/scc -c -O c2?.c
+/usr/tcboot/scc -n -s c2?.o
+mv a.out /usr/tcboot/s2/c2
+rm *.o table.i
+
+echo step 8 -- stage3 -- tc sources compiled by stage2
+/usr/tcboot/s2cc -c -O c0?.c
+/usr/tcboot/s2cc -f -n -s c0?.o
+mv a.out c0
+/usr/tcboot/s2cc cvopt.c
+mv a.out cvopt
+./cvopt table.s table.i
+as table.i; mv a.out table.o
+/usr/tcboot/s2cc -c -O c1?.c
+/usr/tcboot/s2cc -f -n -s c1?.o table.o /usr/tcboot/itol.o
+mv a.out c1
+/usr/tcboot/s2cc -c -O c2?.c
+/usr/tcboot/s2cc -n -s c2?.o
+mv a.out c2
+rm c0?.o c1?.o c2?.o table.i
+
+echo step 9 -- stage2 and stage3 must be identical
+echo any output between here and done means failure
+cmp c0 /usr/tcboot/s2/c0
+cmp c1 /usr/tcboot/s2/c1
+cmp c2 /usr/tcboot/s2/c2
+cmp cvopt /usr/tcboot/s2/cvopt
+cmp table.o /usr/tcboot/s2/table.o
+echo done
+rm c0 c1 c2 cvopt table.o
