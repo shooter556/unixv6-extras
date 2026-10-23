@@ -26,7 +26,8 @@ added on top of it.
   on the tape: _ashell_ first, then the tools its make scripts use
   and _libX.a_, then the terminal data bases with _sethome_,
   _ttytype_ and _tset_, a _login_ and _su_ that keep them up to
-  date, and the editor _ex_ 1.1 with visual mode on a vt100. See
+  date, and the editor _ex_ 1.1 with visual mode on a vt100 and
+  its _expreserve_ and _exrecover_. See
   [bsd1/READ_ME](bsd1/READ_ME).
 
 * __[toolbox](toolbox)__ - helper scripts that run on the host:

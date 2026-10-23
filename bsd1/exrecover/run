@@ -1,0 +1,27 @@
+: run -- build expreserve and exrecover, which save and recover ex buffers
+: usage -- sh run  in this directory, as root, after ../ex
+: see ../READ_ME for details
+
+echo step 1 -- expreserve
+: copyout removes cp after an error, which is never set, it means pattern
+ed expreserve.c
+g/unlink(cp);/s//unlink(pattern);/
+w xexpreserve.c
+q
+: without -O, c2 fails on it with Fatal error in /lib/c2
+cc -s xexpreserve.c
+mv a.out expreserve
+rm xexpreserve.c
+
+echo step 2 -- exrecover, with ex_io.c and ex_pack.c of ex as they are
+cp ../ex/ex.h ex.h
+cp ../ex/ex_vars.h ex_vars.h
+cp ../ex/ex_re.h ex_re.h
+cp ../ex/ex_io.h ex_io.h
+cp ../ex/ex_io.c ex_io.c
+cp ../ex/ex_pack.c ex_pack.c
+cc -c -O ex_io.c ex_pack.c
+cc -O -s exrecover.c ex_io.o ex_pack.o
+mv a.out exrecover
+rm ex.h ex_vars.h ex_re.h ex_io.h ex_io.c ex_pack.c *.o
+ls -l expreserve exrecover

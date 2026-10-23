@@ -1,0 +1,43 @@
+: install -- install expreserve and exrecover in /usr/lib, and make /usr/preserve
+: usage -- sh install  in this directory, as root, after run and ../ex install
+: see ../READ_ME for details
+if -r expreserve -a -r exrecover goto start
+echo run first
+exit
+: start
+
+echo step 1 -- save what is replaced, only the first time
+if ! -r save mkdir save
+if -r /usr/lib/expreserve -a ! -r save/expreserve cp /usr/lib/expreserve save/expreserve
+if -r /usr/lib/exrecover -a ! -r save/exrecover cp /usr/lib/exrecover save/exrecover
+
+echo step 2 -- install, set user id root, and /usr/preserve for root only
+cp expreserve /usr/lib/expreserve
+cp exrecover /usr/lib/exrecover
+chown root /usr/lib/expreserve /usr/lib/exrecover
+chmod 4711 /usr/lib/expreserve /usr/lib/exrecover
+if ! -r /usr/preserve mkdir /usr/preserve
+chown root /usr/preserve
+chmod 700 /usr/preserve
+ls -l /usr/lib/expreserve /usr/lib/exrecover
+ls -ld /usr/preserve
+
+echo step 3 -- test, preserve a buffer with ex, then recover it
+echo any output between here and done means failure
+echo first line >t1
+echo a >t2
+echo second line >>t2
+echo . >>t2
+echo preserve >>t2
+echo q! >>t2
+/usr/bin/ex - t1 <t2 >/dev/null
+echo recover t1 >t3
+echo w t4 >>t3
+echo q! >>t3
+/usr/bin/ex - <t3 >/dev/null
+echo first line >t5
+echo second line >>t5
+cmp t4 t5
+ls /usr/preserve
+rm t1 t2 t3 t4 t5
+echo done

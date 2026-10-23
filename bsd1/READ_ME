@@ -30,6 +30,8 @@ DIRECTORIES, IN THE ORDER THEY MUST BE INSTALLED
 	htmp	the terminal data bases, and sethome, ttytype, tset
 	login	login and su that keep /etc/htmp up to date
 	ex	the editor ex 1.1, with open and visual modes
+	exrecover	expreserve and exrecover, which save and
+		recover the buffers of ex
 
 
 ashell
@@ -280,6 +282,47 @@ A bad command must give a message, not just "ERROR"; that one
 means /usr/lib/ex1.1strings is missing.  ex needs exrecover and
 expreserve in /usr/lib for the recover command and after crashes;
 they are the next step.
+
+
+exrecover
+
+The sources are expreserve.c and exrecover.c from the exrecover
+directory of the tape, unchanged.
+
+	expreserve	copies the buffer of ex into /usr/preserve:
+			ex runs it for "preserve" and on a hangup,
+			and "expreserve -a" saves all the buffers left
+			in /tmp after a crash and mails their owners
+	exrecover	finds a buffer in /tmp or /usr/preserve and
+			gives it back: ex runs it for "recover file"
+			and for "ex -r file"
+
+run compiles expreserve, where copyout removes the file cp after
+an error; cp is never set, so ed makes it pattern, the file being
+written.  It is compiled without -O: the c2 of type_C dies on it from a
+signal, which cc reports as "Fatal error in /lib/c2".  The cause
+is not known yet.  It compiles exrecover with ex_io.c and ex_pack.c, which
+it copies from ../ex with the headers they need, as makerecover
+does: these are the plain sources, not the ones from mkstr, so the
+messages of ex_io.c are printed by the error of exrecover.
+
+install saves what it replaces in save, installs both in /usr/lib,
+set user id root, and makes /usr/preserve, owned by root, mode
+700.  It then preserves a buffer with ex, recovers it with another
+ex, writes it to a file and compares it.  Nothing may be printed
+between "any output between here and done means failure" and
+"done"; ls of /usr/preserve prints nothing when exrecover has
+removed the buffer it gave back, so buffers saved there before
+show up too.
+To undo: remove them, or copy back what is in save.
+
+If /etc/rc removes the files in /tmp, put
+
+	/usr/lib/expreserve -a
+
+before that, so that the buffers of a crash are saved first.  If
+it leaves /tmp alone, as the one of the V6 tape does, the line is
+not needed: exrecover looks in /tmp first.
 
 
 NOTES
