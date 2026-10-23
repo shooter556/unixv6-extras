@@ -1,0 +1,52 @@
+: run -- build the 1BSD login and su, which keep /etc/htmp up to date
+: usage -- sh run  in this directory, as root, after ../tools and ../htmp
+: see ../READ_ME for details
+
+echo step 1 -- xlogin.c, login.c made to fit V6
+: V6 has no alarm, the passwords are in /etc/passwd, not passwdf,
+: utmp slots are 0-9 then a-z, as the V6 login and init have them,
+: root may log in on any terminal, as with the V6 login,
+: uid and gid are separate in V6, and htmp and the tty get the uid only,
+: a missing /etc/kickoff must not stop the login
+ed login.c
+/alarm(300)/d
+/passwdf/s/passwdf/passwd/
+/t&0177/c
+		if (t>='a')
+			t =- 'a' - (10+'0');
+		seek(f, (t-'0')*16, 0);
+.
+/if (f == 0)/-1,/if (f == 0)/+2d
+/chown(ttyx, gid<<8|uid);/s/gid<<8|uid/uid/
+/hsetuid(gid << 8 | uid);/s/gid << 8 | uid/uid/
+/setuid(gid<<8 | uid);/c
+	setgid(gid);
+	setuid(uid);
+.
+/execl(kickoff/+1s/exit()/exit(0)/
+/alarm(0)/d
+w xlogin.c
+q
+
+echo step 2 -- xsu.c, su.c made to fit V6
+: the passwords are in /etc/passwd, uid holds gid and uid, so set
+: both and keep the uid only in htmp, the utmp slots as in login
+ed su.c
+/passwdf/s/passwdf/passwd/
+/hsetuid(uid);/s/uid)/uid \& 0377)/
+g/setuid(uid);/s//setgid(uid >> 8 \& 0377); setuid(uid \& 0377);/
+/tty & 0177/c
+	if (tty >= 'a')
+		tty =- 'a' - (10+'0');
+	seek(i, (tty-'0') * 16 + 9, 0);
+.
+w xsu.c
+q
+
+echo step 3 -- compile, with the libX.a from ../tools
+cc -O -s xlogin.c -lX
+mv a.out login
+cc -O -s xsu.c -lX
+mv a.out su
+rm xlogin.c xsu.c
+ls -l login su

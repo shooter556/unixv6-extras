@@ -1,0 +1,21 @@
+: install -- install login as /bin/login and su as /bin/su
+: usage -- sh install  in this directory, as root, after run
+: try ./login and ./su first, see ../READ_ME
+: back up the disk images first, a bad /bin/login locks everybody out
+if -r login -a -r su goto start
+echo run first
+exit
+: start
+
+echo step 1 -- save what is replaced, only the first time
+if ! -r save mkdir save
+if -r /bin/login -a ! -r save/login cp /bin/login save/login
+if -r /bin/su -a ! -r save/su cp /bin/su save/su
+ls -l save
+
+echo step 2 -- install, set user id root
+cp login /bin/login
+cp su /bin/su
+chown root /bin/login /bin/su
+chmod 4755 /bin/login /bin/su
+ls -l /bin/login /bin/su

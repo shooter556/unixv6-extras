@@ -1,0 +1,45 @@
+: install -- install ex and edit in /usr/bin, ex1.1strings and how_ex in /usr/lib
+: usage -- sh install  in this directory, as root, after run
+: see ../READ_ME for details
+if -r ex -a -r ex1.1strings goto start
+echo run first
+exit
+: start
+
+echo step 1 -- save what is replaced, only the first time
+if ! -r save mkdir save
+if -r /usr/bin/ex -a ! -r save/ex cp /usr/bin/ex save/ex
+if -r /usr/lib/ex1.1strings -a ! -r save/ex1.1strings cp /usr/lib/ex1.1strings save/ex1.1strings
+
+echo step 2 -- install
+if -r /usr/bin/edit rm /usr/bin/edit
+cp ex /usr/bin/ex
+ln /usr/bin/ex /usr/bin/edit
+chown bin /usr/bin/ex
+chmod 755 /usr/bin/ex
+cp ex1.1strings /usr/lib/ex1.1strings
+chmod 644 /usr/lib/ex1.1strings
+if ! -r /usr/lib/how_ex mkdir /usr/lib/how_ex
+cp how_ex/help /usr/lib/how_ex/help
+cp how_ex/index /usr/lib/how_ex/index
+cp how_ex/lostlines /usr/lib/how_ex/lostlines
+cp how_ex/recover /usr/lib/how_ex/recover
+cp how_ex/saferecover /usr/lib/how_ex/saferecover
+chmod 644 /usr/lib/how_ex/help /usr/lib/how_ex/index /usr/lib/how_ex/lostlines /usr/lib/how_ex/recover /usr/lib/how_ex/saferecover
+ls -l /usr/bin/ex /usr/bin/edit /usr/lib/ex1.1strings /usr/lib/how_ex
+
+echo step 3 -- test the installed ex
+echo any output between here and done means failure
+echo hello world >t1
+echo s/world/there/ >t2
+echo a >>t2
+echo second line >>t2
+echo . >>t2
+echo w >>t2
+echo q >>t2
+echo hello there >t3
+echo second line >>t3
+/usr/bin/ex - t1 <t2
+cmp t1 t3
+rm t1 t2 t3
+echo done

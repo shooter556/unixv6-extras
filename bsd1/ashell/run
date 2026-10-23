@@ -1,0 +1,22 @@
+: run -- build ashell, the 1BSD shell the make scripts are written for
+: usage -- sh run  in this directory, as root
+: see ../READ_ME for details
+
+echo step 1 -- fix the uid in a copy of sh.c
+: the V6 getuid returns the effective uid in the high byte,
+: and xid makes gid and uid, so they never match
+ed sh.c
+/uid = getuid();/s/getuid()/getuid() \& 0377/
+/return (i << 8 | uid);/s/i << 8 | uid/uid/
+w xsh.c
+q
+
+echo step 2 -- compile, -f for the floating point in time
+: makesh also names ../lib/libX.a, but nothing in it is used
+cc -f -n -O xsh.c sh_exec.c sh_func.c sh_glob.c sh_lex.c sh_parse.c sh_sem.c sh_set.c sh_wait.c -lS
+mv a.out ashell
+rm xsh.c *.o
+
+echo step 3 -- run ashtest with the new ashell
+echo the next line must be: done
+./ashell ashtest foo.c bar baz

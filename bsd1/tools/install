@@ -1,0 +1,25 @@
+: install -- install the tools and libX.a built by run
+: usage -- sh install  in this directory, as root, after run
+: see ../READ_ME for details
+if -r libX.a goto start
+echo run first
+exit
+: start
+
+echo step 1 -- save what is replaced, only the first time
+if ! -r save mkdir save
+if -r /usr/bin/rmtree -a ! -r save/rmtree cp /usr/bin/rmtree save/rmtree
+if -r /lib/libX.a -a ! -r save/libX.a cp /lib/libX.a save/libX.a
+
+echo step 2 -- install
+cp mkstr /usr/bin/mkstr
+cp lnall /usr/bin/lnall
+cp mvall /usr/bin/mvall
+cp cpall /usr/bin/cpall
+cp squash /usr/bin/squash
+cp chownall /usr/bin/chownall
+cp cptree /usr/bin/cptree
+cp rmtree /usr/bin/rmtree
+cp libX.a /lib/libX.a
+ls -l /usr/bin/mkstr /usr/bin/lnall /usr/bin/mvall /usr/bin/cpall /usr/bin/squash /usr/bin/chownall /usr/bin/cptree /usr/bin/rmtree /lib/libX.a
+if -r /bin/cptree echo note: /bin/cptree is found before /usr/bin/cptree

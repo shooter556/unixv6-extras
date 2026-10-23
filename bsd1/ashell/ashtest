@@ -1,0 +1,87 @@
+: ashtest -- self check for ashell
+: usage -- ashell ashtest foo.c bar baz
+: only the line done may be printed, anything else means failure
+:
+: arguments
+if x$0 != xashtest echo FAIL 1 dollar 0
+if x$1 != xfoo.c echo FAIL 2 dollar 1
+if x$3 != xbaz echo FAIL 3 dollar 3
+if x$.1 != xfoo echo FAIL 4 dollar dot 1
+if x$nargs != x3 echo FAIL 5 nargs
+echo $* >/tmp/ash.a
+echo foo.c bar baz >/tmp/ash.b
+cmp /tmp/ash.a /tmp/ash.b
+shift
+if x$1 != xbar echo FAIL 6 shift
+if x$nargs != x2 echo FAIL 7 nargs after shift
+rewind
+if x$1 != xfoo.c echo FAIL 8 rewind
+:
+: variables and arithmetic
+set i=5
+set i++
+if x$i != x6 echo FAIL 9 set plus plus
+set j=3
+set j*=$i
+if x$j != x18 echo FAIL 10 set times
+set j-=8 j/=2
+if x$j != x5 echo FAIL 11 set minus divide
+set x
+if ${x?yes:no} != yes echo FAIL 12 brace set
+unset x
+if ${x?yes:no} != no echo FAIL 13 brace unset
+if x$$ != x$pid echo FAIL 14 pid
+:
+: goto loop with the V6 goto
+set i=0
+: loop
+set i++
+if $i != 3 goto loop
+if x$i != x3 echo FAIL 15 goto loop
+:
+: redirection pipes and lists
+echo a >/tmp/ash.a
+echo b >>/tmp/ash.a
+cat </tmp/ash.a >/tmp/ash.b
+(echo a; echo b) >/tmp/ash.c
+cmp /tmp/ash.b /tmp/ash.c
+echo hello | cat | cat >/tmp/ash.a
+echo hello >/tmp/ash.b
+cmp /tmp/ash.a /tmp/ash.b
+:
+: file name expansion
+echo /b?n /b*/sh >/tmp/ash.a
+echo /bin /bin/sh >/tmp/ash.b
+cmp /tmp/ash.a /tmp/ash.b
+if '/b*' = /bin echo FAIL 16 quoted star expanded
+:
+: alias
+alias say echo
+say hi >/tmp/ash.a
+echo hi >/tmp/ash.b
+cmp /tmp/ash.a /tmp/ash.b
+:
+: chdir and home
+chdir /tmp
+pwd >/tmp/ash.a
+echo /tmp >/tmp/ash.b
+cmp /tmp/ash.a /tmp/ash.b
+chdir
+pwd >/tmp/ash.a
+echo $home >/tmp/ash.b
+cmp /tmp/ash.a /tmp/ash.b
+if x$home = x. echo FAIL 17 home is dot
+:
+: dash c and a script run by name, these need /usr/bin/ashell
+if ! -r /usr/bin/ashell goto noinst
+/usr/bin/ashell -c 'echo sub' >/tmp/ash.a
+echo sub >/tmp/ash.b
+cmp /tmp/ash.a /tmp/ash.b
+echo echo sub >/tmp/ash.x
+chmod 755 /tmp/ash.x
+/tmp/ash.x >/tmp/ash.a
+cmp /tmp/ash.a /tmp/ash.b
+: noinst
+:
+rm /tmp/ash.?
+echo done

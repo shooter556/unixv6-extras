@@ -1,0 +1,319 @@
+1BSD FROM SOURCE ON STOCK V6
+============================
+
+The directories here build the 1BSD software from its sources,
+on a stock V6 system with the typesetter C toolchain from
+../type_C installed.  The binaries on the 1BSD tape are not used.
+
+As in type_C, all sources come unchanged from the 1BSD tape, and
+each directory holds the ones it needs.  Where a change is
+needed, run makes it with ed on a copy.
+
+Each directory has two scripts:
+
+	run	builds and tests, changes nothing outside
+		this directory
+	install	installs the result, after saving what it
+		replaces
+
+Run them as root, from their own directory, for example:
+
+	chdir /usr/work/bsd1/tools
+	sh run
+	sh install
+
+
+DIRECTORIES, IN THE ORDER THEY MUST BE INSTALLED
+
+	ashell	the shell the 1BSD make scripts are written for
+	tools	the 1BSD tools the make scripts use, and libX.a
+	htmp	the terminal data bases, and sethome, ttytype, tset
+	login	login and su that keep /etc/htmp up to date
+	ex	the editor ex 1.1, with open and visual modes
+
+
+ashell
+
+The make scripts on the tape use "set", "$*" and the alias "cd"
+of ashell, so it comes first.  Put
+
+	alias cd chdir
+
+in .profile in your home directory; ashell has only chdir.
+
+The sources come from the ashell directory of the tape.  run
+fixes the uid in a copy of sh.c (see NOTES), compiles with
+cc -f -n -O and -lS (calloc, strcpy, strcat and strcmp come from
+libS), and runs ashtest with the new ashell.  It must print
+
+	done
+
+and nothing else.  ashtest checks the arguments, shift, rewind,
+set arithmetic, ${name?a:b}, a goto loop with the V6 goto,
+redirection, pipes, file name expansion, alias, and chdir with
+and without an argument.  The checks of -c and of a script run by
+name need /usr/bin/ashell, so they are skipped until install.
+
+install saves an existing /usr/bin/ashell in save, installs
+ashell there (that path is built into ashell, as the shell for
+scripts), and runs ashtest again, now with all the checks.
+To undo: cp save/ashell /usr/bin/ashell, or remove it.
+
+Things to try by hand, as they are not easy to check in a script:
+- no 15 second pause when ashell starts (see NOTES)
+- "time ls -l /bin" prints a line like "0.3u 1.2s 0:02 75%",
+  which uses the floating point simulated by fptrap
+- "sleep 20 &" prints the process number and sets pcs; "wait"
+  can be stopped with an interrupt
+- ">*file" and "|*" also send the diagnostic output
+
+
+tools
+
+The sources come from s6 and s7 of the tape, and access.c is
+new.  run builds, from the s6 sources,
+
+	mkstr		puts error messages into a message file
+	lnall		links files into a directory
+	mvall		moves files into a directory
+	cpall		copies files into a directory
+	squash		strips object files with ld -r
+	chownall	changes owners in a tree
+	cptree		copies a tree, keeping links
+	rmtree		removes a tree
+
+and libX.a from the s7 sources (typeof, ttycap, ttycap2, htmpg,
+htmps), with each member before the members it uses.  Ttyn.c of
+s7 is not here: its table is made for the Berkeley /dev.
+
+It then tests them in the directory t, and removes t with the new
+rmtree.  Nothing may be printed between "any output between here
+and done means failure" and "done".  Lines printed by ed are
+normal.
+
+install saves /usr/bin/rmtree (the shell script from
+../vanilla/trees, if there is one) and /lib/libX.a, if there is
+one, in save, and installs the tools in /usr/bin and libX.a in
+/lib.  Programs built later link it with -lX, not with the
+../lib/libX.a the tape scripts name.
+To undo: copy save/rmtree to /usr/bin and save/libX.a to /lib,
+or remove what was installed.
+
+If ../vanilla/trees put a cptree in /bin, it is found before the
+one in /usr/bin; install prints a note.  The 1BSD scripts only
+call it as "cptree from to", which both accept.
+
+
+htmp
+
+ex and ashell learn the home directory and the terminal type from
+three data bases:
+
+	/etc/htmp	for each terminal, the uid, home directory
+			and terminal type of its user
+	/etc/ttytype	the type of each terminal, when it is not set
+			in htmp
+	/etc/ttycap	the capabilities of each type
+
+Without them ex takes every terminal to be a model 33 teletype,
+with no open or visual mode.
+
+The sources are sethome.c, ttytype.c and tset.c from s6, and
+ttycap from etc, all unchanged.  ttytype.v6 is new: the ttytype
+in etc is the one for the Berkeley terminals.  It has one line,
+8vt, for the console /dev/tty8.  Add a line for each other
+terminal before install, as described in the file.
+
+run compiles the three programs with -lX, so ../tools must be
+installed first, and makes xttycap: the ttycap of the tape with a
+new entry vt (vt100, ansi) for the terminal emulators of today.
+Its modes are 0:0, so that tset leaves the tty modes alone.  It
+has "ca" (cursor addressing), which ../ex adds to ex for vt.  It
+has no "am": a vt100 waits at the last column before it wraps,
+and ex 1.1 expects a terminal with "am" to wrap at once.
+
+install saves what it replaces in save, installs xttycap as
+/etc/ttycap and ttytype.v6 as /etc/ttytype, makes an empty
+/etc/htmp owned by bin (an existing one is kept), and installs
+the programs in /usr/bin, set user id bin so that they can write
+/etc/htmp.  It must be run on a terminal.  It then sets the type
+of the terminal to vt and checks it, and checks that sethome
+gives "/" for root.  Nothing may be printed between "any output
+between here and done means failure" and "done".  Last it lists
+the types in /etc/ttycap.
+To undo: copy back what is in save (ttytype.b is the program
+/usr/bin/ttytype), and remove /etc/htmp.
+
+Use:
+
+	sethome [ dir ]		show or set your home directory in
+				htmp (root cannot set it)
+	ttytype [ type ]	show or set the type of this terminal;
+				-n lists the types
+	tset -h			sets the erase and kill characters and
+				the modes for the type in htmp
+
+Until login keeps htmp up to date, run "sethome dir" after logging
+in as a user other than root.  The terminal type stays in htmp
+for the terminal, so "ttytype vt" is needed only once.
+
+tset sets the erase character to backspace (control-H) for a type
+with "bs", vt included, unless it is given with -eC.  On a terminal
+that sends DEL for its backspace key, it is better not to use it.
+The other entries of the tape have modes like 0177440:0000332,
+made for the V6 tty driver; with the driver in ../vanilla/tty
+those bits mean other things, so do not use tset with them.
+
+
+login
+
+The sources are login.c and su.c from s8, unchanged.  When you
+log in, login writes your uid, home directory and the type of the
+terminal from /etc/ttytype into /etc/htmp, so sethome is no
+longer needed.  It also prints .reminder in your home directory
+(and in each directory on the way to it), runs .start_up there
+with /bin/sh, and prints "Last login" if /usr/adm/lastlog exists.
+su keeps htmp up to date as well, and puts the old entry back
+when it exits.  Note that su changes to the home directory of the
+new user.
+
+They were written for the Berkeley system, so run makes these
+changes on copies:
+
+login
+- alarm is not in V6: the two calls are removed (the V6 login
+  has no time limit either)
+- the passwords are read from /etc/passwd, not /etc/passwdf
+- the utmp slot is 0-9 then a-z, as in the V6 login and init,
+  not the terminal letter itself
+- root may log in on any terminal, as with the V6 login (it was
+  limited to the Berkeley terminals 5, 8 and t)
+- V6 has separate uid and gid, where Berkeley used gid << 8 | uid
+  as one id: login now calls setgid and setuid, and the tty and
+  htmp get the uid only, which is what sethome and ex expect
+- a missing /etc/kickoff exits with 0: before, the exit status
+  was whatever was in r0, and login said "priority too low to log
+  in" to everybody but root
+
+su
+- the passwords are read from /etc/passwd, not /etc/passwdf
+- setgid and setuid, and the uid only in htmp, as for login
+- the utmp slot as in login
+
+run compiles them with -lX, so ../tools and ../htmp must be
+installed first.  It does not install anything.
+
+Before install, try them, as root on the console:
+
+	./login yourname
+
+logs you in, in a new shell under the root shell; check that
+sethome gives your home directory, ashell starts without a pause,
+and "ls -l /dev/tty8" shows you as the owner.  Log out with
+control-d, which brings back the root shell, then run
+
+	./su yourname
+
+and check sethome again; control-d brings back root, and sethome
+then gives what it gave before su.  The test logins leave your
+entry in htmp and your name in utmp for the console, until the
+next real login there; chown root /dev/tty8 to give the console
+back to root.
+
+install saves /bin/login and /bin/su in save, and installs the
+new ones, set user id root.  Back up the disk images first: if
+/bin/login does not work, nobody can log in.
+To undo: cp save/login /bin/login; cp save/su /bin/su
+
+
+ex
+
+The sources are those of ex-1.1 on the tape, unchanged: the C
+files and headers, the assembler files crt0.s (a startup that
+leaves room for the arguments of "next"), printf.s (a printf that
+prints through putchar), putchar.s, reset.s and wait.s, Version.c,
+and the help files in how_ex.  ctest.c is new.
+
+run builds the version for a machine without separate I and D,
+like a.outNOID on the tape, as makeex does:
+
+- mkstr moves the error messages into ex1.1strings and writes the
+  sources into temp, where they are compiled, so ../tools must be
+  installed
+- ed adds cursor addressing for vt (ESC [ line ; column H) to the
+  copy of ex_ca.c in temp: ex 1.1 only knows the ADM-3A, and the
+  HP 2645 in the UNIMP version
+- the C files are compiled without UNIMP: the visual operations
+  e, E, < and > are left out, as on the 11/40 at Berkeley
+- the objects are linked straight, not through the archive lib of
+  makeex, with -n (pure text), libX.a and the C library
+- Version.c of the tape is used: the script version that makes it
+  runs ex itself
+
+It then runs ctest, which checks that 'vt' is packed the way
+ex_tty.c makes the terminal type, and edits a file with ex from
+a command file.  Nothing may be printed between "any output
+between here and done means failure" and "done".  run prints
+the size of ex: text, data and bss must fit in 64K with the
+stack and the buffer of ex.
+
+install saves an existing /usr/bin/ex and /usr/lib/ex1.1strings
+in save, and installs
+
+	/usr/bin/ex		with /usr/bin/edit linked to it
+	/usr/lib/ex1.1strings	the error messages
+	/usr/lib/how_ex		the files of the help command
+
+and runs the test again with /usr/bin/ex.
+To undo: remove them, or copy back what is in save.
+
+The "ca" in the vt entry of /etc/ttycap comes from ../htmp: if
+that was installed before ex, run sh run and sh install in
+../htmp again.  Then try ex by hand on the console:
+
+	ex file		"vi" enters visual mode, "q" leaves it
+	edit file	the simpler mode of ex for beginners
+	help		in ex, uses /usr/lib/how_ex
+
+A bad command must give a message, not just "ERROR"; that one
+means /usr/lib/ex1.1strings is missing.  ex needs exrecover and
+expreserve in /usr/lib for the recover command and after crashes;
+they are the next step.
+
+
+NOTES
+
+- sethome checks that you are the user on the terminal: the
+  owner of /dev/ttyX must be you, with group 0, which is what the
+  V6 login does.  Otherwise it looks in /etc/utmp at slot X,
+  which on V6 is the wrong slot (V6 puts 0-9 then a-z in order),
+  and says "NOT super-user".  This only happens after su.
+
+- su writes the reason and, for a wrong password, the password
+  itself to /usr/adm/su, if that file exists.  Do not create it.
+
+- The V6 getuid returns the real uid in the low byte and the
+  effective uid in the high byte.  ashell keeps all 16 bits, and
+  xid makes gid << 8 | uid from /etc/passwd, so the two never
+  match: gethome fails, sleeps 15 seconds, fails again, and home
+  becomes ".".  run masks the uid to 8 bits and makes xid return
+  the uid only.
+
+- ${name:default} gives "Undefined variable" when name is not
+  set: in dolvbl the ':' case falls through to the check for an
+  unset variable.  No 1BSD script uses it, so it is left alone.
+
+- V6 has no access system call.  cptree and rmtree use it, so
+  access.c does it with stat, for the real user and group ids.
+
+- cpall and mvall call execl without the 0 that ends the
+  argument list; run adds it.
+
+- warning in rmtree returns no value when it does not ask (the
+  -f flag, or input that is not a terminal), so what rmtree does
+  then depends on what is left in r0.  run makes it return 1, go
+  ahead.
+
+- mkstr builds an octal escape with a shift of 7 instead of 3.
+  None of the error messages in ex, pi or pxp use one, so it is
+  left alone.

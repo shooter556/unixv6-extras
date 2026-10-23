@@ -1,0 +1,6 @@
+8vt
+
+/etc/ttytype for V6: one line per terminal, the last character
+of its name in /dev (8 for /dev/tty8, the console) followed by the
+two character type code from /etc/ttycap.  The blank line above
+ends the list.  "ttytype -n" lists the codes.

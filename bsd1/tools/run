@@ -1,0 +1,92 @@
+: run -- build the 1BSD tools the 1BSD make scripts need, and libX.a
+: usage -- sh run  in this directory, as root
+: see ../READ_ME for details
+
+echo step 1 -- access, which V6 does not have
+cc -c -O access.c
+
+echo step 2 -- tools that compile unchanged
+cc -O -s mkstr.c
+mv a.out mkstr
+cc -O -s lnall.c
+mv a.out lnall
+cc -O -s squash.c
+mv a.out squash
+cc -O -s chownall.c
+mv a.out chownall
+cc -O -s cptree.c access.o
+mv a.out cptree
+
+echo step 3 -- tools that need a change
+: cpall and mvall call execl without the 0 that ends the list
+ed cpall.c
+/execl/s/buf)/buf, 0)/
+w xcpall.c
+q
+cc -O -s xcpall.c
+mv a.out cpall
+ed mvall.c
+/execl/s/buf)/buf, 0)/
+w xmvall.c
+q
+cc -O -s xmvall.c
+mv a.out mvall
+: warning in rmtree returns nothing when it does not ask
+ed rmtree.c
+/if (!f) return;/s/return;/return(1);/
+/if (gtty(0,line)) return;/s/return;/return(1);/
+w xrmtree.c
+q
+cc -O -s xrmtree.c access.o
+mv a.out rmtree
+rm xcpall.c xmvall.c xrmtree.c *.o
+
+echo step 4 -- libX.a, every member before the members it uses
+cc -c -O typeof.c ttycap2.c ttycap.c htmps.c htmpg.c
+if -r libX.a rm libX.a
+ar r libX.a typeof.o ttycap2.o ttycap.o htmps.o htmpg.o
+rm typeof.o ttycap2.o ttycap.o htmps.o htmpg.o
+
+echo step 5 -- test, in the directory t
+echo any output between here and done means failure
+mkdir t
+chdir t
+mkdir a a/b c d e m
+echo x >a/f1
+ln a/f1 a/b/f2
+echo y >a/b/f3
+../cptree -y a c
+cmp a/f1 c/f1
+cmp a/b/f2 c/b/f2
+cmp a/b/f3 c/b/f3
+../cpall a/f1 a/b/f3 d
+cmp a/f1 d/f1
+cmp a/b/f3 d/f3
+../lnall d/f1 d/f3 e
+cmp d/f1 e/f1
+cmp d/f3 e/f3
+../mvall e/f1 e/f3 m
+if -r e/f1 echo FAIL mvall left e/f1
+cmp d/f1 m/f1
+cmp d/f3 m/f3
+../chownall - -nbin c
+ls -l c c/b | grep root
+echo 'main() { error("hello"); }' >x.c
+echo 'main() { error(0); }' >e.c
+../mkstr strs y x.c
+cmp yx.c e.c
+if ! -r strs echo FAIL mkstr made no strs
+echo 'f() { }' >s.c
+cc -c s.c
+../squash s.o
+if ! -r s.o echo FAIL squash lost s.o
+echo 'char *tbuf; main() { tgetmodes(0); }' >l1.c
+cc l1.c ../libX.a
+echo 'main() { hput(0); }' >l2.c
+cc l2.c ../libX.a
+echo 'char *tbuf; main() { typeof(0); tgetent(0, 0); tgetnum(0); tgetflag(0); tgetstr(0, 0); hget(0); hsethome(0); }' >l3.c
+cc l3.c ../libX.a
+chdir ..
+./rmtree -f t
+if -r t echo FAIL rmtree left t
+echo done
