@@ -246,7 +246,8 @@ like a.outNOID on the tape, as makeex does:
 - the C files are compiled without UNIMP: the visual operations
   e, E, < and > are left out, as on the 11/40 at Berkeley
 - the objects are linked straight, not through the archive lib of
-  makeex, with -n (pure text), libX.a and the C library
+  makeex, with libX.a and the C library, and without the -n (pure
+  text) of makeex: see NOTES
 - Version.c of the tape is used: the script version that makes it
   runs ex itself
 
@@ -254,8 +255,8 @@ It then runs ctest, which checks that 'vt' is packed the way
 ex_tty.c makes the terminal type, and edits a file with ex from
 a command file.  Nothing may be printed between "any output
 between here and done means failure" and "done".  run prints
-the size of ex: text, data and bss must fit in 64K with the
-stack and the buffer of ex.
+the size of ex; "too large" from the test means it does not fit,
+see NOTES.
 
 install saves an existing /usr/bin/ex and /usr/lib/ex1.1strings
 in save, and installs
@@ -313,6 +314,15 @@ NOTES
   -f flag, or input that is not a terminal), so what rmtree does
   then depends on what is left in r0.  run makes it return 1, go
   ahead.
+
+- On an 11/40, V6 gives a process whole 8K pages, 8 in all: for a
+  pure program the text, the data with bss, and the stack each
+  take whole pages; for a program that is not pure, the text,
+  data and bss together, and the stack.  The typesetter C makes
+  ex 41088+3844+5036: pure, that is 6+2+1 pages, too large (the
+  text is 128 bytes over 5 pages), and not pure 7+1, which fits.
+  Either way about 7K is left for the line pointers of the
+  buffer, which ex gets with sbrk.
 
 - mkstr builds an octal escape with a shift of 7 instead of 3.
   None of the error messages in ex, pi or pxp use one, so it is
