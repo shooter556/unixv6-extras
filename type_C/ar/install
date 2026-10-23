@@ -1,0 +1,39 @@
+: install -- switch the system to the new archive format
+: usage -- sh install  as root, only after run reported no differences
+: everything replaced is saved in save first
+
+if ! -r save mkdir save
+if ! -r save/ar cp /bin/ar save/ar
+if ! -r save/ld cp /bin/ld save/ld
+if ! -r save/file cp /bin/file save/file
+if ! -r save/libc.a cp /lib/libc.a save/libc.a
+if ! -r save/liba.a cp /lib/liba.a save/liba.a
+if ! -r save/libf.a cp /lib/libf.a save/libf.a
+if ! -r save/filib.a cp /lib/filib.a save/filib.a
+if ! -r save/libp.a cp /lib/libp.a save/libp.a
+if ! -r save/libs.a cp /lib/libs.a save/libs.a
+if ! -r save/liby.a cp /lib/liby.a save/liby.a
+if ! -r save/tmgb cp /lib/tmgb save/tmgb
+if ! -r save/utmgb cp /usr/lib/tmgb save/utmgb
+if ! -r save/lib1 cp /usr/sys/lib1 save/lib1
+if ! -r save/lib2 cp /usr/sys/lib2 save/lib2
+
+echo step 1 -- convert the libraries
+./arcv /lib/libc.a /lib/liba.a /lib/libf.a /lib/filib.a /lib/libp.a
+./arcv /lib/libs.a /lib/liby.a /lib/tmgb /usr/lib/tmgb
+./arcv /usr/sys/lib1 /usr/sys/lib2
+
+echo step 2 -- install the programs
+: remove before copying so that a busy or sticky text is not overwritten
+rm /bin/ar /bin/ld /bin/file
+cp ar /bin/ar
+cp ld /bin/ld
+cp file /bin/file
+cp arcv /usr/bin/arcv
+ls -l /bin/ar /bin/ld /bin/file /usr/bin/arcv
+
+echo step 3 -- compile and run ltest with the installed system
+echo the next line must be: long ops ok
+cc -O ../libc/ltest.c
+a.out
+rm -f a.out

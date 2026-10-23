@@ -1,0 +1,64 @@
+: run -- build ar, arcv, ld and file for the new archive format
+: usage -- sh run  in this directory, as root, after tc, libc, as and cc are installed
+: see ../READ_ME for details
+
+echo step 1 -- ar.c without AUSAM, and with the V6 ctime
+ed ar.c
+/^#define.AUSAM/d
+/ctime(arbuf.date)/s/arbuf/\&arbuf/
+w xar.c
+q
+
+echo step 2 -- compile
+cc -O -s xar.c
+mv a.out ar
+rm xar.c
+cc -O -s arcv.c
+mv a.out arcv
+cc -O -n -s ld.c
+mv a.out ld
+cc -O -s file.c
+mv a.out file
+
+echo step 3 -- convert copies of libc.a and liba.a into new
+if ! -r new mkdir new
+cp /lib/libc.a new/libc.a
+cp /lib/liba.a new/liba.a
+./arcv new/libc.a new/liba.a
+
+echo step 4 -- check the converted copies
+echo any output between here and done means failure
+/bin/ar t /lib/libc.a >old.t
+./ar t new/libc.a >new.t
+cmp old.t new.t
+/bin/ar t /lib/liba.a >old.t
+./ar t new/liba.a >new.t
+cmp old.t new.t
+cc -c -O ld.c
+./ld -X -n -s /lib/crt0.o ld.o new/libc.a new/liba.a
+cmp a.out ld
+echo done
+rm old.t new.t ld.o a.out
+
+echo step 5 -- link and run ltest with the new ld and the converted libraries
+echo the next line must be: long ops ok
+cc -c -O ../libc/ltest.c
+./ld -X /lib/crt0.o ltest.o new/libc.a new/liba.a
+a.out
+rm -f a.out ltest.o
+
+echo step 6 -- link a kernel with the new ld and converted lib1 and lib2
+if ! -r /usr/sys/conf/c.o goto nokernel
+cp /usr/sys/lib1 new/lib1
+cp /usr/sys/lib2 new/lib2
+./arcv new/lib1 new/lib2
+as /usr/sys/conf/l.s
+mv a.out l.o
+/bin/ld -x l.o /usr/sys/conf/m40.o /usr/sys/conf/c.o /usr/sys/lib1 /usr/sys/lib2
+mv a.out unix.old
+./ld -x l.o /usr/sys/conf/m40.o /usr/sys/conf/c.o new/lib1 new/lib2
+echo any output between here and done means failure
+cmp a.out unix.old
+echo done
+rm a.out unix.old l.o new/lib1 new/lib2
+: nokernel
