@@ -187,7 +187,7 @@ installs ar, ld and file in /bin and arcv in /usr/bin, and runs
 ltest again.  arcv says "not archive format" for a file that is
 already converted, so running install twice is harmless.
 
-Convert any other archive of your own with arcv.  aredit (../aredit)
+Convert any other archive of your own with arcv.  aredit (../vanilla/aredit)
 only understands the old format.
 
 To undo: copy everything in save back where it came from (tmgb
