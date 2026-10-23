@@ -1,0 +1,7 @@
+: install -- install the cc driver built by run
+: usage -- sh install  as root, only after run reported no differences
+: the tc driver remains in /usr/tcboot/cc, the V6 one in /usr/tcboot/orig/cc
+
+rm /bin/cc
+cp cc /bin/cc
+ls -l /bin/cc

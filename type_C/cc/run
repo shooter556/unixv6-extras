@@ -1,0 +1,20 @@
+: run -- build the UNSW cc driver
+: usage -- sh run  in this directory, as root, after tc, libc and as are installed
+: see ../READ_ME for details
+
+echo step 1 -- compile cc.c with the tc driver
+cc -O -n -s cc.c
+mv a.out cc
+
+echo step 2 -- compile cc.c again with the new driver
+echo any output between here and done means failure
+./cc -O -n -s cc.c
+cmp a.out cc
+echo done
+rm a.out
+
+echo step 3 -- compile and run ltest with the new driver
+echo the next line must be: long ops ok
+./cc -O ../libc/ltest.c
+a.out
+rm -f a.out
