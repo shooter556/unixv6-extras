@@ -1,0 +1,21 @@
+: install -- install ashell as /usr/bin/ashell
+: usage -- sh install  in this directory, as root, after run
+: see ../READ_ME for details
+if -r ashell goto start
+echo run first
+exit
+: start
+
+echo step 1 -- save what is replaced, only the first time
+if ! -r save mkdir save
+if -r /usr/bin/ashell -a ! -r save/ashell cp /usr/bin/ashell save/ashell
+
+echo step 2 -- install
+: the path is in ashell, as the shell for scripts
+cp ashell /usr/bin/ashell
+chmod 755 /usr/bin/ashell
+ls -l /usr/bin/ashell
+
+echo step 3 -- run ashtest with the installed ashell
+echo the next line must be: done
+/usr/bin/ashell ashtest foo.c bar baz

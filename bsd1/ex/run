@@ -1,0 +1,88 @@
+: run -- build ex 1.1, with open and visual, for a machine without separate I and D
+: usage -- sh run  in this directory, as root, after ../tools and ../htmp
+: see ../READ_ME for details
+
+echo step 1 -- mkstr moves the error messages to ex1.1strings, the sources to temp
+if -r temp rmtree -f temp
+mkdir temp
+mkstr ex1.1strings temp/ ex*.c
+
+echo step 2 -- cursor addressing for vt100, in temp/ex_ca.c
+ed temp/ex_ca.c
+/default:/i
+	case 'vt':
+		vtgoto(result);
+		break;
+.
+$a
+
+/*
+ * vt100 -- ESC [ line ; column H, counting from 1
+ */
+vtgoto(cp)
+	register char *cp;
+{
+
+	*cp++ = '\033';
+	*cp++ = '[';
+	cp = vtnum(cp, destline + 1);
+	*cp++ = ';';
+	cp = vtnum(cp, destcol + 1);
+	*cp++ = 'H';
+	*cp = 0;
+}
+
+vtnum(cp, n)
+	register char *cp;
+	register int n;
+{
+
+	if (n >= 10)
+		cp = vtnum(cp, n / 10);
+	*cp++ = n % 10 + '0';
+	return (cp);
+}
+.
+w
+q
+
+echo step 3 -- compile, without UNIMP, as for an 11/40
+chdir temp
+cpall ../*.h .
+cc -c -O *.c
+mvall *.o ..
+chdir ..
+rmtree -f temp
+as -o crt0o crt0.s
+as -o printf.o printf.s
+as -o putchar.o putchar.s
+as -o reset.o reset.s
+as -o wait.o wait.s
+cc -c -O Version.c
+
+echo step 4 -- link, pure text, with libX.a
+ld -X -n crt0o *.o -lX -lc -l
+mv a.out ex
+rm *.o crt0o
+size ex
+
+echo step 5 -- test
+echo any output between here and done means failure
+cc ctest.c
+a.out
+rm a.out
+echo hello world >t1
+echo s/world/there/ >t2
+echo a >>t2
+echo second line >>t2
+echo . >>t2
+echo w >>t2
+echo q >>t2
+echo hello there >t3
+echo second line >>t3
+: called a.out, ex reads its messages from ex1.1strings here
+cp ex a.out
+a.out - t1 <t2
+cmp t1 t3
+rm a.out t1 t2 t3
+echo done

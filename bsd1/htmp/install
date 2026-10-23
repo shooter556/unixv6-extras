@@ -1,0 +1,45 @@
+: install -- install /etc/htmp, /etc/ttycap, /etc/ttytype, sethome, ttytype and tset
+: usage -- sh install  in this directory, as root, on a terminal, after run
+: see ../READ_ME for details
+if -r xttycap goto start
+echo run first
+exit
+: start
+
+echo step 1 -- save what is replaced, only the first time
+if ! -r save mkdir save
+if -r /etc/ttycap -a ! -r save/ttycap cp /etc/ttycap save/ttycap
+if -r /etc/ttytype -a ! -r save/ttytype cp /etc/ttytype save/ttytype
+if -r /usr/bin/sethome -a ! -r save/sethome cp /usr/bin/sethome save/sethome
+if -r /usr/bin/ttytype -a ! -r save/ttytype.b cp /usr/bin/ttytype save/ttytype.b
+if -r /usr/bin/tset -a ! -r save/tset cp /usr/bin/tset save/tset
+
+echo step 2 -- the data bases, an existing /etc/htmp is kept
+cp xttycap /etc/ttycap
+cp ttytype.v6 /etc/ttytype
+chmod 644 /etc/ttycap /etc/ttytype
+if ! -r /etc/htmp cp /dev/null /etc/htmp
+chown bin /etc/htmp
+chmod 644 /etc/htmp
+
+echo step 3 -- the programs, set user id bin, so that they can write /etc/htmp
+cp sethome /usr/bin/sethome
+cp ttytype /usr/bin/ttytype
+cp tset /usr/bin/tset
+chown bin /usr/bin/sethome /usr/bin/ttytype /usr/bin/tset
+chmod 4711 /usr/bin/sethome /usr/bin/ttytype /usr/bin/tset
+ls -l /etc/htmp /etc/ttycap /etc/ttytype /usr/bin/sethome /usr/bin/ttytype /usr/bin/tset
+
+echo step 4 -- test, this sets the type of this terminal to vt
+echo any output between here and done means failure
+/usr/bin/ttytype vt
+/usr/bin/ttytype >x
+echo vt100 >y
+cmp x y
+/usr/bin/sethome >x
+echo / >y
+cmp x y
+rm x y
+echo done
+echo the types in /etc/ttycap, as listed by ttytype -n:
+/usr/bin/ttytype -n

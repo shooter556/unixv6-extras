@@ -21,6 +21,14 @@ added on top of it.
   archive format, and the standard I/O library. Each step is checked on
   the system itself. See [type_C/READ_ME](type_C/READ_ME).
 
+* __[bsd1](bsd1)__ - builds the 1BSD software from its sources on a
+  stock V6 system with the type_C toolchain, without the binaries
+  on the tape: _ashell_ first, then the tools its make scripts use
+  and _libX.a_, then the terminal data bases with _sethome_,
+  _ttytype_ and _tset_, a _login_ and _su_ that keep them up to
+  date, and the editor _ex_ 1.1 with visual mode on a vt100. See
+  [bsd1/READ_ME](bsd1/READ_ME).
+
 * __[toolbox](toolbox)__ - helper scripts that run on the host:
   * _mkv6tap.py_ - makes a SIMH tape image from folders. The first file
     on the tape is a _tar_ that runs on V6 (the file _tar_ here), so a

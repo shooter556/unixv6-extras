@@ -1,0 +1,21 @@
+: run -- build sethome, ttytype and tset, and a ttycap with a vt100
+: usage -- sh run  in this directory, as root, after ../tools is installed
+: see ../READ_ME for details
+
+echo step 1 -- compile, with the libX.a from ../tools
+cc -O -s sethome.c -lX
+mv a.out sethome
+cc -O -s ttytype.c -lX
+mv a.out ttytype
+cc -O -s tset.c -lX
+mv a.out tset
+
+echo step 2 -- xttycap, the ttycap of the tape and an entry for vt100
+: the modes are 0:0, so that tset leaves the tty modes alone
+ed ttycap
+$a
+vt|vt100|ansi:0:0:li#24:co#80:cl=\E[H\E[J:ho=\E[H:nd=\E[C:up=\E[A:ce=\E[K:cd=\E[J:bs:ca
+.
+w xttycap
+q
+ls -l sethome ttytype tset xttycap
