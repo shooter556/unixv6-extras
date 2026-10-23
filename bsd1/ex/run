@@ -60,8 +60,10 @@ as -o reset.o reset.s
 as -o wait.o wait.s
 cc -c -O Version.c
 
-echo step 4 -- link, pure text, with libX.a
-ld -X -n crt0o *.o -lX -lc -l
+echo step 4 -- link, not pure, with libX.a
+: V6 gives text, data and stack each whole 8K pages, 8 in all,
+: pure, the text of 41K takes 6 pages, so ex is too large
+ld -X crt0o *.o -lX -lc -l
 mv a.out ex
 rm *.o crt0o
 size ex
