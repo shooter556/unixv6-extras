@@ -41,25 +41,50 @@ added on top of it.
 
 * __[em](em)__ - the _em_ editor from Queen Mary College.
 
-* __[1bsd](1bsd)__, __[2bsd](2bsd)__, __[unsw3](unsw3)__ - the 1BSD and
-  2BSD distributions and the UNSW 3 tape, as tar balls.
+* __[1bsd](1bsd)__, __[unsw3](unsw3)__ - the 1BSD distribution and the
+  UNSW 3 tape, unpacked. __[2bsd](2bsd)__ - the 2BSD distribution, as a
+  tar ball.
 
-* __gen-*.sh__ - make the tape images, run from the top of the repository:
+## Making a tape
 
-  | script | tape |
-  | --- | --- |
-  | `gen-extra1.sh <distro>` | the tools in _vanilla_ and _em_, read with _tp_ |
-  | `gen-1bsd.sh` | 1BSD, read with _tp_ |
-  | `gen-2bsd.sh` | 2BSD, built with _mkv6tap.py_ |
-  | `gen-unsw3.sh` | UNSW 3, built with _mkv6tap.py_ |
+_toolbox/mkv6tap.py_ puts folders on a SIMH tape image, each as a
+directory of its own name:
 
-  On V6, a tape made by _mkv6tap.py_ is read with:
+```sh
+toolbox/mkv6tap.py DIR [DIR ...] file.tap
+```
 
-  ```sh
-  dd if=/dev/mt0 of=tar bs=512 skip=1 count=49
-  chmod 755 tar
-  ./tar x
-  ```
+For example, run from the top of the repository:
+
+```sh
+# the toolchain and the 1BSD steps
+toolbox/mkv6tap.py type_C bsd1 ~/vm/iso/unix/v6/work.tap
+# a distribution
+toolbox/mkv6tap.py 1bsd ~/vm/iso/unix/v6/1bsd.tap
+toolbox/mkv6tap.py unsw3 ~/vm/iso/unix/v6/unsw3.tap
+# the tools of vanilla, without the vanilla/ prefix, and em
+(cd vanilla && ../toolbox/mkv6tap.py aredit fsck halt man setclock sh \
+    sysconf time trees tty ../em ~/vm/iso/unix/v6/extra1.tap)
+```
+
+2BSD is a tar ball: unpack it into a folder named 2bsd first.
+
+```sh
+mkdir -p /tmp/t/2bsd && tar xzf 2bsd/spencer_2bsd.tar.gz -C /tmp/t/2bsd
+toolbox/mkv6tap.py /tmp/t/2bsd ~/vm/iso/unix/2bsd/2bsd.tap
+```
+
+The first file on the tape is a _tar_ that runs on V6, so a system
+without _tar_ can read it. Attach the tape to tm0, then on V6, in the
+directory where the folders should go:
+
+```sh
+dd if=/dev/mt0 of=tar bs=512 skip=1 count=49
+chmod 755 tar
+./tar x
+```
+
+mkv6tap.py prints the _dd_ command with the right count.
 
 ## Licenses
 
