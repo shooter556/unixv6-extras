@@ -370,3 +370,68 @@ NOTES
 - mkstr builds an octal escape with a shift of 7 instead of 3.
   None of the error messages in ex, pi or pxp use one, so it is
   left alone.
+
+
+TODO
+
+Not done yet.  The notes on s6 come from reading the sources
+against the stock V6 sources and libraries; the text filters were
+also compiled and tested on a copy of the system, the others were
+not compiled.
+
+Two facts that decide many of them: the stock V6 printf has no
+%ld (its %l is one word unsigned), so longs are printed with
+locv, or the program is linked with -lS; and ldiv, lrem and ttyn
+are in /lib/liba.a, which cc links.
+
+- s6, unchanged: head, fold, colrm, colcrt, collpr, cr3, number,
+  linerm, ssp, soelim, iul, funny, transcribe, toc, Print, reset,
+  repeat, continue, crazy, expand, nm, lntree, fix, gres, block,
+  clock, biorhythm, makeTtyn, syswatch, dates (set user id root,
+  /usr/lib/dates), rout (cc -f, or 3600.0 made 3600).
+  expand, number, list, ssp and Print never close a file before
+  opening the next, so they fail after about 11 files; a
+  close(ibuf[0]) before the fopen fixes that.
+
+- s6, with changes:
+	wc	%ld, print with locv, one per printf
+	double	never steps to the next file argument
+	list	"list -" reads stdin: argc > 1 should be argc > 0
+	ls	getname compares gid << 8 | uid with the passwd
+		entry; compare the uid only.  /bin/ls hides it,
+		install it as /usr/bin/l
+	strip	sets cp to the temporary name but uses tmp,
+		which is never set
+	where	fopen("/etc/ttywhere", 0) should be ibuf
+	manwhere	/usr/man is /usr/doc/man on V6
+	box	">* /dev/null" is ashell; under sh, as root, it
+		removes /dev/null.  Needs repeat
+	pss	sort +0.48 is for the Berkeley ps
+	size	%ld, link with -lS
+	whoison	utmp slots, and an /etc/winfo for this system
+	last, sess	%ld, and the time of day is worked out for
+		US Pacific time; use timezone
+	watch	/usr/pascal/syswatch, and it never exits after
+		logout
+	procp	the proc and user structures are Berkeley's
+	public	access (link ../tools/access.c), getuid() >> 8
+		is not the gid, and needs a user with uid 8
+	ulpr	lpr is /lib/lpr on V6
+	ticktock	clears the screen with ^Z of the ADM-3A
+	froc	convert and readb are used before they are
+		declared char
+
+- Not worth doing: man (../vanilla/man is the same program, done),
+  cat3a (ADM-3A only), pq (Berkeley quotas), osethome (replaced by
+  sethome), fixit (MACRO-11 listings only), file (the UNSW file of
+  type_C does as much), and pascals, pcc, pix and flt40 with the
+  rest of Pascal, which needs separate I and D.
+
+- s1 and s8: the Berkeley sh (ashell does more), passwd, who, and
+  glob2 as /etc/glob.
+
+- portlib, then trek.
+
+- The manual pages in man1 and man5 to man8, and help.
+
+- c2 dies on expreserve.c (see exrecover); find out why.
