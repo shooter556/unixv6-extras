@@ -1,0 +1,29 @@
+azel \*- satellite predictions
+bj \*- the game of black jack
+cal \*- print calendar
+chess \*- the game of chess
+col \*- filter reverse line feeds
+cubic \*- three dimensional tic-tac-toe
+factor \*- discover prime factors of a number
+fed \*- edit form letter memory
+flip \*- flip a coin (sort of)
+form \*- form letter generator
+graph \*- draw a graph
+gsi \*- interpret extended character set on GSI terminal
+m6 \*- general purpose macroprocessor
+maze \*- draw a maze
+message \*- print a message in large letters
+moo \*- guessing game
+mtdump \*- magtape dump
+plot: tek, gsip, vt0 \*- graphics filters
+primes  \*-  print all primes larger than somewhat
+quiz \*- test your knowledge
+sky \*- obtain ephemerides
+sno \*- Snobol interpreter
+speak \*- word to voice translator
+spline \*- interpolate smooth curve
+tbl \*- format tables for nroff or troff
+tmg \*- compiler-compiler
+ttt \*- the game of tic-tac-toe
+units \*- conversion program
+wump \*- the game of hunt-the-wumpus

@@ -1,0 +1,4 @@
+.xx "C-addendum" "latest news about C"
+.xx "overlay" "overlays for fortran"
+.xx "stdio" "new standard IO library"
+.xx "tbl" "a program to format tables"

@@ -1,0 +1,55 @@
+.th STP I 11/30/76
+.sh NAME
+stp \*- new super tp
+.sh SYNOPSIS
+.bd stp
+[ key ] [ name ... ]
+.sh DESCRIPTION
+Stp is an improved version of tp for use with magnetic tapes only.
+For the values and meanings of the key, see the description of tp.
+.s3
+The differences are:
+.s3
+.lp +9 8
+m	Magnetic tape is assumed, this key is ignored.
+.s3
+.lp +9 8
+c	This option is not assumed with magnetic tape. To create
+a new tape in this format, this key must be specified.
+.s3
+.i0
+.dt
+With the \fBc\fR key specified, a first file in standard
+.it tp
+format
+is written on the tape.
+A second file, containing a copy of the directory,
+is also written.
+All subsequent
+.it stp
+operations ignore the
+directory at the front of the tape and use the second file as the directory.
+The first directory is written solely so that an
+.it stp
+tape written with key
+\fBc\fR will be readable by standard
+.it tp.
+.s3
+Because the used directory is written after the data files one may
+extend the tape by update, delete or replace.
+Any deletions simply remove the second directory reference to
+the file but leave the file intact vis-a-vis the first directory.
+.sh "SEE ALSO"
+tp (I), tp (V)
+.sh AUTHOR
+Melvin Ferentz
+.sh BUGS
+The program is painfully slow due to the necessity of using /dev/rmt?
+to access the second file.
+A future version will use modified drivers.
+The program assumes the largest possible user space in core.
+Users
+with less than 28k of user space will need to modify the source
+and recompile.
+This may reduce the maximum number of files that can
+be handled.

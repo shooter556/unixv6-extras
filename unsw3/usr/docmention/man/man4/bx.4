@@ -1,0 +1,21 @@
+.th BX IV 23/1/78
+.sh NAME
+.bd bx
+- BURROUGHS communications link
+.sh DESCRIPTION
+The files
+.it bcr, blp, bfiles?
+etc. refer to "stations" on the BURROUGHS TD800 POLL/SELECT multi-drop
+communications link.
+They behave like unidirectional Unix files
+(\ 512 byte writes are the most efficient\ ),
+but reads should always be 512 bytes,
+as any data not taken from a read message are discarded.
+.sh FILES
+ for reading: /dev/bcr /dev/bfilesf /dev/bttyf
+ for writing: /dev/blp /dev/bfilest /dev/bttyt
+.sh "SEE ALSO"
+bpr(I)
+.sh AUTHOR
+Piers Lauder ( University of Sydney )
+.sh BUGS

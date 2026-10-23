@@ -1,0 +1,5 @@
+crfork, crexit, crread, crwrite, crexch, crprior(VII) coroutine scheme
+mm(VII) macros for making manuals
+ms(VII) macros for formatting manuscripts
+plot: openpl et al.(VII) graphics interface
+salloc(VII) string allocation and manipulation

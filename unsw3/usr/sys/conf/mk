@@ -1,0 +1,28 @@
+echoall
+:    make a hp10 system - swap on hp11
+cp c.hp10 c.c
+cc -c c.c
+as -o m70.o m70.s
+as -o powerf.o powerf.s
+as -o l70.o l70.s
+ld -x -r -d l70.o powerf.o m70.o c.o ../lib1 ../lib2
+nm -ug
+rm -f unix.new* >/dev/null ; sysfix a.out unix.new10
+:    turn a hp10 system into a hp02 system
+cp unix.new10 unix.new02
+db unix.new02
+_rootdev/
+2!
+_rootdev/
+%
+:    turn a hp02 system into a hp02 system - with SWAP on hp01
+cp unix.new02 unix.new02s
+db unix.new02s
+_swapdev/
+1!
+_swapdev/
+%
+:    protect
+chmod  0  unix.new10 unix.new02 unix.new02s
+chown bin unix.new10 unix.new02 unix.new02s
+rm -f *.o a.out c.c >/dev/null

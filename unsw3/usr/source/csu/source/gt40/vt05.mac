@@ -1,0 +1,622 @@
+	.title	gt40 - vt05 simulator.
+;
+; 78/02/13 16:30:00
+;
+;	.enabl	abs
+	.dsabl	gbl
+
+	.mcall	gtsym$
+	gtsym$
+
+;
+; vt05 simulator for gt40.
+;
+;
+; switch register bits.
+;
+;	0	local
+;	1	half-duplex
+;	2	half ascii.
+;
+swlocl=	01
+swhdup=	02
+swlcas=	04
+
+;
+; dimensions of screen (in characters)
+;
+lines=	32.
+linsiz=	72.
+
+;
+; screen coordinates (hardware units)
+;
+xstart=0			;screen coords.
+ystart=	1400-24.+4		;coord of top l. corner
+				;-char. box size
+				;+shift to allow curor
+
+;
+; dimensions of characters (hardware units)
+;
+xincr=	14.
+yincr=	24.
+ydif=	4.			;drop dist. for cursor
+
+;
+; character constants
+;
+bel=	007			;^g
+bs=	010
+ht=	011
+lf=	012
+cr=	015
+crlf=	cr+<400*lf>
+
+;
+; cursor addressing characters
+;
+crt=	030			;can <^x>
+clt=	bs			;    <^h>
+cdn=	013			;vt  <^k>
+cup=	032			;sub <^z>
+cad=	016			;so  <^n>
+home=	035			;gs  <^]>
+clrscr=	037			;us  <^_>
+clrlin=	036			;rs  <^^>
+
+;
+; register variable declarations
+;
+rcvadi=	r2			;input pointer
+rcvado=	r3			;output pointer
+crsr=	r4			;display file pointer
+colcnt=	r5			;current column
+	.page
+	.sbttl	interrupt vectors
+
+z=	.
+
+.macro	org	adr
+;.=	adr
+.=	z+adr
+	.endm	org
+
+	org	0
+	jmp	@#start
+
+	.rept	63.
+	.word	.+2
+	halt
+	.endm
+
+	org	24
+	.word	pwrfl,	br7	;power-fail
+
+	org	kvec		;keyboard
+	.word	kbdgo,	br7
+
+	org	rvec		;receiver
+	.word	rcvr,	br7
+
+	org	xvec		;transmitter
+	.word	sndr,	br7
+
+	org	gtstpv		;display stop
+	.word	stop,	br7
+	.page
+	.sbttl	startup sequence
+
+	org	1000
+
+stack=	.
+
+start:	reset
+	mov	#stack,sp		;set up stack
+	clr	pfflg
+	clr	@#ps			;allow interrupts.
+	mov	#xstart,crsrx		;fix cursor posn
+	mov	#ystart-ydif,crsry
+	mov	#gtbufx,r0
+	mov	r0,gtbufg+2		;fix first jmp
+	mov	#lines,r1		;lines to be cleared
+10$:	mov	#<linsiz/2>,r2
+20$:	mov	#<"  >,(r0)+		;bang
+	dec	r2
+	bgt	20$			;line finis?
+	mov	#<crlf>,(r0)+		;cr/lf
+	dec	r1
+	bgt	10$			;page finis?
+	mov	#dstop,-(r0)		;mark end of page
+	mov	#gtbufx,crsr		;init cursor
+	clr	colcnt			;and position
+	clr	lincnt
+	mov	#sort,dsplgo		;and /go to/
+	jsr	pc,initio		;initialize i/o
+	jmp	exit
+	.page
+	.sbttl	interrupt - power fail
+
+pwrfl:	tst	pfflg
+	bne	20$
+	mov	r0,-(sp)	;;;save registers.
+	mov	r1,-(sp)
+	mov	r2,-(sp)
+	mov	r3,-(sp)
+	mov	r4,-(sp)
+	mov	r0,-(sp)
+	mov	sp,pfflg	;;;mark as occurring
+	halt
+
+20$:	mov	pfflg,sp	;get stack.
+	clr	pfflg		;
+	mov	#br7,@#ps	;lock up
+	mov	(sp)+,r0	;restore registers.
+	mov	(sp)+,r4
+	mov	(sp)+,r3
+	mov	(sp)+,r2
+	mov	(sp)+,r1
+	mov	(sp)+,r0
+	jsr	pc,initio	;start off i/o.
+	rti
+
+pfflg:	.word	0
+
+initio:	clr	rcvcnt
+	mov	#rcvbuf,rcvadi
+	mov	rcvadi,rcvado	;init. buffer status.
+	clr	sndcnt
+	mov	#sndbuf,sndadi
+	mov	#sndbuf,sndado
+	mov	#gtbuf,@#dpc	;1st off start display
+	mov	#107,@#rcsr	;then receiver
+	mov	#100,@#xcsr	;init xtr.
+	mov	#107,@#kcsr	;and enable keyboard.
+	rts	pc		;all initialised!!
+	.page
+	.sbttl	interrupt - keyboard
+;
+; keyboard input interrupt routine.
+;
+
+kbdgo:	mov	r0,-(sp)	;;;save
+	mov	@#kbuf,r0
+	bic	#^c<177>,r0	;;;extract gargage
+	bit	#swlcas,@#swr	;;;lower case??
+	beq	5$		;;;don't worry
+	cmp	r0,#<137>
+	blos	5$		;;;"64" range
+	cmp	r0,#<177>	;;;del?
+	beq	5$		;;;yes. it is an exception
+	bic	#040,r0		;;;knock out bit.
+5$:	bit	#<swlocl!swhdup>,@#swr	;;;test "echo" bits of switch reg.
+	beq	10$		;;;no. full duplex
+	jsr	pc,rcvque	;;;echo it.
+	bit	#swlocl,@#swr	;;;test "send" bit
+	bne	30$		;;;local
+				;;;half duplex
+10$:	cmp	#sndlng-2,sndcnt;;;buffer full?
+	ble	60$
+	inc	sndcnt		;;;is sending going on?
+	bne	20$		;;;yes.
+	movb	r0,@#xbuf	;;;start up
+	br	30$
+20$:	movb	r0,@sndadi	;;;put into buffer
+	inc	sndadi
+	cmp	#sndbuf+sndlng,sndadi	;;;wrap-around?
+	bgt	30$		;;;no worries.
+	mov	#sndbuf,sndadi
+30$:	mov	(sp)+,r0
+	rti
+60$:	inc	@#dsr		;;;ring bell for overflow
+	.if	df	test
+	halt
+	.endc
+	br	30$		;;;continue
+	.page
+	.sbttl	interrupt - remote transmit
+;
+; host transmit interrupt routine.
+;
+
+sndr:	dec	sndcnt		;;;how goes it?
+	blt	10$		;;;last char. buffer empty
+	movb	@sndado,@#xbuf	;;;send it.
+	inc	sndado		;;;next
+	cmp	#sndbuf+sndlng,sndado	;;;wrap-around?
+	bgt	10$		;;;don't worry
+	mov	#sndbuf,sndado	;;;
+10$:	rti			;;;
+	.page
+	.sbttl	interrupt - remote receive
+;
+; host receiving interrupt routine.
+;
+
+rcvr:	mov	r0,-(sp)	;;;
+	movb	@#rbuf,r0	;;;
+	bit	#swlocl,@#swr	;;;local?
+	bne	10$		;;;yes. don't receive this
+	jsr	pc,rcvque	;;;queue it
+10$:	mov	(sp)+,r0	;;;
+	rti			;;;
+	.page
+	.sbttl	queue - input
+;
+; character queueing routine for input to display.
+;
+
+rcvque:	bic	#^c<177>,r0	;;;clean off muck.
+	beq	20$		;;;ignore nulls.
+	cmp	#rcvlng-2,rcvcnt;;;fit in buffer?
+	ble	30$		;;;buffer full. ignore chr.
+	movb	r0,(rcvadi)+	;;;save it
+	cmp	#rcvbuf+rcvlng,rcvadi	;;;
+	bgt	10$		;;;wrap-around?
+	mov	#rcvbuf,rcvadi	;;;
+10$:	inc	rcvcnt		;;;notify of 1 more.
+	bne	20$		;;;only 1 in buffer?
+;
+;************************************************************************
+;
+; note:	if this is the only character in buffer then display is
+;	assumed to have stopped and this is a method to restart such.
+;
+;************************************************************************
+;
+	mov	#disply,stack-4	;;;restart - was waiting hopefully?
+20$:	rts	pc		;;;
+30$:	inc	@#dsr		;;;ring bell for overflow!
+	.if	df	test
+	halt
+	.endc
+	br	20$		;;;back we go.
+	.page
+	.sbttl	interrupt - display
+;
+; display interrupt routine.
+;
+stop:	mov	#gtbuf,@#dpc	;;;top of screen again
+	rti			;;;
+	.page
+	.sbttl	main program loop
+;
+; display time waste routine.
+;
+exit:	dec	rcvcnt		;buffer empty yet?
+	bge	disply
+10$:	wait
+	br	10$		;keep on waiting
+
+;
+; actual display routine.
+;
+disply:	movb	(rcvado)+,r0	;get char.
+	cmp	#rcvbuf+rcvlng,rcvado
+	bgt	10$		;wrap-around?
+	mov	#rcvbuf,rcvado
+10$:	jsr	pc,@dsplgo	;which place?
+				;this is to switch between a number of
+				;different character handlers.
+				;at the moment it is only used for the
+				;handling of cursor addressing.
+	br	exit
+	.page
+	.sbttl	character processor
+;
+; analyse what sort of character
+;
+
+sort:	cmp	#<040>,r0	;control character?
+	bgt	ctrl		;yes.
+	bit	#swlcas,@#swr	;lower case allowed?
+	beq	10$
+	cmp	r0,#<137>	;"64" range?
+	blos	10$
+	cmp	r0,#<177>	;del?
+	beq	10$
+	bic	#040,r0		;convert to upper case.
+10$:	movb	r0,(crsr)	;dump it.
+;  cursor right control
+xcrt:	cmp	#<linsiz-1>,colcnt
+	ble	10$		;at end of line, don't move cursor
+	inc	crsr
+	inc	colcnt		;move posn.
+	add	#xincr,crsrx
+10$:	rts	pc		;all done
+
+;
+; separate the different control characters.
+;
+ctrl:	mov	r0,r1
+	asl	r1		;word size
+	jmp	@ctltab(r1)	;select
+	.page
+
+;
+;  carriage return function
+;
+xcr:	sub	colcnt,crsr	;back to start
+	clr	colcnt
+	mov	#xstart,crsrx
+	rts	pc
+
+;
+;  dummy routine
+;
+xnull:	rts	pc
+
+;
+;  bell!!
+;
+xbell:	clr	@#dsr		;write to dsr rings bell!!
+	rts	pc		;and that's all there is to it.
+
+;
+;  cursor left control
+;
+xclt:	tst	colcnt
+	beq	10$		;can't go any further
+	dec	colcnt
+	dec	crsr
+	sub	#xincr,crsrx
+10$:	rts	pc
+
+;
+;  cursor up control
+;
+xcup:	tst	lincnt
+	beq	20$		;top line already
+	dec	lincnt
+	sub	#<linsiz+2>,crsr
+	cmp	#gtbufx,crsr
+	blos	10$		;wrap-around?
+	add	#gtbufl,crsr
+10$:	add	#yincr,crsry	;lift cursor
+20$:	rts	pc
+
+;
+;  horizontal tab
+; note:	programmed to be like the vt05 tab.
+;	i.e.	groups of 8 spaces - cols. 1,9,17,25,33,41,49,57,65
+;	and from 66-72 a tab only moves 1 space.
+;
+xht:	cmp	#64.,colcnt	;last 8.?
+	ble	xcrt		;yes. can't tab
+	mov	colcnt,r0	;save
+	add	#8.,colcnt
+	bic	#7,colcnt	;round down
+	sub	colcnt,r0	;how much movement?
+	sub	r0,crsr
+10$:	add	#xincr,crsrx
+	inc	r0
+	blt	10$		;all moved?
+	rts	pc		;yes.
+
+;
+;  cursor down control &
+;  line-feed  (code partially shared)
+;
+xcdn:
+xlf:	cmp	#lines-1,lincnt	;bottom line?
+	ble	16$		;yes. test for scroll
+	inc	lincnt
+	add	#<linsiz+2>,crsr	;2 for cr/lf
+	cmp	#gtbufe,crsr	;wrap-around?
+	bhi	10$		;no.
+	sub	#gtbufl,crsr
+10$:	sub	#yincr,crsry
+13$:	rts	pc
+16$:	cmp	#<lf>,r0	;lf or cdn?
+	bne	13$		;cdn. don't scroll
+;
+; super scrolling section.
+;
+	mov	gtbufg+2,crsr	;old top line = new bottom line
+	mov	crsr,r0
+	add	#<linsiz+2>,r0	;old 2nd top --> top
+	cmp	#gtbufe,r0	;wrap-around
+	bhi	20$
+	mov	#gtbufx,r0
+20$:	mov	r0,gtbufg+2	;sudden move up 1 line
+	mov	#<linsiz/2>,r0	;clear new line before use
+	mov	crsr,-(sp)	;save it.
+30$:	mov	#<"  >,(crsr)+	;super blank
+	dec	r0		;that all?
+	bgt	30$
+	mov	#dstop,(crsr)	;mark end of page.
+	mov	(sp),crsr	;retrieve
+	cmp	#gtbufx,crsr	;wrap-around?
+	blo	40$
+	mov	#gtbufe,crsr
+40$:	mov	#<crlf>,-(crsr)	;reconnect work line
+	mov	(sp)+,crsr	;fix crsr and clean stack
+	add	colcnt,crsr	;posn. on line
+	rts	pc
+
+;
+;  home beam control
+;
+xhome:	clr	colcnt
+	clr	lincnt
+	mov	gtbufg+2,crsr	;start of top line
+	mov	#xstart,crsrx
+	mov	#ystart-ydif,crsry
+	rts	pc		;all done.
+
+;
+;  erase line control ("eol")
+;
+erasel:	mov	colcnt,r0	;how many to be blanked?
+	mov	crsr,-(sp)
+	sub	#linsiz,r0	;thus many
+10$:	movb	#<' >,(crsr)+	;little blank
+	inc	r0
+	blt	10$
+	mov	(sp)+,crsr
+	rts	pc
+
+;
+;  erase screen control ("eos")
+;
+erases:	mov	colcnt,r0
+	mov	crsr,-(sp)	;clear current line first
+	sub	#linsiz,r0	;the hard way
+10$:	movb	#<' >,(crsr)+
+	inc	r0
+	blt	10$
+	mov	colcnt,-(sp)
+	mov	#lines,r0
+	sub	lincnt,r0
+	br	40$		;start at end, may be on bottom line
+20$:	mov	#<linsiz/2>,colcnt
+30$:	mov	#<"  >,(crsr)+	;super blank
+	dec	colcnt
+	bgt	30$
+40$:	tst	(crsr)+		;skip cr/lf
+	cmp	#gtbufe,crsr	;wrap-around?
+	bhi	50$
+	mov	#gtbufx,crsr
+50$:	dec	r0		;all lines?
+	bgt	20$
+	mov	(sp)+,colcnt
+	mov	(sp)+,crsr
+	rts	pc
+	.page
+	.sbttl	cursor addressing
+
+;
+;  cursor addressing
+;   disconnects normal character processing routines when at work.
+;
+xcad:	mov	#xcad1,dsplgo	;trap to cad set.
+	rts	pc
+
+;  handle y coordinate of cad sequence
+xcad1:	sub	#<040>,r0	;convert
+	bmi	60$		;must be fill
+	cmp	#lines,r0
+	bgt	10$		;not too big
+	clr	r0		;back to start if illegal
+10$:	mov	r0,lincnt	;load.
+	mov	#ystart-ydif,crsr
+	mov	r0,-(sp)
+	ble	30$		;0 moves
+20$:	sub	#yincr,crsr	;
+	dec	r0
+	bgt	20$		;next down
+30$:	mov	crsr,crsry	;position on screen now found
+	mov	#xstart,crsrx	;back to start of line to match vt05
+	mov	gtbufg+2,crsr	;now for position in table
+	mov	(sp)+,r0	;count again
+	ble	50$		;0 moves
+40$:	add	#<linsiz+2>,crsr
+	dec	r0
+	bgt	40$		;next line
+	cmp	#gtbufe,crsr	;may have gone out end
+	bhi	50$
+	sub	#gtbufl,crsr
+50$:	mov	#xcad2,dsplgo	;re-trap
+60$:	rts	pc
+
+;  handle x coordinate of cad sequence
+xcad2:	sub	#<040>,r0	;convert
+	bmi	40$		;must be fill
+	cmp	#linsiz,r0
+	bgt	10$		;not too big
+	clr	r0
+10$:	mov	#xstart,crsrx	;calc x cursor
+	add	r0,crsr		;move over
+	mov	r0,colcnt
+	ble	30$		;at left
+20$:	add	#xincr,crsrx
+	dec	r0
+	bgt	20$
+30$:	mov	#sort,dsplgo	;un-trap
+				;meaning - connect up the normal
+				;character processor.
+40$:	rts	pc
+	.page
+	.sbttl	control character jump table
+
+ctltab:	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xbell	;bell tone
+	.word	xclt	;cursor left
+	.word	xht	;horizontal tab
+	.word	xlf	;line feed
+	.word	xcdn	;cursor down
+	.word	xnull
+	.word	xcr	;carriage return
+	.word	xcad	;cursor addressing
+	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xnull
+	.word	xcrt	;cursor right
+	.word	xnull
+	.word	xcup	;cursor up
+	.word	xnull
+	.word	xnull
+	.word	xhome	;home beam
+	.word	erasel	;erase to end-of-line
+	.word	erases	;erase to end-of-screen
+	.page
+	.sbttl	variables
+
+rcvcnt:	.blkw	1	;count of characters in receive buffer
+sndcnt:	.blkw	1	;count of characters in send buffer
+sndadi:	.blkw	1	;next free slot in send buffer
+sndado:	.blkw	1	;next character in send buffer
+lincnt:	.blkw	1	;lines on screen
+dsplgo:	.blkw	1	;state of character processor
+			; :-	normal
+			;	cursor address y
+			;	cursor address x
+
+;
+; receiver buffer
+;
+rcvlng=	200.
+rcvbuf:	.blkb	rcvlng
+
+;
+; transmitter buffer
+;
+sndlng=	5.
+sndbuf:	.blkb	sndlng
+	.even
+	.page
+	.sbttl	display file
+
+;
+; display file
+;
+gtbuf:	.word	point		;set up cursor
+crsrx:	.word	0
+crsry:	.word	0
+	.word	char!int2!blkon
+	.word	<'_>		;cursor char.
+	.word	point,xstart,ystart	;back to top
+;	.word	statsa!sync	;fix intensity?
+	.word	char!int4!blkoff
+gtbufg:	.word	djmp,0
+gtbufx:				;buffer starts
+
+gtbufl=	lines*<linsiz+2>
+
+	.blkb	gtbufl		;buffer ends
+gtbufe:	.word	djmp,gtbufx
+
+	.end	start
+

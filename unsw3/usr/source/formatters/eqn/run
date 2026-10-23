@@ -1,0 +1,8 @@
+echoall
+yacc -o e.g
+cc -n -s -O -o eqn e*.c -ly -lS
+rm *.o y.tab.c
+rm -f /usr/bin/eqn
+mv eqn /usr/bin/eqn
+chmod 111 /usr/bin/eqn
+chown root /usr/bin/eqn

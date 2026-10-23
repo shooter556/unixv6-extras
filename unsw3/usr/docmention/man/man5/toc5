@@ -1,0 +1,16 @@
+a.out \*- assembler and link editor output
+archive \*- ar (library) file format
+ascii \*- map of ASCII character set
+core \*- format of core image file
+dir \*- format of directories
+dump \*- incremental dump tape format
+fs \*- format of file system volume
+greek \*- graphics for extended TTY-37 type-box
+group \*- group file
+mtab \*- mounted file system table
+passwd \*- password file
+tabs \*- set tab stops
+tp \*- DEC/mag tape formats
+ttys \*- typewriter initialization data
+utmp \*- user information
+wtmp \*- user login history

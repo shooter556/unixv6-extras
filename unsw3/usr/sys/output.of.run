@@ -1,0 +1,126 @@
+rmcom < param.agsm > param.h 
+rmcom < defines.agsm > defines.h 
+if x != x exit 
+chdir ken 
+run & 
+4522
+chdir ../dmr 
+run & 
+4523
+chdir ../conf 
+wait 
+cc -c cc -c -O *.c 
+-O *.c 
+bio.c:
+alloc.c:
+clock.c:
+cr.c:
+debug.c:
+crd.c:
+fio.c:
+dj.c:
+iget.c:
+dz.c:
+malloc.c:
+nami.c:
+ei.c:
+once.c:
+hp.c:
+ht.c:
+pipe.c:
+kl.c:
+prf.c:
+lp.c:
+rdwri.c:
+mem.c:
+msc.c:
+sig.c:
+partab.c:
+rk.c:
+slp.c:
+sys.c:
+subr.c:
+tm.c:
+sys1.c:
+tty.c:
+sys2.c:
+ar rv ../lib2 hp.o ht.o tm.o mem.o kl.o dz.o dj.o lp.o sys.o partab.o tty.o bio.o rk.o msc.o ei.o cr.o crd.o 
+r - hp.o
+r - ht.o
+r - tm.o
+r - mem.o
+r - kl.o
+r - dz.o
+r - dj.o
+r - lp.o
+r - sys.o
+r - partab.o
+r - tty.o
+r - bio.o
+r - rk.o
+r - msc.o
+r - ei.o
+sys3.c:
+r - cr.o
+r - crd.o
+rm *.o 
+exit 
+sys4.c:
+sysent.c:
+text.c:
+trap.c:
+ar rv ../lib1 once.o trap.o sysent.o sys1.o sys2.o sys3.o sys4.o iget.o prf.o rdwri.o slp.o subr.o text.o sig.o clock.o fio.o malloc.o nami.o pipe.o alloc.o 
+r - once.o
+r - trap.o
+r - sysent.o
+r - sys1.o
+r - sys2.o
+r - sys3.o
+r - sys4.o
+r - iget.o
+r - prf.o
+r - rdwri.o
+r - slp.o
+r - subr.o
+r - text.o
+r - sig.o
+r - clock.o
+r - fio.o
+r - malloc.o
+r - nami.o
+r - pipe.o
+r - alloc.o
+rm *.o 
+exit 
+sync 
+mk 
+: make a hp10 system - swap on hp11 
+cp c.hp10 c.c 
+cc -c c.c 
+as -o m70.o m70.s 
+as -o powerf.o powerf.s 
+as -o l70.o l70.s 
+ld -x -r -d l70.o powerf.o m70.o c.o ../lib1 ../lib2 
+nm -ug 
+rm -f unix.new* > /dev/null ; sysfix a.out unix.new10 
+No match
+
+text=33132 (24212) data+bss=48394 (758) text+data=36266 (16982)
+
+unix.new10: 33132+3134+45260=81526  (100554+6076+130314=237166)
+
+: turn a hp10 system into a hp02 system 
+cp unix.new10 unix.new02 
+db unix.new02 
+_rootdev: 4
+_rootdev: 2
+: turn a hp02 system into a hp02 system - with SWAP on hp01 
+cp unix.new02 unix.new02s 
+db unix.new02s 
+_swapdev: 5
+_swapdev: 1
+: protect 
+chmod 0 unix.new10 unix.new02 unix.new02s 
+chown bin unix.new10 unix.new02 unix.new02s 
+rm -f *.o a.out c.c > /dev/null 
+sync 

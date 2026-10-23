@@ -1,0 +1,318 @@
+.bp
+.in 0
+.ig
+.ul 1
+..
+2.  HARDWARE
+
+.ti 3
+For those who find hardware all very confusing or for those who find it
+crystal clear this section should best be skipped as it becomes slightly
+technical but not oppressively so and as such would not satisfy either of
+the above mentioned groups.
+
+
+.ig
+.ul 1
+..
+2.1 CYBER
+
+.ti 3
+There are two mainframe computers installed at UNSW - a CDC Cyber 72-26
+and a CDC Cyber 171-18.
+The '72 was the original machine and took all the processing load.
+Since it had to support both timesharing and batch processing (both
+being somewhat incompatible with each other), response time and turnaround
+were bad and so the '171 was added later
+on.
+
+.ti 3
+We need only consider the Cyber 171 since it is the Batch machine.
+
+.in 7
+.ig
+.ul 1
+..
+CPU's (central processing units)
+
+.ti 10
+The '171 has one CPU, and this runs the batch jobs, and also part
+of the executive for EXPORT.
+
+.ig
+.ul 1
+..
+PPU's (peripheral processing units)
+
+.ti 10
+The '171 has ten of these.
+One of the PPU's runs the major proportion of the batch station
+service software which drives
+the 6671 multiplexer to which your batch station is connected.
+In theory the PPU (peripheral processing unit) can cope with sixteen remote
+batch stations.
+
+.ig
+.ul 1
+..
+6671 (16 port 4800 baud terminal multiplexer)
+
+.ti 10
+This is what interfaces the PPU to the communications line from the remote
+terminal.
+.ti 10
+The 6671 is polled from The PPU (it does not interrupt the PPU) as often as the
+program running in the PPU can manage.
+At 4800 baud the 6671 requires service at least every
+1.5 ms or data may be lost. It may not always get the service in time
+and this would lead to transmission errors in data from the batch station to the CYBER.
+
+.in 0
+.ig
+.ul 1
+..
+2.2 MODEMS (G.E.C. 4800 baud)
+
+.ti 3
+This is the little brown box in the larger green box (that
+lives in the house that ........sorry) on the wall in your batch station.
+.ti 3
+Without going into electrical details, a modem
+is a device such that if you put one at both ends of a communication line
+as below
+signals entering at one end of the line appear at the opposite end unchanged.
+.ss
+.ne 8
+
+
+		-------				-------
+ in/out	--------(modem)-----------line----------(modem)-------- in/out
+		-------				-------
+
+
+
+.ds
+.ti 3
+Since all data up and down the line must pass through these modems
+a fault in one or both of them will lead to data transmission errors.
+
+.ig
+.ul 1
+..
+2.3 PDP 11/40
+
+.ti 3
+The PDP 11/40 installed in your batch station is one of about a dozen
+all over the university. As a batch station operator this is the computer
+you must live with every day. In order to operate the computer properly
+under all circumstances you should understand something about the
+hardware that surrounds you.
+.ti 3
+The following subsections should give you this understanding.
+
+.in 7
+.ig
+.ul 1
+..
+2.3.1 CPU
+
+.ti 10
+The 11/40 is a 16 bit
+parallel machine having a modular design arranged
+around a central communications 'bus' called UNIBUS.
+UNIBUS provides an information transfer path between any two modules.
+.ti 10
+Since all system elements, including the CPU, communicate with each other
+in identical fashion via UNIBUS, the processor has the
+same access to peripheral devices as it has to memory. Memory is just another
+device.
+.ti 10
+The instruction set reflects the modular bus-connected
+design of the 11/40 having no distinction between memory reference
+instructions or i/o instructions.
+.ti 10
+The 11/40 has a multi-level priority interrupt system which
+permits the processor to respond automatically to asynchronous events
+occurring at any device.
+Any number of separate devices can be attached to any level.
+The levels range from the lowest priority of zero to the highest of seven.
+.ti 10
+The processor continually (after each instruction) compares its own
+programmable priority with that of any interrupting devices and acknowledges
+the device with the highest level above the processors priority level.
+Each device in the 11/40 system has a hardware pointer to
+its own interrupt vector (two memory words) . One word points to the
+starting address of the service routine for that device
+and the other contains the new processor status information (including
+priority) with which the service routine is to executed.
+When an interrupt is acknowledged the processor automatically begins execution
+of the service routine specified by the interrupt vector.
+.ti 10
+Servicing an interrupt for a device can be interrupted for servicing a higher
+priority device. Servicing of the lower priority device will be resumed
+automatically upon completion of the higher level servicing.
+
+.ig
+.ul 1
+..
+2.3.2 Memory
+
+.ti 10
+All the 11/40s on campus have memory, although as with many things, some
+have more than oThers. the smaller batch stations have 8K (16 bit
+word, K=1024) and the souped up batch stations have up to 104k.
+.ti 10
+Actually the memories in the 11/40s are very like the CYBER memory because
+they dont have parity checking either (the option costs an extra $3000 
+per 64k words).
+
+.ig
+.ul 1
+..
+2.3.3 Console
+
+.ti 10
+Each batch station has at least one video display terminal connected
+to their 11/40, more than likely a VT05 type.
+This is used for communication between the batch station operator
+and programs running on his 11/40.
+
+.ig
+.ul 1
+..
+2.3.4 Card Reader
+
+.ti 10
+All batch stations are equipped with at least one card reader,
+usually one manufactured by CDC (the blue, cream and brushed aluminium ones).
+.ti 10
+The CDC type use an optical reading system to detect
+black holes (astronomers note!) on the back of the cards but cannot
+differentiate between writing and punching.
+They are designed to run at one of four speeds (300, 400, 600 and 800
+cards per minute) set by internal adjustments.
+Most are set at 600 cards per minute.
+.ti 10
+Unfortunately most batch station operators whose stations do not have discs
+have never seen their card readers
+operating at anything like 600 cpm.
+.ti 10
+The standard card readers interrupt every column of the card (750nS)
+which is a rather heavy load on the C.P.U.
+.ti 10
+A new interface providing buffering of a complete card has been
+designed by V. Kuperman (CSU) and is in operation
+at most batch stations.
+This reduces interrupts to every 75mS.
+
+.ig
+.ul 1
+..
+2.3.5 Printer
+
+.ti 10
+All batch stations are equipped with at least one line printer,
+usually one manufactured by CDC (those noisy great monsters
+in grey and cream).
+.ti 10
+The CDC type are a 400 line per minute (there are two 600 lpm
+printers on campus) drum printer.
+They print 136 columns across the page, but to save
+money they only have half this number of hammers.
+This accounts for the comic shuffling of the paper
+while it is printing.
+.ti 10
+Unfortunately, as with the card reader, the printer is seldom
+seen to work at the rated lines per minute
+at a station without discs (under UNIX
+they have been known to operate faster than their rating).
+
+.ig
+.ul 1
+..
+2.3.6 DP-11 (DEC Synchronous Communications Port)
+
+.ti 10
+This device is the interface between the 11/40 processor and the
+CYBER communications line.
+It is a level five priority interrupt device providing full duplex
+(communications up and down the line simultaneously; it never gets to use it) data transmission
+at a range of speeds up to 9600 bits per second.
+.ti 10
+While receiving and transmitting data, the DP-11 also monitors
+the line for certain types of data errors.
+
+.ig
+.ul 1
+..
+2.3.7 Discs
+
+.ti 10
+These determine whether your batch station runs like a bat out of hell
+or acts as if it has been caught in the eternal fires.
+.ti 10
+The only type installed in batch stations on campus are the RK05 type.
+These provide online storage of a paltry 2.5 Mbytes (characters)
+per disc at a rather slow speed. The availability of this storage is the factor which leads to the
+increased speed in reading cards and printing printout under UNIX.
+Faster and larger discs would improve this even further.
+.ti 10
+Use of discs for spooling (discussed later) enables the CYBER
+communications line to be used more efficiently.
+Under UNIX the discs may also be used
+to support local batch processing and a multi-user terminal system on the PDP 11/40.
+
+.ig
+.ul 1
+..
+2.3.8 Air Conditioners
+
+.ti 10
+This section has been included at the request of a certain
+temperature sensitive
+Senior Lecturer in Computer Science.
+.ti 10
+All batch stations should be airconditioned !
+.ti 10
+A few actually are !
+.ti 10
+Some of them adequately even !
+.ti 10
+Although Digital Equipment has a wide environmental operating
+specification your computer will run better and longer between failures
+if it is kept at a stable moderate temperature and low humidity.
+Air conditioners also help keep disc killing dust to a minimum.
+.ti 10
+The air conditioning installed at the various batch stations falls into three
+main categories.
+.ti 10
+The first is provided by the main building plant which has plenty
+of reserve capacity and gives good service most of the time.
+Batch stations in the newer
+buildings have this benefit due to their location. Not so the others.
+.ti 10
+The second is provided by expensive semi-industrial units
+having split cooling and heat dissipation units.
+These are designed to serve one or a few rooms and do so well,
+when they are operating.
+Unfortunately experiences with these units have not been
+inspiring.
+.ti 10
+The final, cheapest (but not necessarily the best) and most common units
+are self contained 2HP window or wall mounted used in most other batch stations.
+These are designed to serve one small room only, and do so moderately well,
+however as they must be running at full capacity most of the time they
+tend to fail occasionally.
+Usually the fan motor bearings seize.
+Although the manufacturers say this can be avoided by routine maintenance
+(oiling the bearings every few months) they neglect to mention
+that the unit must be almost dismantled to get at the oil holes!
+.ti 10
+The university air conditioning section has been advised to
+give priority to batch stations and computer room units,
+but what can be done with a blown unit but send it back to
+its maker with pleadings for a speedy return.
+.ti 10
+This then is the situation you must live with.
+
+.nx 6om3.0

@@ -1,0 +1,215 @@
+.bp
+.in 0
+.ds
+.ig
+.ul 1
+..
+5.0 SYSTEM MAINTENANCE
+
+.ti 3
+In this section we will endeavour to do the impossible, that is
+explain procedures to protect you against system failures (crashes).
+.ti 3
+Crashes do not happen.
+They are also inevitable.
+This is an apparent contradiction but one cannot
+go against the laws of probability.
+It can and will happen to you.
+Therefore backups and system checks are a necessary evil
+.ti 3
+USE THEM !!!!!!!!!!  REGULARLY !!!!!!!!!
+
+.in 0
+.ig
+.ul 1
+..
+5.1 SYSTEM BACKUP
+
+.ti 3
+BACKUPs should be taken when the system is quiescent; that is no
+users other than the "BACKerUPer" logged in, Batch System
+stopped and no processes madly manipulating files.
+In other words as quiet and inactive as possible.
+.ti 3
+The most favoured backup medium is disc both because not all
+stations have tapes and discs are bootable where tapes are not.
+.ti 3
+The system distributed to you has two backup procedures available.
+
+.in 7
+.ig
+.ul 1
+..
+5.1.1 "BACKUP" (3 or more discs on system)
+
+.ti 10
+On a three disc system it is rare to have a free drive
+for the backup disc.
+For this reason, usually one or both of the TMP and SPOOL dsics
+must be logically UnMOUNTed (see /etc/umount (viii))
+from UNIX to allow their safe removal from the drives
+before a BACKUP is taken.
+.ti 10
+The complementary action, logically MOUNTing the discs (/etc/mount (viii)), may be
+performed after BACKUP if you wish to continue running
+the system although this is not usual.
+.ti 10
+Having prepared the way, to take a BACKUP of the
+disc on drive RKn
+onto a scratch or backup disc on drive RKm enter
+
+	"BACKUP RKn RKm"
+
+.ti 10
+.ti 10
+BACKUP will perform certain checks, copies and
+counter checks
+as follow (messages advise of BACKUP's current action)
+
+	1) Checks for read permission on RKn
+		and read/write permission on RKm
+		   notifies an error by
+
+		"either RKn or RKm unacceptable"
+
+	2) ICHECKs RKn
+
+		"icheck /dev/rrkn"
+
+	3) Reads RKn using DD (DD (1))
+
+		"dd if=/dev/rrkn of=/dev/null bs=24b count=203"
+
+	4) Does a SYNC
+
+		"sync"
+
+	5) Copies RKn to RKm using DD
+		"dd if=/dev/rrkn of=/dev/rrkm bs=24b count=203"
+
+	6) ICHECKs RKn and RKm
+
+		"icheck /dev/rrkn /dev/rrkm"
+
+	7) Reads RKm
+
+		"dd if=/dev/rrkm of=/dev/null bs=24b count=203"
+
+.ti 10
+If at any time errors are noticed in the output of the ICHECKs
+(ref. section 4.3.3)
+or the DDs have any output at all the BACKUP should be stopped by
+hitting the delete or rubout key.
+Then call a guru !!!!!!!!!!!.
+.ti 10
+If all proceeds normally (whats that?) then the backup disc
+should be a perfect, readable copy of the disc being backed up.
+
+.in 7
+.ig
+.ul 1
+..
+5.1.2 UNIX.RKDF (2 disc systems)
+
+.ti 10
+UNIX.RKDF is a stand alone backup routine.
+Stand alone means that once loaded and running
+it needs no discs mounted at all.
+.ti 10
+To use this program on small stations (2 discs)
+you must first close the system down completely
+(ref. section 4.4)
+.ti 10
+having done this you now BOOT
+.ig
+.ul 1
+..
+BUT
+in a very special way !!!!!
+.ti 10
+In the bootstrapping procedure,
+just before you finally press the START switch,
+reset the switch register to all zero (all switches down).
+Then press start as normal.
+.ti 10
+In general
+
+	  maths and commerce
+
+	 1) Ensure the front panel lock is at POWER position.
+	 2) Ensure ENABLE/HALT switch is at HALT.
+	 3) Set switch register to 773100 octal.
+	 4) Depress and release the LOAD ADDRESS switch.
+	 5) Set switch register to 777406 octal.
+	 6) Depress and release CONTINUE switch.
+	 7) Set switch register to all zeros.
+	 8) Put ENABLE/HALT switch to ENABLE.
+	 9) Depress and release the START switch.
+	10) Enter boot file name in response to "?"
+
+	  library and C.S.U.
+
+	 1) Ensure the front panel lock is at POWER position.
+	 2) Ensure ENABLE/HALT switch is at halt.
+	 3) Set switch register to 773110 octal.
+	 4) Depress and release LOAD ADDRESS switch.
+	 5) Put ENABLE/HALT switch to ENABLE.
+	 6) Set switch register to all zeros.
+	 7) Depress and release the START switch.
+	 8) Enter boot file name in response to "?"
+
+	  elec eng and mech eng
+
+	 1) Ensure the front panel lock is at POWER position.
+	 2) Ensure ENABLE/HALT switch is at halt.
+	 3) Set switch register to 773100 octal.
+	 4) Depress and release LOAD ADDRESS switch.
+	 5) Put ENABLE/HALT switch to ENABLE.
+	 6) Set switch register to all zeros.
+	 7) Depress and release the START switch.
+	 8) Enter boot file name in response to "?"
+
+.ti 10
+When the console prompts with "?"
+you enter "UNIX.RKDF"
+and wait until asked
+
+	"what function is desired ??"
+
+.ti 10
+You may then remove the system disc to make way for backup discs.
+.ti 10
+If you have never used UNIX.RKDF, typing "H" in answer to the above question
+will produce a short summary of available commands.
+.ti 10
+You then load your discs in the appropriate drives,
+enter the necessary command and supply any information requested.
+.ti 10
+If any output not in plain english is encountered, call a guru.
+
+.in 0
+.ig
+.ul 1
+..
+5.2 FILE SYSTEM MAINTENANCE
+
+.ti 3
+This section is very brief (I hope !!!)
+.ti 3
+In order to maintain your system and get the most out of it,
+it is imperative that you read the following sections of the UNIX Programmers Manual
+and any associated documents.
+
+	ICHECK (viii)
+	DCHECK (viii)
+	NCHECK (viii)
+	CRASH (viii)
+	CLRI (viii)
+	BOOT (viii)
+	UPDATE (viii) (should be killed when patching system disc)
+
+
+.ti 10
+Any future additions to this section will be made at request!
+
+.nx 6omappend

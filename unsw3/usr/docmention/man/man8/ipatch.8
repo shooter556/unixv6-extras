@@ -1,0 +1,87 @@
+.th IPATCH VIII May/76
+.sh NAME
+ipatch \*- first aid for sick file systems
+.sh SYNOPSIS
+.bd /etc/ipatch
+device
+[ inumber ]
+.sh DESCRIPTION
+Ipatch is an interactive programme for patching broken inodes on filesystems.
+When you invoke it, you must give it two arguments, the name of the
+filesystem you would like to patch, and the inumber of the inode you are
+interested in.
+Ipatch will prompt you for commands by typing a dot `.'.
+All commands work on a copy
+of the inode which ipatch keeps in core.
+No change is made to the file system being patched unless the user
+explicitly writes out the inode using the w command.
+Each command consists of a single letter, possibly followed by one or two
+numeric arguments,
+and perhaps terminated with the letter `p',
+in which case the inode being editted is printed after the command is
+executed.
+Every command must be typed on a single line.
+Whenever a number is called for, if the
+first digit is a `0', the number is taken to be octal. Otherwise,
+the number is taken to be decimal, just as in C.
+If you type an erroneous command, ipatch
+will ring the bell, type a question mark, and prompt you for another command.
+Typing del (rubout) will cause ipatch to stop what it is doing and
+prompt you for another command.
+.ti+5
+In the following description of the commands recognized by ipatch,
+`i' and `j' uniformly refer to two numbers which are arguments of
+the command being described.
+.s3
+.lp +9 8
+.s3
+a i j	addr[i] in the inode is set to j.
+.lp +9 8
+.s3
+e i	If i is a valid inumber, the corresponding inode is
+read in to be editted.
+.lp +9 8
+.s3
+f i	The flag word is set to i.
+.lp +9 8
+.s3
+g i	The groupid byte is set to i.
+.lp +9 8
+.s3
+l i	The link count is set to i.
+.lp +9 8
+.s3
+p	The contents of the inode are printed out.
+Numbers in parentheses are in octal, numbers not in parentheses are in
+decimal.
+.lp +9 8
+.s3
+q	Exit from ipatch.
+End of file on standard input (ctrl-d from a terminal) also causes
+ipatch to exit.
+.lp +9 8
+.s3
+s i j	The high order byte of the size is set to i,
+and the low order word is set to j.
+.lp +9 8
+.s3
+u i	The userid byte is set to i.
+.lp +9 8
+.s3
+w	The incore copy of the inode is written out to the disk.
+.lp +9 8
+.s3
+!	The rest of the line following the exclamation point is interpreted
+as a UNIX command line by the shell.
+.i0
+.dt
+.sh "SEE ALSO"
+fs (V), [din]check (VIII), check (VIII), clri (VIII)
+.sh AUTHOR
+Tom Duff.
+.sh BUGS
+It believes the isize in the superblock of the filesystem.
+.br
+You can't patch indirect blocks.
+.br
+It's not clairvoyant.

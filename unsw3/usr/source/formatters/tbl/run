@@ -1,0 +1,7 @@
+echoall
+cc -n -s -O -o tbl t?.c -lp
+rm *.o
+rm -f /usr/bin/tbl
+mv tbl /usr/bin/tbl
+chmod 711 /usr/bin/tbl
+chown root /usr/bin/tbl

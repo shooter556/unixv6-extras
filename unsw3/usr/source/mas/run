@@ -1,0 +1,11 @@
+echoall
+cc -s -O -n mas1[1-7].c
+cp a.out mas
+chmod 711 mas
+rm mas1?.o
+
+cc -s -O -n mas2[1-7].c
+cp a.out mas2
+chmod 711 mas2
+rm mas2?.o
+rm a.out

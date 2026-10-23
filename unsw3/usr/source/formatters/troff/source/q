@@ -1,0 +1,55 @@
+: make suftab
+
+as -o suftab suftab.s
+strip suftab
+rm -f /usr/lib/suftab
+mv suftab /usr/lib/suftab
+chmod 644 /usr/lib/suftab
+chown root /usr/lib/suftab
+
+: make common routines
+
+as -o t.o t.s
+as -o hytab.o hytab.s
+
+: make nroff
+
+cc -DNROFF -n -s -o nroff -O n[123456789].c n10.c ni.c nii.c ntab.c hytab.o t.o
+n1.c:
+n2.c:
+n3.c:
+n4.c:
+n5.c:
+n6.c:
+n7.c:
+n8.c:
+n9.c:
+n10.c:
+ni.c:
+nii.c:
+ntab.c:
+
+: make troff
+
+cc -n -s -o troff -O n[12345789].c t6.c t10.c ni.c nii.c tab3.c hytab.o t.o
+n1.c:
+n2.c:
+n3.c:
+n4.c:
+n5.c:
+n7.c:
+n8.c:
+n9.c:
+t6.c:
+t10.c:
+ni.c:
+nii.c:
+tab3.c:
+
+rm -f /usr/bin/nroff /usr/bin/troff
+/usr/bin/troff: non existent
+mv nroff /usr/bin/nroff
+mv troff /usr/bin/troff
+chmod 711 /usr/bin/troff /usr/bin/nroff
+chown root /usr/bin/troff /usr/bin/nroff
+rm *.o

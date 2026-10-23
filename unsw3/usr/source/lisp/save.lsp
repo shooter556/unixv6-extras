@@ -1,0 +1,6 @@
+(setq L '(1 2 3))
+(setq M '(a s d))
+(setq exchange '[sexpr (lambda (L S) (prog (Z) (setq Z (eval (car L) S)) (apply (quote set) (list (car L) (eval (cadr L) S)) S) (apply (quote set) (list (cadr L) Z) S)))])
+(setq nil 'nil)
+(setq oblist '(*append *apply *eq *eval *function *ge *gt *le *lt *ne *plus *rset *times L M S Z a abs add1 addr and append apply ascii assoc atom backgag cadr car cdr char clist close conc concat cond cons cont copy d de debug delete deposit df difference divide dl dm dn ds dupl entier eof eq eq. equal err errset eval evlis examine exchange exit expr fexpr fixp float floatp for fsubr funarg function gc gc-count gc-min ge. genseed gensym go gt. incon index initfn int intern label lambda land last le. length lexpr list lnot lor lsh lsubr lt. lxor macro map mapc mapcar maplist max member memeq min minus mkatom nconc ncons ne. nexpr nil not nsubr null numberp oblist openi openo or outcon outstr pair plus prin print prog progn quote quotient radix read readch real recip remainder remob return reverse rol ror rplaca rplacd rsh s sassoc save select set setch setq sexpr shell sign size ssubr string stringp sub1 subr subst substr symb t terpri times tval type unset unsetq val while xcons xfile))
+(setq t 't)

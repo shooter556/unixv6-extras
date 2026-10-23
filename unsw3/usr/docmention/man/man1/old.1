@@ -1,0 +1,266 @@
+.nr % 1
+.th OLD I 1/1/76
+.sh NAME
+old \*- overlay linker
+.sh SYNOPSIS
+.bd old
+[ overlay description ]
+.sh DESCRIPTION
+.it Old
+is an overlay link-editor for UNIX-style object files.
+It is designed to allow the structuring of
+logically closely related programs which are too large to be entirely core-resident. The overlaying process can be 
+made automatic, and completely transparent, to C-language programs.
+.s3
+Programs to be overlaid must be capable of having an n-ary tree description of their calling
+sequence. The head node of the tree is the resident section; it is composed of the
+.bd root
+and
+.bd upool
+segments. All other nodes of the tree are overlay segments.
+.s3
+A segment may reference any symbols in itself, an ancestor, or a descendant.
+This definition allows multiple definitions of global symbols in distinct paths, provided they are
+not ambiguous.
+Common blocks are automatically located in the most ancestral node in which they appear; again,
+non-ambiguous multiple definitions are permitted. Common blocks of initial zero length may be placed in
+a node by means of the "-p" construction in a segment description: see below.
+.s3
+After the
+.bd root
+and all overlay segments are searched, remaining undefined references are
+duplicated in the
+.bd upool.
+The
+.bd upool
+is then searched; it is assumed that this will 
+commonly be used to force frequently used library routines into the resident section.
+.s3
+A library module is included iff it defines some undefined symbol which has not been "excluded."
+.s3
+Segments are assigned core address in such a way that a segment and all of its ancestors can be simultaneously resident.
+.s3
+The overlay linker defines the following global symbols in the data portion of the resident section
+(all symbol names should have an additional "_" prepended from assemly language) :
+.s3
+.nf
+	_o_name
+	_o_segs
+	_o_sege
+.fi
+.s3
+and the following symbol in the bss portion of the resident section:
+.s3
+	_o_oreg
+.s3
+If any symbols have been declared as "autoloads," the symbol
+.s3
+	_o_aut
+.s3
+is made undefined in the root segment.
+.s3
+"_o_name" is the address of the first byte of a null-terminated UNIX pathname;
+this pathname can be given either in the link description via the
+"-o" option, or assigned the default "ov.out."
+The run-time overlay handler assumes that the pathname is the name of the overlay file.
+.s3
+"_o_segs" points to the first word of the overlay segment tables, and "_o_sege"
+points to the first word following the last segment table. Segment tables have the following format:
+.s3
+.nf
+	[byte offset for start of segment	]
+	[block offset for start of segment	]
+	[byte count for segment read		]
+	[segment low core address		]
+	[segment high core address		]
+	[segment number				]
+.fi
+.s3
+Each autoload entry also has a unique autoload vector of the form
+.s3
+.nf
+	[jsr r4,*$			]
+	[  _o_aut			]
+	[segment table address of entry	]
+	[core address of entry		]
+.fi
+.s3
+"_o_oreg" is the address of the overlay region.
+.s3
+If a symbol is declared "autoload," intra-segmental references to that symbol refer directly to
+it. Extra-segmental references are converted to references to that entry's autoload vector alias. These references must
+occur in transfers of control directly to the symbol, and will force loading of the segment if it is not already resident.
+.s3
+A system library routine is available to define "_o_aut," and perform several other
+overlay-related functions.
+A C-language call is available to force manual loading of a segment:
+.s3
+.lp +20 15
+_o_segl(n)	An attempt is made to load segment n. If segment n is found, a pointer to its
+segment table is returned. Otherwise, -1 is returned.
+.i0
+.dt
+.s3
+The external character-pointer cell "_o_file" originally points to "_o_name"
+This may be changed before any overlay activity has occured to point to the pathname of the
+desired overlay file.
+.s3
+The format of the "a.out" file is as described in the UNIX manual.
+The "ov.out" contains core images of the text and data portions of the overlay
+segments, and is indexed by the segment tables.
+The "ov.sym" file has the format:
+.ne 15
+.s3
+.nf
+	n = # of segments (overlay)
+		# of symbols in segment 1
+		# of symbols in segment 2
+			...
+		# of symbols in segment n
+.s3
+	symbols for segment 1
+		...
+	symbols for segment n
+.fi
+.s3
+The order of the segments is as in "ov.out."
+.s3
+The core map of an overlay program is as follows:
+.ne 15
+.nf
+.s3
+		resident text region
+		resident data region
+			user defined data
+	_o_name ->	null-terminated path name
+	_o_segs ->	segment tables
+	_o_sege ->	autoload vectors
+.s3
+		resident bss region
+	_o_oreg ->	overlay region
+			resident common
+			resident bss
+.fi
+.s3
+.s3
+If it is not otherwise defined, "end" points to the first word after the resident bss region.
+The symbols "etext" and "edata," defined in a similar manner in
+.it ld
+(I), are omitted, because
+their definition in an overlay program is problematical.
+.s3
+The syntax the overlay loader accepts is composed of the following:
+.s3
+.lp +14 12
+-d fn	Input is diverted from the named file until it is exhausted.
+.s3
+.lp +14 12
+-o on	The pathname located at "_o_name" is "on". the default is "ov.out"
+.s3
+.lp +14 12
+-xn	The degree of symbolic output in the resident section is controlled as follows:
+.s3
+.nf
+		n = 0: no symbolic output (default)
+		n = 1: global symbols only
+		n = 2: global symbols and non-C-style locals
+		n = 3: all symbols
+.fi
+.s3
+.lp +14 12
+-X	Equivalent to -x2
+.s3
+.lp +14 12
+-yn	The degree of symbolic output in the "ov.sym" file is controlled as follows:
+.s3
+.nf
+		n = 0:	no "ov.sym" file (default)
+		n = 1:	global symbols only
+		n = 2:	global symbols and non-C-style locals
+		n = 3:	all symbols
+.fi
+.s3
+.lp +14 12
+-Y	Equivalent to -y2
+.s3
+.lp +14 12
+-n	The text and data segments are separated. The text segment is write-protected at run-time.
+.s3
+.lp +14 12
+-m	A load map is produced to the standard output
+.s3
+.lp +14 12
+-R	A description of the
+.bd root
+segment follows (the
+.bd root
+is referred to as segment -1 in
+the load map and diagnostics)
+.s3
+.lp +14 12
+-U	A description of the
+.bd upool
+segment follows (the
+.bd upool
+is referred to as segment -2 in the
+load map and diagnostics)
+.s3
+.lp +14 12
+-S n	A description of segment n (1 <_ n <_ 32767) follows.
+.i0
+.dt
+.s3
+.ul
+Segment descriptors
+.s3
+The initial items are the filenames of object files to comprise the segment.
+The following abbreviations are recognized:
+.s3
+.nf
+		"-l?" for "/lib/lib?.a"
+		"-l" for "/lib/liba.a"
+.fi
+.s3
+After the filename, any or all of the following may appear in any order:
+.s3
+.lp +16 14
+-c c1 ... cn	The segment calls segments c1 ... cn
+.s3
+.lp +16 14
+-p p1 ... pn	Common blocks p1 ... pn are placed in the segment with an initial length of 0.
+.s3
+.lp +16 14
+-a a1 ... an	The symbols a1 ... an are declared to be autoload
+.i0
+.dt
+.s3
+The following may appear with the file names:
+.s3
+.lp +16 14
+-i sm	The symbol "sm" is made a candidate for library inclusion. If it was previously excluded, the
+exclusion is annulled.
+.s3
+.lp +16 14
+-e sm	The symbols "sm" is excluded from consideration for library inclusion.
+.i0
+.dt
+.s3
+.ul
+Example
+.s3
+The linker is linked as follows:
+.s3
+		%old -m -d lfile >link_map
+.s3
+"lfile" contains:
+.s3
+.nf
+		-R /lib/crt0.o main.o find.o printf.o -c 1 2 3 4 5
+			-U -lc -l
+			-S 1 parse.o	-a	_parse
+			-S 2 link1.o	-a	_link1
+			-S 3 address.o	-a	_address
+			-S 4 map.o	-a	_map
+			-S 5 link2.o	-a	_link2
+.fi
+.sh BUGS

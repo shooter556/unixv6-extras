@@ -1,0 +1,1122 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      Berkeley UNIX Pascal
+
+                         Report______ Appendix________
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+This document is intended for use in spring quarter 1977 and reflects
+the state of UNIX Pascal as of April 1, 1977.  Documentation  en-
+closed in '[' ... ']' reflects features not yet available in ver-
+sion 0.8.
+
+
+
+
+
+
+
+
+
+
+
+
+
+                 T A B L E   O F   C O N T E N T S
+
+
+ 1 Introduction.........................................  1
+    1.1 Origin of the implementation....................  1
+    1.2 Definition of the implementation................  1
+    1.3 Components of the implementation................  1
+    1.4 Portability.....................................  1
+    1.5 Feedback........................................  2
+ 2 Extensions to the language Pascal....................  2
+    2.1 String padding..................................  2
+    2.2 Octal constants.................................  2
+    2.3 Write in octal and hexadecimal..................  3
+    2.4 The assert statement............................  3
+ 3 Resolution of the undefined specifications...........  3
+    3.1 File name-file variable associations............  3
+    3.2 The program statement and 'input' and 'output'..  4
+    3.3 Details for files...............................  4
+    3.4 Notes on input, output, and buffering...........  5
+    3.5 The character set...............................  5
+    3.6 The standard types..............................  5
+       3.6.1 INTEGER....................................  5
+       3.6.2 CHAR.......................................  6
+       3.6.3 REAL.......................................  6
+    3.7 Comments........................................  6
+    3.8 Option control..................................  6
+    3.9 Option push and pop.............................  7
+    3.10 Notes on the listings..........................  8
+    3.11 The standard procedure write...................  8
+ 4 Restrictions and limitations.........................  9
+    4.1 Files...........................................  9
+    4.2 Arrays, sets, and strings.......................  9
+    4.3 Line and symbol length..........................  9
+    4.4 Procedure/function nesting and program size.....  9
+    4.5 Overflow........................................  9
+ 5 Added types, operators, procedures and functions.....  9
+    5.1 Additional predefined types.....................  9
+    5.2 Constant sets and 'intset'...................... 10
+    5.3 Additional predefined operators................. 10
+    5.4 Non-standard procedures and functions........... 10
+       5.4.1 PROCEDURES................................. 10
+         argv(i,a)...................................... 10
+         date(a)........................................ 10
+         flush(f)....................................... 11
+         halt........................................... 11
+         linelimit(f,x)................................. 11
+         message(x,...)................................. 11
+         remove(a)...................................... 11
+         reset(f,a)..................................... 11
+         rewrite(f,a)................................... 11
+         stlimit........................................ 11
+         time(a)........................................ 11
+       5.4.2 FUNCTIONS.................................. 11
+
+
+
+
+
+
+
+
+
+
+
+
+
+         argc........................................... 11
+         card(x)........................................ 11
+         clock.......................................... 11
+         column(f)...................................... 12
+         expo(x)........................................ 12
+         line(f)........................................ 12
+         pageline(f).................................... 12
+         random(x)...................................... 12
+         seed(i)........................................ 12
+         sysclock....................................... 12
+         undefined(x)................................... 12
+         wallclock...................................... 12
+ 6 Differences with Pascal 6000-3.4..................... 13
+    6.1 Features not available in UNIX Pascal........... 13
+    6.2 Features available only in UNIX Pascal.......... 13
+    6.3 Other problem areas............................. 13
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+1 Introduction
+
+     This is the appendix to the Pascal Report for the  UNIX  im-
+     plementation of the language, and replaces section 13 of:
+
+          "Pascal User Manual and report - Second Edition"
+          Jensen, Kathleen and Wirth, Niklaus
+          Springer-Verlag. 1975. 167 pp.
+
+     This document is the reference  for  implementation  related
+     questions  about  UNIX  Pascal.   The new UNIX and/or Pascal
+     user should find the "UNIX Pascal User Manual" a useful  tu-
+     torial  introduction  to  the system.  In general, the "User
+     Manual" should serve most of the needs of  new  users,  with
+     this,  the  "Report  Appendix", serving as a reference docu-
+     ment.
+
+   1.1 Origin of the implementation
+
+     UNIX Pascal had its origin in a system written by Ken Thomp-
+     son during the first half of 1976. The system in its present
+     form results from the work of Charles Haley and William  Joy
+     during  the  latter  half of 1976.  Faculty advisor for this
+     portion of the project was Professor Susan L.  Graham.   The
+     system is being maintained at UC Berkeley by William Joy.
+
+   1.2 Definition of the implementation
+
+     A conscious effort has been made to keep this implementation
+     of the language as close to report Pascal as possible.  This
+     document is the reference for questions relating to the  im-
+     plementation  and  reflects  the intentions of the implemen-
+     tors.  The implementation is defined by the Jensen-Wirth Re-
+     port  as  amended  by  the  differences described here.  Any
+     behavior of the system which conflicts with this  definition
+     is considered to be a bug and should be reported as such.
+
+   1.3 Components of the implementation
+
+     The system currently consists of 'pc' which translates  Pas-
+     cal into an intermediate stack machine code to be interpret-
+     ed by 'pcx'.  Also available are an execution profiler 'pxp'
+     and  Wirth's  Pascal  cross-reference  program  available as
+     'pxref'.  A code generating version of  the  compiler  'pcg'
+     and a debugger 'pdb' are under development.
+
+   1.4 Portability
+
+     A large part of this appendix details features  peculiar  to
+     this  implementation  of Pascal on UNIX for the PDP-11.  The
+     reader is warned that any reliance on characteristics  pecu-
+     liar  to  this  implementation may render his programs unac-
+     ceptable to other implementations of report Pascal.  One  is
+
+
+                               -1-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+     therefore advised to use only features which are part of re-
+     port  Pascal whenever possible, and certainly whenever writ-
+     ing 'portable' programs.
+
+   1.5 Feedback
+
+     Comments on all  aspects  of  UNIX  Pascal  are  encouraged.
+     These  may  be directed to 'bill' by system mail on the Cory
+     or Evans Hall UNIX systems at UC Berkeley,  or  through  the
+     Pascal  system trouble reporting procedures for the particu-
+     lar system.
+
+
+2 Extensions to the language Pascal
+
+     This section defines non-standard language constructs avail-
+     able in UNIX Pascal.
+
+   2.1 String padding
+
+     UNIX Pascal will pad constant strings with blanks in certain
+     contexts  to  make them as long as is required.  This occurs
+     only in expressions, and in the  value  parameters  to  pro-
+     cedure and function calls.  Thus the following program frag-
+     ment:
+
+             var z : packed array [ 1 .. 13 ] of char;
+             begin
+                     z := 'red'
+             end;
+
+     will compile on this system, with the constant string  'red'
+     being  padded  to  a string of length 13 by adding blanks on
+     the right.  It is felt that this is  a  convenience  to  the
+     programmer  which  is  a significant advantage.  In standard
+     Pascal, one would have had to write:
+
+                     z := 'red          '
+
+     The user should consider this a courtesy  of  the  compiler.
+     The  's'  option of the compiler disables this and all other
+     non-standard Pascal features of the  compiler  for  checking
+     programs  to  be  transported.  It should be used whenever a
+     program is to be distributed to other Pascal installations.
+
+   2.2 Octal constants
+
+     Octal constants are available. They are represented by a se-
+     quence of the digits 0-7 followed by the character b or B.
+
+
+
+
+
+
+                               -2-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+   2.3 Write in octal and hexadecimal
+
+     The statement
+
+                            write(a:n oct)
+
+     causes a to be written, in an octal field of width at  least
+     n.   Up to 11 octal digits will be written giving the inter-
+     nal representation of a.  The expression a may be a Boolean,
+     character,  integer, pointer or scalar type, but not a real.
+     The default for n, if omitted, is 11.
+     The statement
+
+                            write(a:n hex)
+
+     causes a to be written in a hexadecimal field  of  width  at
+     least  n.   Up  to 8 hexadecimal digits may be written.  The
+     expression a may be anything allowed for  oct.  The  default
+     for n, if omitted, is 8.
+
+   2.4 The assert statement
+
+     The statement
+
+                      assert <expr> { , <expr> }
+
+     is available in UNIX Pascal.  Each expression  in  the  list
+     must  be of type Boolean.  If the test 't' option is enabled
+     when the statement is compiled, then code will be  generated
+     to  check  that  each of the asserted Boolean expressions is
+     true.  Otherwise, assert is treated as a  comment.   A  run-
+     time error occurs when an assertion fails.
+
+
+3 Resolution of the undefined specifications
+
+   3.1 File name-file variable associations
+
+     Each Pascal file variable is associated with  a  named  UNIX
+     file.  Except for 'input' and 'output', which are exceptions
+     to some of the rules, a name can be associated with  a  file
+     in any of three ways.
+
+         1) If a Pascal file appears  in  the  program  statement
+            then  it  is  associated with a UNIX file of the same
+            name.
+
+         2) If the file is reset or rewritten using the  extended
+            two-argument  form of reset or rewrite then the given
+            name is associated.
+
+         3) If a file which has never had a UNIX name  associated
+            is  reset  or rewritten without specifying a name via
+
+
+                               -3-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+            the second argument, then a temporary name is associ-
+            ated  with  the  file.   Temporary  names  start with
+            'tmp.1' and continue by incrementing the last charac-
+            ter  in  the  USASCII ordering i.e. 'tmp.2' etc. Tem-
+            porary files are  removed  automatically  when  their
+            scope is exited.
+
+   3.2 The program statement and 'input' and 'output'
+
+     The syntax of the program heading is:
+
+            program <id> ( <file id> { , <file id > } ) ;
+
+     The file identifiers must be declared as file  variables  in
+     the  main  program.  The formal parameters 'input' and 'out-
+     put' are associated with the UNIX standard input and  output
+     and  have  a  somewhat  special status.  The following rules
+     must be noted:
+
+        1) The program  heading  contains  the  formal  parameter
+           'output'.  If 'input' is used, explicitly or implicit-
+           ly, then it must also be declared here.
+
+        2) Unlike all other files, the Pascal files  'input'  and
+           'output'  must not be defined in a declaration.  Their
+           declaration is automatically assumed to be:
+
+                         var input, output : text;
+
+
+        3) The procedure reset may be used  on  'input'.   If  no
+           UNIX  file name has ever been associated with 'input',
+           and no file name is given, then  an  attempt  will  be
+           made to "rewind" input using seek (II). If this fails,
+           a run time error will occur.  Rewrite calls to  output
+           act  as for any other file.  Note, however, that 'out-
+           put', like 'input', initially has no associated  name.
+           This means that a simple
+
+                              rewrite(output)
+
+           associates the name 'tmp.x', for some character x.
+
+   3.3 Details for files
+
+     If a file, other than 'input' or 'output',  is  to  be  read
+     then  reading  must  be initiated by a reset statement which
+     causes the Pascal system to attempt to open  the  associated
+     UNIX  file for reading.  If this fails, then a runtime error
+     occurs.  Similarly if a file is to be written  then  writing
+     must  be  initiated  by a rewrite statement which causes the
+     Pascal system to create the associated UNIX file  with  mode
+     644 and then open the file for writing.
+
+
+                               -4-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+   3.4 Notes on input, output, and buffering
+
+     Assume that the character represented by "input^"  were  de-
+     fined  at  the  start of execution of a program.  This would
+     require that the Pascal system initiate each run of  a  pro-
+     gram  by  reading a character from 'input'.  If 'input' were
+     the users terminal, the user would have to supply a line  of
+     text  before  execution could begin.  To avoid this problem,
+     the Pascal system does not read a character from 'input' un-
+     til  one  is actually required. Thus the first usage of 'in-
+     put', e.g.  in  "eof(input)",  "eoln(input)",  "input^",  or
+     "read(ch)", will force a read from 'input'.
+
+     Character by character input and output are  very  expensive
+     in  system  overhead.   Thus all Pascal files (with a single
+     possible exception as noted below) are buffered in blocks of
+     512  characters.   These  buffers are flushed when the files
+     are closed at scope exit, whenever  the  built-in  procedure
+     'message'  is called, and by calls to the built-in procedure
+     'flush'.
+
+     The buffering for 'output' is determined by the value of the
+     b  option  at  the  end  of the program statement.  If b1 is
+     specified (the default) then 'output' is buffered up to  512
+     characters,  but  flushed  whenever  a writeln occurs and at
+     each reference to the file 'input'.  If b0 is specified then
+     'output'  is unbuffered.  Any value for b which is 2 or more
+     gives block (512 character) buffering.
+
+   3.5 The character set
+
+     Seven bit USASCII is the character set used  on  UNIX.   The
+     standard  Pascal  symbols  'and',  'or',  'not', '<=', '>=',
+     '<>', and the uparrow or circumflex '^' (for pointer qualif-
+     ication)  are  recognized.   Less preferred, but recognized,
+     are the synonyms tilde '~' for 'not', '&' for 'and', and '|'
+     for 'or'.  These are less portable.
+
+     Upper and lower case are considered distinct.  Keywords  and
+     built-in  procedures and functions are composed of all lower
+     case letters.  Thus the identifiers GOTO and GOto  are  dis-
+     tinct  both  from each other and from the keyword goto.  The
+     standard type boolean is also available as Boolean.
+
+   3.6 The standard types
+
+     3.6.1 INTEGER
+
+     The standard type 'integer' is conceptually defined as
+
+                   type integer = minint .. maxint;
+
+     Integer is implemented with 32 bit 2's complement  arithmet-
+
+
+                               -5-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+     ic.  Predefined constants of type integer are:
+
+                   const maxint = 2147483647;
+                         minint = -2147483648;
+     3.6.2 CHAR
+
+     The standard type 'char' is conceptually defined as
+
+                    type char = minchar..maxchar;
+
+     Built-in character constants are  'minchar'  and  'maxchar',
+     'bell' and 'tab'; ord(minchar) = 0, ord(maxchar) = 127.  See
+     also ASCII (V) for the character set.
+
+     3.6.3 REAL
+
+     The type real is implemented using 64 bit floating point ar-
+     ithmetic  with  a  56  bit fraction.  The binary exponent is
+     stored in excess 128 notation.  Fractions are represented in
+     sign-magnitude  notation  with the binary radix point at the
+     left.  Numbers are assumed to be normalized and,  therefore,
+     the  most significant bit is not stored because it is redun-
+     dant.  It is always a 1 except where the exponent  is  zero,
+     then the complete number is declared to be 0.
+
+     The first (16 bit) word of the number contains the  sign  of
+     the  number  in its high bit, followed by 8 bits of exponent
+     and finally the high 7 bits of the fraction.  The  remaining
+     bits  of  the  fraction are stored in subsequent words.  The
+     floating point arithmetic is done in rounded  mode  (as  op-
+     posed to truncate mode).
+
+     This representation provides approximately 17 digits of pre-
+     cision  with  numbers  as  small  as 10 to the negative 38th
+     power and as large as 10 to the 38th power.
+
+   3.7 Comments
+
+     Comments can be delimited by either '{' and '}' or  by  '(*'
+     and  '*)'.  In a comment delimited by '{' and '}', the char-
+     acter '{' is disallowed, and in a comment delimited by  '(*'
+     and  '*)',  '(*'  is disallowed.  This restriction conflicts
+     with standard Pascal, but experience has shown that the res-
+     triction eliminates a number of mysterious errors.
+
+   3.8 Option control
+
+     Options of the compiler may be controlled  in  two  distinct
+     ways.  The options which can have the values on and off  may
+     appear on the  UNIX  command  line  invoking  the  compiler.
+     These  options  are given as a string of letters preceded by
+     the character '-' and cause  the  default  setting  of  each
+     given  option  to be inverted.  This method of communication
+
+
+                               -6-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+     of options is expected to predominate for UNIX.  Thus
+
+                            % pc -ls foo.p
+
+     compiles the file foo.p with the listing option enabled  (as
+     it  normally  is off) and with only standard Pascal features
+     available.
+
+     If more control over the portions of text where options  are
+     enabled is required, then option control in comments can and
+     should be used.  The format for option control  in  comments
+     is  identical  to  that used in Pascal 6000-3.4.  One places
+     the character '$' as the first character of the comment  and
+     follows it by a comma separated list of directives.  Thus an
+     equivalent to the command line example given above would be:
+
+                 {$l+,s+ listing on, standard Pascal}
+
+     as the first line of the program.  Note, however,  that  the
+     'l'  option  is  more appropriately specified on the command
+     line, since it is extremely unlikely that one wants a  list-
+     ing of the program each time it is compiled.
+
+     Directives consist of a letter designating the option,  fol-
+     lowed  either by a '+' to turn the option on, or by a '-' to
+     turn the option off.  A small number of options take a  sin-
+     gle  digit  instead  of a '+' or '-'.  These options are not
+     specifiable on the command line, only in comments.
+
+   3.9 Option push and pop
+
+     It is often the case that one wishes to enable or disable an
+     option for certain procedures and functions and then restore
+     the old option value.  This happens quite often  when  using
+     pxp, when one wishes to turn off the 'z' before 'initializa-
+     tion' procedures and restore its old value thereafter.  This
+     is  permitted  not only for the 'z' option, but also for all
+     on/off valued toggles by treating each as a stack  and  pro-
+     viding  the  operations push '>' and pop '<' for them.  Thus
+     before an initialization procedure one might do
+
+                    {$z>- push z option, now off}
+
+     and then after the procedure do
+
+                     {$z< pop old z option value}
+
+     Thus the new legal option sequences  are  '>',  '>-',  '>+',
+     '<', '<-', and '<+' which are read `push', `push and clear',
+     `push and set', `pop', `pop and clear', and `pop  and  set'.
+     A push without a set or clear retains the current setting.
+
+
+
+
+                               -7-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+   3.10 Notes on the listings
+
+     A small amount of special processing of the input file takes
+     place  for  the listings produced by UNIX Pascal.  The first
+     page of a listing includes a banner line indicating the pro-
+     gram  and  version  in  use.  It also includes the path name
+     supplied for the source file and the date of last  modifica-
+     tion of that file.  [ Command line options are also indicat-
+     ed in the banner line. ]
+
+     Within the body of the listing lines are  numbered  consecu-
+     tively  and  correspond  to the line numbers for the editor.
+     Currently, two special kinds of lines may be used to  format
+     the  listing:  a  line  consisting  of a form-feed character
+     (generated by a control-l (the letter  l))  which  causes  a
+     page  eject  in  the  listing, and a line with no characters
+     which causes a (truly) blank line in the listing.  For  both
+     of  these  special  lines,  no number is given.  These lines
+     thus correspond to 'eject' and 'space' macros found in  many
+     assemblers.
+
+     Characters which are not part of the printing portion of the
+     USASCII  character set are printed as the character '?'.  As
+     this character is not normally used in Pascal,  this  should
+     cause no trouble.
+
+   3.11 The standard procedure write
+
+     If no minimum field length parameter is specified, the  fol-
+     lowing default values are assumed:
+
+                  type                     default
+             ------------------------------------------
+                 integer                     10
+                 real                        22
+                 Boolean                     10
+                 char                         1
+                 string             length of the string
+                 octal                       11
+                 hex                          8
+
+     The end of each line in a text file should be explicitly in-
+     dicated  by writeln(f), where writeln(output) may be written
+     simply as writeln.  For UNIX, the builtin  function  page(f)
+     puts  a single ASCII form feed character on the output file.
+     For programs which are to be transported the following  car-
+     riage controls are interpreted by the filter pcc (I):
+
+                '+'           no line feed (overprinting)
+               blank          single spacing
+                '0'           double spacing
+                '1'           skip to top of next page
+
+
+
+                               -8-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+4 Restrictions and limitations
+
+   4.1 Files
+
+     Files are not allowed to be members of files or  members  of
+     dynamically allocated structures.
+
+   4.2 Arrays, sets, and strings
+
+     The calculations involving array subscripts and set elements
+     are  done  with 16 bit arithmetic.  This restricts the types
+     over which arrays and sets may be defined.  The lower  bound
+     of such a range must be greater than or equal to -32768, and
+     the upper bound less than 32768.  In particular, strings may
+     have any length from 1 to 32767 characters.
+
+   4.3 Line and symbol length
+
+     There is no intrinsic limit on the  length  of  identifiers.
+     Identifiers are considered to be distinct if they are of 100
+     characters long and differ in the last position.  There is a
+     limit,  however,  on the maximum input line length.  This is
+     quite generous however, currently exceeding 160 characters.
+
+   4.4 Procedure/function nesting and program size
+
+     At most 20 levels of procedure and function nesting are  al-
+     lowed.   There  is no fundamental, compiler defined limit on
+     the size of the program which can be compiled.  The ultimate
+     limit  is  supplied  by  the  hardware and the fact that the
+     PDP-11 has a 16 bit address space.  If one runs  up  against
+     the 'ran out of core' diagnostic the program may yet compile
+     if smaller procedures are used, as a lot of space  is  freed
+     by the compiler at the completion of each procedure/function
+     in the current implementation.
+
+   4.5 Overflow
+
+     There is currently no checking for  overflow  on  arithmetic
+     operations  at  run-time.   This may be an option at a later
+     date (perhaps coordinated with the 't'  run-time  tests  op-
+     tion.)
+
+
+5 Added types, operators, procedures and functions
+
+   5.1 Additional predefined types
+
+     The type 'alfa' is predefined as:
+
+             type alfa = packed array [ 1..10 ] of char;
+
+     The type 'intset' is predefined as:
+
+
+                               -9-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+                     type intset = set of 0..127;
+
+   5.2 Constant sets and 'intset'
+
+     In most cases the context of an expression involving a  con-
+     stant  set  allows the compiler to determine the type of the
+     set, even though the constant set itself  may  not  uniquely
+     determine  this type.  In the cases where it is not possible
+     to determine the type of the set from local context, the ex-
+     pression  type  defaults  to a set over the entire base type
+     unless the base type is integer.  In  the  latter  case  the
+     type defaults to the current binding of 'intset', which must
+     be "type set of (a subrange of) integer" at that point.
+
+     Note that if intset is redefined via:
+
+                     type intset = set of 0..58;
+
+     then the default integer set is the implicit intset of  Pas-
+     cal 6000-3.4
+
+     The current compiler makes a special case of  the  construct
+     "if  ... in [ ... ]" and enforces only the more lax restric-
+     tion on 16 bit arithmetic given above in this case.  This is
+     a  peculiarity  of the current compiler which may or may not
+     persist.
+
+   5.3 Additional predefined operators
+
+     The relationals < and > of proper set inclusion  are  avail-
+     able.  Note that:
+
+                      (not (a < b)) <> (a >= b)
+
+     As an example consider the sets a = [0,2] and b = [1]  which
+     are only <>.
+
+
+   5.4 Non-standard procedures and functions
+
+     5.4.1 PROCEDURES
+
+     argv(i,a)           where i is an integer and a is a  string
+                         variable assigns the (possibly truncated
+                         or blank padded) ith argument of the in-
+                         vocation  of the current UNIX process to
+                         the variable a.  The range of valid i is
+                         0 to argc-1.  See also exec (II).
+
+     date(a)             assigns the current  date  to  the  alfa
+                         variable  a  in the format 'dd mmm yy ',
+                         where mmm is the first three  characters
+                         of the month, i.e. Apr.
+
+
+                              -10-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+     flush(f)            writes the output  buffered  for  Pascal
+                         file f into the associated UNIX file.
+
+     halt                terminates the execution of the  program
+                         with a control flow backtrace .
+
+     linelimit(f,x)      with f a textfile and x an  integer  ex-
+                         pression  [ causes the program to be ab-
+                         normally terminated if more than x lines
+                         are written on file f. If x is less than
+                         0 then no limit is imposed. ]
+
+     message(x,...)      causes the parameters,  which  have  the
+                         format  of those to the procedure write,
+                         to be written unbuffered on the diagnos-
+                         tic unit 2, almost always the users ter-
+                         minal.
+
+     remove(a)           where a is a string causes the UNIX file
+                         whose  name  is  a, with trailing blanks
+                         removed, to be  unlinked.   (see  unlink
+                         (II))
+
+     reset(f,a)          where a is  a  string  causes  the  file
+                         whose name is a (with blanks trimmed) to
+                         be associated with f in addition to  the
+                         normal function of reset.
+
+     rewrite(f,a)        is analogous to 'reset' above.
+
+     stlimit(i)          where i is an integer sets the statement
+                         limit  to  be  i  statements.  Note that
+                         statement  limit  counting  is  disabled
+                         whenever the 'p' post mortem flag is on.
+
+     time(a)             causes the  current  time  in  the  form
+                         ' hh:mm:ss '  to be assigned to the alfa
+                         variable a.
+
+     5.4.2 FUNCTIONS
+
+     argc                returns the count of arguments when  the
+                         Pascal  program  was  invoked.  See exec
+                         (II).  (Note that argc is always >= 1.)
+
+     card(x)             returns the cardinality of  the  set  x,
+                         i.e. the number of elements contained in
+                         the set x.
+
+     clock               returns an integer which is  the  number
+                         of  central  processor  milliseconds  of
+                         user time used by this process.
+
+
+
+                              -11-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+     column(x)           [ where f is  a  text  file  return  the
+                         number  of  characters  which  have been
+                         written to f since the  last  writeln(f)
+                         or  page(f).   f may be omitted, the de-
+                         fault is the file 'output'. ]
+
+     expo(x)             yields the integer  valued  exponent  of
+                         the  floating-point representation of x;
+                         expo(x) = entier(log2(abs(x))).
+
+     line(f)             [ where f is a  text  file  returns  the
+                         sequential  line  number  for file f.  f
+                         may be omitted if f is 'output'. ]
+
+     pageline(f)         [ where f is a  text  file  returns  the
+                         number of the current line of the file f
+                         relative to the top  of  the  last  page
+                         (after  a  "page(f)",  "pageline(f)" has
+                         value 1.) f may be omitted if f is 'out-
+                         put'. ]
+
+     random(x)           where x is a real  parameter,  evaluated
+                         but  otherwise ignored, invokes a linear
+                         congruential  random  number  generator.
+                         Successive   seeds   are   generated  as
+                         (seed*a + c) mod m and  the  new  random
+                         number is a normalization of the seed to
+                         the range 0.0 to 1.0; a is 62605,  c  is
+                         113218009,  and m is 536870912. The ini-
+                         tial seed is 7774755.
+
+     seed(i)             where i is an integer  sets  the  random
+                         number  generator  seed to i and returns
+                         the previous seed. Thus,  in  particular
+                         seed(seed(i))  has  no  effect except to
+                         yield value i.
+
+     sysclock            an integer function of no arguments  re-
+                         turns  the  number  of central processor
+                         milliseconds of system time used by this
+                         process.
+
+     undefined(x)        a Boolean function.  Its argument  is  a
+                         real number and it always returns false.
+
+     wallclock           an integer function of no arguments  re-
+                         turns the time in seconds since 00:00:00
+                         GMT January 1, 1970.
+
+
+
+
+
+
+
+                              -12-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+6 Differences with Pascal 6000-3.4
+
+     The following differences may cause trouble when  attempting
+     to  transport  programs  between  this  compiler  and Pascal
+     6000-3.4.  Differences flagged with '-' are considered to be
+     permanent  characteristics  of this installation.  Using the
+     's' compiler option  may  serve  to  indicate  many  problem
+     areas.
+
+   6.1 Features not available in UNIX Pascal
+
+     * Formal parameter procedures and functions.
+
+     - Segmented files and associated functions and procedures.
+
+     - The function trunc with two arguments.
+
+     * Arrays whose indices exceed the capacity of 16 bit  arith-
+     metic.
+
+   6.2 Features available only in UNIX Pascal
+
+     - The procedures reset and rewrite with file names.
+
+     - The functions argc, column, line, pageline, seed, sysclock
+     and wallclock.
+
+     - The procedures argv, flush and remove.
+
+     - Message with arguments other than character strings.
+
+     - Write with option 'hex'.
+
+     - The 'assert' statement.
+
+   6.3 Other problem areas
+
+     Sets and strings are more general in UNIX, see the  restric-
+     tions  given  in  the  Pascal User Manual for details on the
+     6000-3.4 restrictions.
+
+     The character set differences may cause problems, especially
+     the  use  of  chr  since  the character set ordering differs
+     between the two machines.
+
+     The Pascal 6000-3.4 compiler uses a less  strict  notion  of
+     type  equivalence.   In  UNIX  Pascal,  types are considered
+     identical only if they are  represented  by  the  same  type
+     identifier.   Thus,  in particular, unnamed types are unique
+     to the variables/fields declared with them.
+
+     Pascal 6000-3.4 doesn't recognize our option flags, so it is
+     wise  to put the control of our options to the end of option
+
+
+                              -13-
+
+
+
+
+
+
+UNIX Pascal              Report Appendix              C. B. Haley
+April 1, 1977                                           W. N. Joy
+
+
+     lists or, better yet, restrict the  option  list  length  to
+     one.  Pascal 6000-3.4 doesn't allow option push and pop.
+
+     For Pascal 6000-3.4 the ordering of  files  in  the  program
+     statement has significance.  If input and output are not the
+     first two files in the program statement, the user should be
+     aware of the consequences.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                              -14-
+
+
+
+
+
+

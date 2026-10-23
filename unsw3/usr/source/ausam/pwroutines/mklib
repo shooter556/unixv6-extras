@@ -1,0 +1,49 @@
+echoall
+rm -f *.o
+cc -O -c addpwent.c \
+	delpwent.c \
+	chngpwent.c \
+	updtpwent.c \
+	getpwlog.c \
+	getpwuid.c \
+	addentry.c \
+	chkentry.c \
+	equalentry.c \
+	getentry.c \
+	putentry.c \
+	freetable.c \
+	getutab.c \
+	gethtab.c \
+	pututab.c \
+	puthtab.c \
+	getoffset.c \
+	strlen.c \
+	pwhash.c \
+	pwclose.c \
+	pwfile.c \
+	pwinit.c
+ar rv /lib/libP.a addpwent.o \
+	delpwent.o \
+	chngpwent.o \
+	updtpwent.o \
+	getpwlog.o \
+	getpwuid.o \
+	addentry.o \
+	chkentry.o \
+	equalentry.o \
+	getentry.o \
+	putentry.o \
+	freetable.o \
+	getutab.o \
+	gethtab.o \
+	pututab.o \
+	puthtab.o \
+	getoffset.o \
+	strlen.o \
+	pwhash.o \
+	pwclose.o \
+	pwfile.o \
+	pwinit.o
+rm *.o
+chmod 604 /lib/libP.a
+: all finished......

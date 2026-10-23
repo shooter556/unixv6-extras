@@ -1,0 +1,75 @@
+.tl 'FORTRAN(I)'12/17/75'FORTRAN(I)'
+NAME
+	fortran - fortran iv compiler
+
+SYNOPSIS
+	fortran flags & files
+
+DESCRIPTION
+	fortran is a new fortran iv compiler for the UNIX
+time-sharing system.  Arguments may be either files or switches;
+switches begin with a '-'.  The valid switches are:
+
+	-db	Compile statements with a 'd' in column 1. 
+		Usually they are treated as comments.
+	-80	Take a full 80 columns of source.  Usually only
+		columns 1-72 are used.
+	-ls:n	Listing control.  The listing file is enabled.
+		Its contents are determined by the sum of the
+		following modes:
+			0 = list errors
+			1 = list source
+			2 = list storage map
+			4 = list (pseudo) generated code
+		E.g. -ls:3 directs that source and storage map
+		information be placed on the listing file.
+	-ot	Print the options-in-effect table
+	-no	Suppress object code output
+	-lr:n	Set run-time logical record size to n, 10<_n<_4096
+		The default is 136.  This is only valid if a main
+		program is being compiled.
+	-sn	Suppress run-time code to record statement
+		number (isn's)
+	-i4	Set the default integer precision to 4 bytes.
+	-nv	Disable vectoring of arrays.
+		Since all UNIX systems have hardware multiply,
+		array vectoring is usually of minimal advantage.
+	-wr	Print warning messages
+	-xs:n	Allocate an extra n Kw of core for the compiler.
+		The initial allocation is 6Kw,  which is more
+		than sufficient for almost all programs.
+	-st	Print statistics summary at end of compilation
+	-ck	Generate code to check subscripts at run-time.
+		This is a no-op now.
+	-op	Inhibit optimization.
+	
+File control:
+	Fortran may have up to 8 input files. If an input file
+cannot be opened,  the suffix ".for" is appended and another
+attempt is made.  If no listing file is explicitly specified,
+and the -ls option is not used,  no listing file is created.
+Otherwise,  the name of the listing file may be explicitly stated
+by:
+.br
+	-l=filename
+.br
+or,
+	-l=
+.br
+if the listing is to be produced to the standard output.  If no
+filename is specified,  the name of the first source file with the
+suffix ".lst" is used.  Similarly,  the object file name may be specified
+by
+	-o=filename
+.br
+If no object file is specified,  the name of the first source file
+with the suffix ".obj" is used.
+
+Example:
+	The following command line compiles the fortran main program
+in mainprog.for,  and the subroutines in sub1.for ... sub3.for,
+places the output in the file tolink.obj,  and the listing on the
+standard output file (the keyboard).  Lots of options are invoked:
+
+%fortran -o=tolink.obj -l= -ls:3 -wr -ck mainprog sub1 sub2 sub3
+

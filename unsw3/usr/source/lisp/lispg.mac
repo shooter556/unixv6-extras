@@ -1,0 +1,20 @@
+	.list
+	.list	me
+.hiseg
+.title	edit
+.ident	/11April/
+
+	global	<.nil, ed>
+
+	func	$ed,<file>,,2
+	mov	file(r5),r0
+	cmp	(r0)+,#t.string
+	bne	1$
+	calli	ed	(r0)
+	call	$xfile,<file(r5)>
+	return	.nil
+
+1$:	error	48.,<unreasonable file name - open>
+	freturn
+
+.end

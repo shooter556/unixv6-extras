@@ -1,0 +1,172 @@
+.de hd
+'sp 3
+..
+.de fo
+'sp 3
+.tl ''- % -''
+'bp
+..
+.wh 0 hd
+.wh -7 fo
+.ce 3
+UNIX CHANGES
+(Differences between Bell UNIX & Standard Ver. 6)
+compiled by Mike O'Brien
+
+
+ 1)\ Space allocation for buf, file, inode, proc, text, and u split out
+into separate files (see notes).
+ 2)\ New "aging" parameter in block I/O puts a freshly written-out DELWRI
+block on the tail of the av-list (see notes).
+ 3)\ spl5's have been changed to spl6's in mch.s.
+ 4)\ Location 0 traps to "trap()" in case of hardware glitch (trap type 15).
+ 5)\ On 45's: kernel text is write-protected; stuff above "_end" is removed
+from kernel address space (presumably to catch accidents).
+ 6)\ "sysfix" has been changed to use long ints and lseek(); should work
+on systems >32K.
+ 7)\ In bio.c, several things sleep at pri+1 instead of pri...see notes.
+ 8)\ There are now two swap buffer buf structs instead of one, indexed by
+register.
+ 9)\ dh.c has special checks for 15cps, for what looks like machine-machine
+communications.
+ 10)\ RAW mode now permits 8-bit transmissions, at the expense of delays.
+ 11)\ Instead of using the control tty for propagating QUIT and KILL
+signals, a "process group" is created for the purpose of propagating
+such signals.  See notes.
+ 12)\ 20 files may now be open per process, but files FCLFILE (=15 currently)
+onward are closed on an "exec".
+ 13)\ The internal "printf" routine now saves its last batch of characters
+output in an internal message buffer for examination.
+ 14)\ User and system times, and most other 2-word quantities, are now
+"longs".
+ 15)\ There is a sort
+of disk instrumentation installed.  It keeps track (in each driver)
+of which disks are currently busy, total number of accesses, and total
+words transferred for each controller.  "clock.c" then sorts these
+into 32 cartesian bins (4 controllers vs. 4 machine states) on the basis
+of who's busy, and what the machine state is.
+ 16)\ A "ttyoutput('\\n')" is done upon receipt of a KILL keypress.
+Also, a constant DLDELAY is added to timeouts for DL stuff to allow
+for double-buffering in the DL hardware.
+ 17)\ File system superblocks now contain a file system name and pack name.
+ 18)\ Some sort of process accounting into a disk file has been added.
+Turned on/off by the super-user via a special sys call, every process that
+runs gets times, id's, and other stuff recorded.
+ 19)\ Unimplemented, but present (see notes): some sort of sorting
+routine to permute each group of 24 blocks to be interleaved by about 3.
+Don't use it\ --\ see notes.
+ 20)\ Scheduler priority shuffling is now different, and "lbolt" gets
+woken up every second. Timeout table overflow now causes a panic.
+ 21)\ Logic error fixes in iget.c: have to do with freeing blocks from
+a truncated inode.  Also, an iput(u.u_pdir) gets done if inode allocation
+fails.
+ 22)\ "Estabur" now takes a 4th arg, RW or RO (for read-only text segment).
+ 23)\ "Sureg" is rather shorter, and rather different.
+ 24)\ The scheduler gets woken up when core is freed. It sleeps when there
+isn't enough core for the selected swapped process. It gets woken up once
+every second in any event.
+ 25)\ Signals are now kept as bits in a word, and several have been
+eliminated. Several can therefore be pending at once.
+Only 16 signals can therefore be defined.
+ 26)\ Writing user I-space is now allowed, if the text is being
+used exclusively.
+ 27)\ pri=0 can't be disturbed by signals any more.
+ 28)\ Everybody SLEEPs now\ -\ WAIT state has been abandoned.
+ 29)\ The process table is now linked-list, though some searches are
+still done linearly through the table.  New panic: "running a dead proc".
+ 30)\ Bug fix in "setpri()": p>curpri should be p<curpri.
+ 31)\ The scheduler now looks for the oldest process to toss it out,
+or for one that's been in 2 sec when the current one has been out 3 sec.
+ 32)\ u.u_segflg now differentiates between user I&D spaces.
+ 33)\ "Exec()" args are now kept in a pseudo-file in swap space.
+Hence, there is no limit on simultaneous EXEC's.
+It still panics when it runs out of swap, though, so arg lengths are
+still limited (to 10 blocks' worth presently).
+ 34)\ There is a "type 405" file which when exec'ed overlays only
+the text portion.  The exec fails if: not separated and text sizes aren't
+exactly the same, or if there are arguments in the exec.
+ 35)\ First 10 bytes (instead of 8) are now read in.  Includes an
+"entry location" word, which if non-zero really works: proc starts up there.
+ 36)\ Lets you know if init proc dies.
+ 37)\ The "u" struct no longer gets swapped on exit().  Instead,
+relevant stuff is saved in the zombie's proc table entry instead, as an
+overlay.
+ 38)\ On fork(), sys makes sure there's enough swap space to swap max size
+core image, to lessen chances of running out.
+ 39)\ Inodes are locked up during actual reads and writes (sys2.c).
+ 40)\ Some later V6's apparently required inode mode to allow writing
+even on "creat()".  Early ones didn't have that.  Anyway, it's fixed back.
+ 41)\ Overseek can now give "file too large" error.
+ 42)\ "Swap I/O error" panic has been moved to bio.c.
+ 43)\ Super-user can now exec a file regardless of its execute permissions.
+ 44)\ There is a "tell()" sys call which returns the file offset pointer
+for the argument file descriptor.
+ 45)\ The "access()" system call checks access permissions on the real
+id's of the process regardless of the effective ones.  Doesn't return
+stats, just does an internal "access()" to set u.u_error.
+.ne 4
+ 46)\ Changes to "unlink()" in sys4.c:
+ 	a)\ panic("unlink") removed.
+ 	b)\ Mounted-on files can't be unlinked.
+ 	c)\ "BUSY" shared-text files can't be unlinked.
+ 47)\ "smdate" call has been removed entirely.
+ 48)\ "alarm()" and "pause()" system calls are in to provide a user-mode
+timeout capability.
+ 49)\ "out of text" is no longer a panic: the process
+gets killed and a printf() happens.
+ 50)\ A pure text segment is no longer swapped out on initial execution,
+if there is core around for separate text allocation.  If not, an "xswap()"
+is done.
+ 51)\ To do this, there are new routines analogous to plock() and prelse(),
+called xlock() and xunlock(), for text segments.
+Text segments now have flags for locked and unlocked, and writable/written
+into, etc.
+ 52)\ 11/70 memory parity errors are reported via printf() and a recovery
+attempted.  Parity on any other machine causes a panic.
+.bp
+.ce 2
+NOTES
+
+by Ken Thompson
+
+
+ 1)\ Separate definition and declarations of tables: a more portable
+C will require that there be only one space definition in
+a group of programs. This has to do with loader restrictions
+that are on some notable big blue machines.
+
+ 2)\ Aging: an old bug on delayed writes. A buffer will age normally until it
+hits the end of the av-list. At that time it is turned into an
+asynchronous write. The bug is that when the asynch-write finishes,
+the buffer is put back on the head of the av-list; thus spending double
+time in the cache.
+
+ 3)\ bio sleep on pri+1: another old bug. When 2 processes are waiting
+on the same thing (buffer in one case and swap block in another),
+and one is waiting completion while another is waiting to use the thing,
+a single wakeup will cause both to be scheduled at the same pri.
+If the one waiting on completion wakes up first, everything is fine, but if
+the one waiting to use the block comes up first then there are 3 context
+switches where one would do.
+
+ 4)\ Process groups: the process groups are now a more dynamic notion;
+mainly they do not need to be tied to a tty structure. The only new
+use of this is in my network code where a "listener" needs to create a
+new process group. There is no current way to set up a new group.
+The reserved sys call is for this purpose.
+You can lose the control of your teletype if a process without
+a controlling teletype (daemon or something) opens your teletype.
+
+ 5)\ Children times: the times in the system are now declared
+long so some explicit code is taken out.
+Times is different in that the parent times are now 32 bits rather than 16.
+This causes some trouble with "time" and "sh".
+
+ 6)\ In the code in closef, the wakeups on pipes need to be a little
+farther down to prevent rare race conditions between reading
+a pipe just as it is being closed.
+
+ 7)\ The sorting of the disk blocks by the shell sort routine is
+commented out.  It's so elegant that I hated to delete it outright,
+but in fact, it's quite a loser.  I meant to delete it from the diff
+so that no one would be led astray.

@@ -1,0 +1,78 @@
+.th SLOGO I Feb/76
+.sh NAME
+slogo \*- simulation language based on logo
+.sh SYNOPSIS
+slogo
+.br
+nglogo
+.sh DESCRIPTION
+Slogo is a conversational process-oriented discrete stochastic simulation
+language with integrated animation facilities.
+It is intended to provide an elegant natural means for the expression of
+and interaction with a wide range of types of models.
+It has been used to model computer system components, transportation systems,
+jobshop situations and as a tool for programme animation.
+There are currently two versions maintained.
+The slogo command supports the full language in all its glory.
+Nglogo supports everything but the animation and graphics commands.
+They are not completely compatible, since in nglogo it is possible
+to define functions whose names conflict with those of graphics commands.
+The only reason for using nglogo is that it is slightly smaller,
+and so spends marginally less time swapped out,
+and it doesn't occupy any double-port memory, so other people can run graphics
+sometimes.
+A somewhat incomplete version of the Slogo user's manual
+is available by typing
+     nroff /mnt/td/slogo/man.d
+.sh FILES
+/bin/ed -- the unix editor used by the edit command.
+.br
+edtmp -- temporary used by the edit command.
+.br
+/mnt/td/bin/bug -- implements the bug command
+.br
+/mnt/td/thesis/bug/bugs -- file written on by the bug command.
+.br
+/mnt/td/bin/gfake.daemon -- the graphics and animation end of the system
+.sh "SEE ALSO"
+ed(I) edupdate(I) /mnt/td/slogo/man.d
+.br
+Simulation and Animation -- my M.Sc. thesis.
+.sh DIAGNOSTICS
+Appendix I of the user's manual describes every error message produced directly by the system.
+It is hoped that all Slogo's error messages should be completely self-explanatory.
+Messages may also be produces by GPAC, the UNIX graphics package.
+These are usually easy to understand.
+As well as error messages, Slogo may produce messages of the form
+	Assertion failed: <some gibberish>
+	IOT trap -- core dumped
+.br
+may be produced.
+If an assertion fails, there is good reason
+to believe that you have found a bug.
+Please send me mail (userid=td), telling me the circumstances, anything
+the system may have printed prior to dumping core,
+and where the dump may be found.
+If Slogo has indigestion, it may print messages of the
+form
+	<Somebody> urped:(<number>,<number>,<number>)
+.br
+It will not exit after urping, since sometimes I want to go on and look for more symptoms.
+You should probably type ctrl-\\ (ctrl-shift-l on the tek) and send
+me mail.
+Of course, Slogo can also produce error messages that make no sense
+or dump core without warning.
+.sh AUTHOR
+Tom Duff.
+.sh BUGS
+Slogo is still, to some extent, under development.
+A number of table sizes are not checked, so, in particular,
+the system can blow its head off if you type a line that's too long.
+If you get an error in the middle of drawing a picture, you can never draw
+another picture.
+There are other bugs (look in /mnt/td/bug/bugs if you're interested),
+but most of the ones I know about were found reading the code, not running
+programmes, and you're not likely to find most of them.
+Send me mail if you want quick action on new bugs.
+If its not urgent, use the bug command (if Slogo hasn't addled itself
+so badly that nothing at all works).

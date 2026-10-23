@@ -1,0 +1,505 @@
+	.list me
+	.title	init
+	.ident	/v001/
+
+; L I S P / 11 startoff
+
+	global	<bitmap,freesp,freels,oblist>
+	global	<bitend,gcount,gc.min>
+	global	<radix,sysatm,gennum>
+	global	<.genseed,atmend,.backcount,ifunc>
+	global	<.backgag,.rset,lerrno,.errst>
+	global	<.ccont,$ispec,stkend>
+
+
+; declare the psects and their attributes
+
+.psect	inits	prv,con
+.psect	loseg	prv,con
+.psect	hiseg	shr,con
+
+; macros to define format in initialization data
+
+	.macro	initstart
+	.psect	inits
+	.endm
+	.macro	enter	t
+	.globl	.'t
+	.byte	h.symb
+	asciz	<t>
+	.even
+	.word	.'t
+	.endm
+	.macro	subr	entr,lname,acount
+	.globl	entr
+	.byte	h.subr
+	asciz	<lname>
+	.even
+	.word	entr
+	.byte	acount
+	.endm
+	.macro	lsubr	entr,lname
+	.globl	entr
+	.byte	h.lsubr
+	asciz	<lname>
+	.even
+	.word	entr
+	.endm
+	.macro	fsubr	entr,lname,acount
+	.globl	entr
+	.byte	h.fsubr
+	asciz	<lname>
+	.even
+	.word	entr
+	.byte	acount
+	.endm
+	.macro	nsubr	entr,lname
+	.globl	entr
+	.byte	h.nsubr
+	asciz	<lname>
+	.even
+	.word	entr
+	.endm
+	.macro	ssubr	entr,lname
+	.globl	entr
+	.byte	h.ssubr
+	asciz	<lname>
+	.even
+	.word	entr
+	.endm
+	.macro	initend
+	.byte	377
+	.psect	hiseg
+	.endm
+
+
+start:	calli	gopen
+	mov	sp,stkend	;start of stack for gc
+	calli	getcore	#2048.*dcore
+	bcs	1$		;allocation failure
+	mov	r0,freesp	;set up start of free space
+	mov	r0,freels	;and establish the free list
+	add	#2048.*dcore,r0	;now point to the end of it
+	clr	r4		;and make the free list
+
+2$:	clr	-(r0)		;second word in cell
+	mov	r4,-(r0)	;first word is free list link
+	mov	r0,r4		;make the next one point here
+	cmp	r0,freesp	;at the start yet?
+	bne	2$		;no - continue
+
+	calli	getcore	#64.*dcore
+	bcs	1$		;couldn't get it
+
+	mov	r0,bitmap	;start of map
+				;bitend is already set up
+	br	3$		;now init oblist
+
+1$:	text	1,<allocation failure - initialization>
+	calli	exit
+
+3$:	text	0,<L I S P / 11>
+	call	gnode
+	tst	(sp)+
+	mov	(sp)+,r0
+	mov	r0,oblist
+	mov	.nil,(r0)
+	mov	(r0)+,(r0)	;make oblist with (nil/nil)
+	global	<.nil>
+
+
+
+	.nlist me
+	initstart
+
+	enter	<t>
+	enter	<lambda>
+	enter	<local>
+	enter	<label>
+	enter	<go>
+	enter	<return>
+	enter	<cond>
+	enter	<quote>
+	enter	<funarg>
+	enter	<oblist>
+	enter	<list>
+	enter	<symb>
+	enter	<int>
+	enter	<real>
+	enter	<string>
+	enter	<expr>
+	enter	<fexpr>
+	enter	<lexpr>
+	enter	<nexpr>
+	enter	<sexpr>
+	enter	<macro>
+	enter	<subr>
+	enter	<fsubr>
+	enter	<lsubr>
+	enter	<nsubr>
+	enter	<ssubr>
+
+	subr	$$plus,<*plus>,2
+	subr	$$times,<*times>,2
+	subr	$minus,minus,1
+	subr	$remainder,remainder,2
+	subr	$entier,entier,1
+	subr	$divide,divide,2
+	subr	$abs,abs,1
+	subr	$add1,add1,1
+	subr	$sub1,sub1,1
+	subr	$float,float,1
+	subr	$recip,recip,1
+	subr	$sign,sign,1
+	subr	$lsh,lsh,2
+	subr	$rsh,rsh,2
+	subr	$ror,ror,2
+	subr	$rol,rol,2
+	subr	$lnot,lnot,1
+	subr	$car,car,1
+	subr	$cdr,cdr,1
+	subr	$last,last,1
+	subr	$rplca,rplaca,2
+	subr	$rplcd,rplacd,2
+	subr	$cons,cons,2
+	subr	$xcons,xcons,2
+	subr	$ncons,ncons,1
+	subr	$$append,<*append>,2
+	subr	$nconc,nconc,2
+	subr	$copy,copy,1
+	subr	$reverse,reverse,1
+	subr	$length,length,1
+	subr	$subst,subst,3
+	subr	$map,map,2
+	subr	$mapc,mapc,2
+	subr	$maplist,maplist,2
+	subr	$mapcar,mapcar,2
+	subr	$assoc,assoc,2
+	subr	$sassoc,sassoc,3
+	subr	$pair,pair,2
+	subr	$incon,incon,1
+	subr	$outcon,outcon,1
+	subr	$radix,radix,1
+	subr	$intern,intern,1
+	subr	$mkatom,mkatom,1
+	subr	$gensym,gensym,0
+	subr	$genseed,genseed,1
+	subr	$openo,openo,1
+	subr	$openi,openi,1
+	subr	$gc,gc,0
+	subr	$gc.count,<gc-count>,0
+	subr	$gc.min,<gc-min>,1
+	subr	$delete,delete,1
+	subr	$close,close,1
+	subr	$err,err,2
+	subr	$eof,eof,1
+	subr	$$eval,<*eval>,1
+	subr	$$apply,<*apply>,2
+	subr	evlist,evlis,1
+	subr	clist,clist,1
+	subr	$cont,cont,0
+	subr	$backgag,backgag,1
+	subr	$$rset,<*rset>,1
+	subr	$$gt,<*gt>,2
+	subr	$$ge,<*ge>,2
+	subr	$$eq,<*eq>,2
+	subr	$$ne,<*ne>,2
+	subr	$$lt,<*lt>,2
+	subr	$$le,<*le>,2
+	subr	$eq,eq,2
+	subr	$equal,equal,2
+	subr	$null,null,1
+	subr	$member,member,2
+	subr	$memeq,memeq,2
+	subr	$stringp,stringp,1
+	subr	$numberp,numberp,1
+	subr	$not,not,1
+	subr	$atom,atom,1
+	subr	$flop,floatp,1
+	subr	$fixp,fixp,1
+	subr	$set,set,2
+	subr	$unset,unset,1
+	subr	$type,type,1
+	subr	$val,val,1
+	subr	$tval,tval,1
+	subr	$initfn,initfn,1
+	subr	$expr,expr,1
+	subr	$fexpr,fexpr,1
+	subr	$nexpr,nexpr,1
+	subr	$lexpr,lexpr,1
+	subr	$sexpr,sexpr,1
+	subr	$macro,macro,1
+	subr	$subr,subr,2
+	subr	$fsubr,fsubr,2
+	subr	$lsubr,lsubr,1
+	subr	$nsubr,nsubr,1
+	subr	$ssubr,ssubr,1
+	subr	$addr,addr,1
+	subr	$debug,debug,0
+	subr	$examine,examine,1
+	subr	$deposit,deposit,2
+	subr	$exit,exit,0
+	subr	$xfile,xfile,1
+	subr	$index,index,3
+	subr	$size,size,1
+	subr	$subrt,substr,3
+	subr	$dupl,dupl,2
+	subr	$ascii,ascii,1
+	subr	$char,char,1
+	subr	$shell,shell,0
+	subr	$setch,setch,1
+	subr	$save,save,1
+	subr	$ed,ed,1
+
+
+
+	fsubr	$quote,quote,1
+	fsubr	$errset,errset,2
+	fsubr	$quote,function,1
+	fsubr	$$function,<*function>,1
+	fsubr	$setq,setq,2
+	fsubr	$unset,unsetq,1
+	
+	nsubr	$de,de
+	nsubr	$df,df
+	nsubr	$dl,dl
+	nsubr	$dn,dn
+	nsubr	$ds,ds
+	nsubr	$dm,dm
+	nsubr	$and,and
+	nsubr	$or,or
+	nsubr	$cond,cond
+	nsubr	$remob,remob
+	nsubr	$select,select
+	nsubr	$progn,progn
+	nsubr	$prog,prog
+	nsubr	$while,while
+	nsubr	$for,for
+
+
+	lsubr	$read,read
+	lsubr	$readch,readch
+	lsubr	$prin,prin
+	lsubr	$print,print
+	lsubr	$terpri,terpri
+	lsubr	$outstr,outstr
+	lsubr	$plus,plus
+	lsubr	$difference,difference
+	lsubr	$times,times
+	lsubr	$quotient,quotient
+	lsubr	$land,land
+	lsubr	$lor,lor
+	lsubr	$lxor,lxor
+	lsubr	$min,min
+	lsubr	$max,max
+	lsubr	$quote,list
+	lsubr	$append,append
+	lsubr	$conc,conc
+	lsubr	$eval,eval
+	lsubr	$apply,apply
+	lsubr	$.gt,gt.
+	lsubr	$.ge,ge.
+	lsubr	$.eq,eq.
+	lsubr	$.ne,ne.
+	lsubr	$.le,le.
+	lsubr	$.lt,lt.
+	lsubr	$concat,concat
+
+	initend
+	.list me
+
+	
+entx:	mov	#<^pl inits>,r2
+
+1$:	movb	(r2)+,r1
+	bmi	10$
+	call	cstring
+
+2$:	movb	(r2)+,r0
+	beq	3$
+	callc	putc
+	br	2$
+
+3$:	call	.intrn
+	inc	r2
+	bic	#1,r2
+	tstb	r1
+	bne	4$
+	save	@(r2)+
+	br	1$
+
+4$:	save	r0
+	mov	2(r0),r0
+	cmpb	r1,#h.lsubr
+	beq	5$
+	cmpb	r1,#h.nsubr
+	beq	5$
+
+	call	gnode
+	call	gnode
+	tst	(sp)+
+	mov	(sp),(r0)
+	mov	(sp)+,r0
+	movb	#1,(r0)+
+	movb	r1,(r0)+
+	tst	(sp)+
+	mov	(sp),(r0)
+	mov	(sp)+,r0
+	mov	(r2)+,(r0)+
+	movb	(r2)+,r1
+	mov	r1,(r0)+
+	br	1$
+
+5$:	call	gnode
+	tst	(sp)+
+	mov	(sp),(r0)
+	mov	(sp)+,r0
+	movb	#1,(r0)+
+	movb	r1,(r0)+
+	mov	(r2)+,(r0)
+	br	1$
+
+10$:	mov	.t,r0
+	mov	r0,@2(r0)
+
+	mov	.oblist,r0
+	mov	oblist,@2(r0)
+
+	call	cstring
+	callc	putc	#147
+	callc	putc	#145
+	callc	putc	#156
+	save	.genseed
+
+	mov	.nil,r0
+	mov	r0,.rset
+	mov	r0,.ccont
+	mov	r0,.errst
+	global	<bindl>
+	clr	-(sp)
+	mov	#syslnk+2,-(sp)
+	mov	sp,bindl+2
+
+;*******************************************************
+;**** Force garbage collection on every gnode if on ****
+;
+;	.globl	trb
+;	inc	trb
+;
+;*******************************************************
+
+
+ln:	call	node,<ifunc,.nil>
+	call	$$eval
+	bcs	ln
+	save
+	br	ln
+
+
+
+	func	$ifunc,,,1
+	calli	ichan	#0
+	call	lform
+	bcs	2$
+	call	$$eval
+	bcs	2$
+	calli	ochan	#1
+	call	prin
+	calli	newlin
+2$:	return	.nil
+
+	func	cstring,,,1
+	call	gnode
+	mov	2(sp),r0
+	mov	#t.string,(r0)
+	calli	sout
+	return
+
+	entry	..error
+	mov	2(sp),lerrno
+	mov	.backg,.backc
+	cmp	.errst,.nil
+	bne	errret
+
+	entry	..text
+	mov	r0,-(sp)
+	mov	4(sp),r0
+	calli	msgfil
+	calli	msgout
+	mov	(sp)+,r0
+errret:	mov	(sp)+,(sp)
+	sec	
+	reti
+
+.loseg
+.nil:	.+2			;the most crucial atom
+	t.symb			;atom header
+	.+2			;atom cell
+	.nil+2			;value cell - value is self
+	.+2			;pname pointer
+	.+4			;next pname cell
+	.byte	156,151
+	1
+	.byte	154,0
+$ispec:	t.nsubr			;initialization function
+	$ifunc
+sysatm:
+
+
+
+.ccont:		0
+.errst:		0
+.t:		0
+.quote:		0
+.lambda:	0
+.local:		0
+.label:		0
+.go:		0
+.return:	0
+.cond:		0
+.funarg:	0
+.oblist:	0
+.genseed:	0
+.rset:		0
+.list:		0
+
+.symb:		0
+.int:		0
+.real:		0
+.string:	0
+
+.expr:		0
+.fexpr:		0
+.lexpr:		0
+.nexpr:		0
+.sexpr:		0
+.macro:		0
+
+.subr:		0
+.fsubr:		0
+.lsubr:		0
+.nsubr:		0
+.ssubr:		0
+		0
+oblist:		0
+ifunc:		$ispec
+
+
+atmend:
+gennum:	1
+.backg:	5
+.backc:	0
+igc:	'\
+lerrno:	0
+radix:	10.
+gc.min:	40.
+gcount:	0
+freesp:	0
+freels:	0
+bitmap:	.limit
+bitend = bitmap+2
+stkend:	0
+
+
+	.end	start
+

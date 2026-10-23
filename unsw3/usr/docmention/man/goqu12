@@ -1,0 +1,1 @@
+nroff -Tqu12 $2 ../tmac.anual $1

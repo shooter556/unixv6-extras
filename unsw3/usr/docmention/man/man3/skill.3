@@ -1,0 +1,21 @@
+.th SKILL III 11/16/75
+.sh NAME
+skill \*- send a signal to a set of processes
+.sh SYNOPSIS
+.ft B
+skill(pid,sig)
+.ft R
+.sh DESCRIPTION
+Skill is similar to the KILL(II) system call, except that it
+sends the specified signal not only to the specified process,
+but also to all of its descendents.
+The youngest descendents
+receive the signal first.
+.sh DIAGNOSTICS
+Skill returns 0 upon success, -1 if the proc table can't be
+read (and thus the skill can't be done), and +1 if the skill
+was performed, but at least one of the processes to be signalled
+either wasn't found or couldn't be signalled (kill returned -1).
+.sh AUTHOR
+Bob Greenberg [bobg]
+.sh BUGS

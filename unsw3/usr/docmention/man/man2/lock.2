@@ -1,0 +1,28 @@
+.th LOCK II 5/4/78
+.sh NAME
+lockon, lockoff \*- lock/unlock process in memory
+.sh SYNOPSIS
+(lockon = 49.: not in assembler)
+.br
+.bd "sys lockon"
+
+.bd "lockon()"
+
+(lockoff = 50.: not in assembler)
+.br
+.bd "sys lockoff"
+
+.bd "lockoff()"
+.sh DESCRIPTION
+.it Lockon
+locks the calling process in low memory
+(\ after suitable core shuffling\ ).
+.s3
+.it Lockoff
+unlocks the calling process.
+.s3
+Locking a process in memory when there is not enough unlocked memory
+left to run anything else is obviously undesirable.
+.sh DIAGNOSTICS
+Error bit (c-bit) is set if the user is not the super-user.
+From C, a -1 value indicates an error.

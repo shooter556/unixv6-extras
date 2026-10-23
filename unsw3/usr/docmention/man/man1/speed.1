@@ -1,0 +1,35 @@
+.th SPEED I Feb/1976
+.sh NAME
+speed \*- do lineprinter escapes and overstrikes
+.sh SYNOPSIS
+.bd speed
+[ file ... ]
+.sh DESCRIPTION
+The output of
+.it speed
+is the concatenation of the
+files whose names are its arguments
+with the characters {, }, |, ~, and ` replaced by the corresponding
+single case lineprinter escapes.
+As well, all backspaces are removed, and overstrikes are done by inserting
+CR characters and overprinting two or more lines.
+Unlike the lineprinter driver, which does roughly the same thing,
+speed guarantees to print singly overstruck lines in at most two
+lines of output.
+If no input files are mentioned, the standard input is used.
+Thus,
+.it speed
+may be used as a filter.
+For text with a lot of escapes, or a large number of underscored words,
+this can amount to considerable time saving over letting the lineprinter
+driver do the work.
+.sh "SEE ALSO"
+lp(IV), lpr(I)
+.sh DIAGNOSTICS
+A message is printed on the diagnostic output stream for each file that
+could not be opened.
+.sh AUTHOR
+Tom Duff
+.sh BUGS
+Does not understand any control characters other than NL, BS, CR, and HT.
+Thus, in particular, formfeeds can cause peculiar results.

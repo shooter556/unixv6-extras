@@ -1,0 +1,41 @@
+.th GPROCS II
+.sh NAME
+gprocs \*- get system process information
+.sh SYNOPSIS
+(gprocs = 61.; not in assembler)
+.br
+(buf in r0)
+.br
+.ft B
+sys gprocs
+.br
+.ft R
+(number of process slots in r0)
+.s3
+.ft B
+gprocs(buf);
+.br
+char *buf;
+.ft R
+.sh DESCRIPTION
+.bd Gprocs
+returns a copy of the system
+process table in the users area
+.it buf.
+.it Buf
+must be large enough to accomodate the whole of this information.
+.bd Gprocs
+returns a word (in r0) containing the number of process slots in
+the system.
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 20
+/usr/sys/param.h	for number of processes
+/usr/sys/proc.h	for process structure
+.fi
+.sh "SEE ALSO"
+skill (I), skill (III), alive (III)
+.sh DIAGNOSTICS
+Error bit (c-bit) is set for segmentation violations.
+From C, a -1 value is returned on error.

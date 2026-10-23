@@ -1,0 +1,10 @@
+cc -o test test.c
+cc -o test2 test2.c
+as sd.s
+ld -o sd.o -r a.out -lc -la
+cc -c sd?.c
+lked Z sd.o sd1.o -lc -la
+mv a.out sd1
+lked Z sd.o sd2.o -lc -la
+mv a.out sd2
+rm *.o

@@ -1,0 +1,482 @@
+/ ALEKHINE DEFENSE
+/ 1	p-k4
+  1		n-kb3	"Alekhine's Defense
+  2	p-k5
+  2		n-q4
+  3	p-q4
+  3		p-q3
+  4	p-qb4
+  4		n-n3
+  5	p-b4
+  5		pxp
+  6	bpxp
+  6		n-b3
+  7	b-k3
+  7		b-b4
+  8	n-qb3
+  8		p-k3
+  9	n-b3
+  9		b-k2
+ 10	p-q5
+ 10		pxp
+ 11	pxp
+ 11		n-n5
+ 12	n-q4
+ 12		b-n3
+ 13	b-n5+
+ 13		k-b1
+ 14	o-o
+ 14		k-n1
+ 15	n-b5
+ 15		bxn
+ 16	bxn
+
+  9		n-n5	_ wa 58
+ 10	r-b1
+ 10		p-b4
+ 11	p-qr3
+ 11		pxp
+ 12	nxp
+ 12		n-b3
+ 13	nxb
+ 13		pxn
+ 14	q-b3
+ 14		nxbp
+ 15	bxn
+ 15		q-r5+
+ 16	k-q2
+ 16		qxb
+ 17	n-q5
+
+ 14		p-n3	_ wa 8.a
+ 15	n-n5
+ 15		b-k2
+ 16	n-q6+
+
+  9		q-q2	_ wa 59
+ 10	b-k2
+ 10		o-o-o
+ 11	o-o
+ 11		b-kn5
+ 12	p-qr4
+ 12		bxn
+ 13	pxb
+ 13		nxqp
+ 14	p-r5
+ 14		n-r1
+ 15	p-r6
+ 15		p-qn3
+ 16	bxn
+ 16		qxb+
+ 17	qxq
+
+ 11		p-b3	_ wa 60
+ 12	p-q5
+ 12		nxkp
+ 13	nxn
+ 13		pxn
+ 14	p-qr4
+ 14		p-qr4
+ 15	n-n5
+ 15		b-qn5
+ 16	p-q6
+ 16		p-b4
+ 17	b-q2
+
+ 17		qxp	_ wa 8.c
+ 18	nxq+
+ 18		rxn
+ 19	rxb
+ 19		rxb
+ 20	q-kb1
+ 20		pxr
+ 21	qxp+
+ 21		n-q2
+ 22	r-q1
+ 22		r-b1
+ 23	q-r3
+
+ 11		b-k2	_ fr
+ 12	p-q5
+ 12		pxp
+ 13	bxn
+ 13		rpxb
+ 14	pxp
+ 14		n-n5
+ 15	n-q4
+ 15		p-n3
+ 16	nxb
+ 16		pxn
+ 17	rxp
+ 17		nxqp
+ 18	p-k6
+ 18		pxp
+ 19	rxn
+ 19		pxr
+ 20	b-n4
+
+ 17		qxr
+ 18	b-n4
+
+  9		b-kn5	_ wa 8.b
+ 10	b-k2
+ 10		bxn
+ 11	pxb
+ 11		q-r5+
+ 12	b-b2
+ 12		q-b5
+ 13	p-b5
+ 13		n-q4
+ 14	nxn
+ 14		pxn
+ 15	q-n3
+ 15		o-o-o
+ 16	q-k3
+ 16		qxq
+ 17	bxq
+ 17		p-b3
+ 18	pxp
+ 18		pxp
+ 19	p-qr3
+
+/ CARO KANN DEFENCE
+/ 1	p-k4
+  1		p-qb3	"Caro-Kann Defense
+  2	p-q4
+  2		p-q4
+  3	p-k5
+  3		b-b4
+  4	b-q3
+  4		bxb
+  5	qxb
+  5		p-k3
+  6	p-kb4
+  6		n-k2
+  7	n-k2
+  7		q-r4+
+  8	n-q2
+  8		q-r3
+  9	qxq
+  9		nxq
+ 10	p-qr3
+ 10		r-b1
+ 11	k-b2
+ 11		p-r4
+ 12	p-kn3
+
+  6		p-kn3	_ wa 62
+  7	n-k2
+  7		q-n3
+  8	n-q2
+  8		p-kr4
+  9	p-kn3
+  9		p-qb4
+ 10	p-b3
+ 10		n-qb3
+ 11	p-qr3
+ 11		p-r4
+ 12	p-r3
+
+  7		p-kr4	_ wa 8.b
+  8	p-kn3
+  8		n-kr3
+  9	p-kr3
+  9		n-b4
+ 10	n-q2
+ 10		q-n3
+ 11	n-kb3
+ 11		p-b4
+ 12	p-b3
+ 12		n-b3
+ 13	k-b2
+
+  6		p-qb4	_ wa 8.a
+  7	p-b3
+  7		n-qb3
+  8	n-k2
+  8		q-n3
+  9	p-qr3
+  9		p-qr4
+ 10	p-b5
+ 10		pxbp
+ 11	qxp
+ 11		pxp
+ 12	r-b1
+ 12		p-b3
+ 13	q-k6+
+ 13		b-k2
+ 14	nxp
+
+/ NIMZOVITCH DEFENCE
+/ 1	p-k4
+  1		n-qb3	"Nimzovich Defense
+  2	n-qb3
+  2		p-k3
+  3	p-q4
+  3		p-q4
+  4	p-k5
+  4		p-b3
+  5	b-qn5
+  5		pxp
+  6	q-r5+
+  6		p-n3
+  7	qxkp
+  7		n-b3
+  8	nxp
+  8		qxn
+  9	qxn
+  9		qxnp
+ 10	qxr
+ 10		qxr
+ 11	b-kr6
+ 11		qxn+
+ 12	b-b1
+
+  3		b-n5	_ pco 128.9
+  4	n-k2
+  4		p-q4
+  5	p-k5
+  5		p-kr4
+  6	n-b4
+  6		p-kn3
+  7	b-k3
+  7		bxn+
+  8	pxb
+  8		n-r4
+  9	b-q3
+  9		n-k2
+ 10	n-r3
+ 10		p-qb4
+ 11	b-kn5
+
+  2		p-k4
+*v3
+
+/ CENTER COUNTER
+/ 1	p-k4
+  1		p-q4	"Center Counter Defense
+  2	pxp
+  2		qxp
+  3	n-qb3
+  3		q-qr4
+  4	p-q4
+  4		p-k4
+  5	n-b3
+  5		b-qn5
+  6	b-q2
+  6		b-n5
+  7	b-k2
+  7		pxp
+  8	nxp
+  8		q-k4
+  9	qn-n5
+  9		bxb+
+ 10	qxb
+ 10		bxb
+ 11	qxb
+ 11		qxq+
+ 12	kxq
+
+ 12		n-qr3	_ wa 7.b
+ 13	k-b3
+ 13		o-o-o
+ 14	nxp+
+ 14		k-n1
+ 15	n/7-n5
+ 15		p-qb3
+ 16	qr-q1
+ 16		pxn
+ 17	n-b6+
+ 17		k-b2
+ 18	rxr
+ 18		pxn
+ 19	kr-q1
+ 19		n-b4
+ 20	p-qn4
+ 20		n-k3
+ 21	kr-q7+
+ 21		k-n3
+ 22	r-n8+
+ 22		k-r3
+ 23	r-r8+
+ 23		k-n3
+ 24	p-b4
+
+  9		qbxb	_ pco
+ 10	qxb
+ 10		bxb+
+ 11	kxb
+ 11		qxq+
+ 12	kxq
+ 12		n-qr3
+ 13	kr-k1
+ 13		o-o-o
+ 14	nxp+
+ 14		k-n1
+ 15	qn-b6+
+
+  4		n-kb3	_ wa 54
+  5	n-b3
+  5		b-n5
+  6	p-kr3
+  6		b-r4
+  7	p-kn4
+  7		b-n3
+  8	n-k5
+  8		p-b3
+  9	n-b4
+  9		q-b2
+ 10	q-b3
+ 10		bxp
+ 11	b-b4
+ 11		q-q2
+ 12	q-k2
+
+  8		n-q4	_ wa 55
+  9	n-b4
+  9		nxn
+ 10	nxq
+ 10		nxq
+ 11	b-n2
+
+  6		bxn	_ wa 56
+  7	qxb
+  7		p-b3
+  8	b-q2
+  8		qn-q2
+  9	b-qb4
+  9		p-k3
+ 10	o-o-o
+ 10		q-b2
+ 11	kr-k1
+ 11		o-o-o
+ 12	b-n3
+
+  3		q-q1	_ pco
+  4	p-q4
+  4		n-kb3
+  5	b-k3
+  5		p-b3
+  6	b-q3
+  6		b-n5
+  7	kn-k2
+  7		p-k3
+  8	q-q2
+  8		b-q3
+  9	n-n3
+  9		q-b2
+ 10	p-kr3
+ 10		bxn
+ 11	rpxb
+ 11		nxp
+ 12	pxb
+ 12		qxp+
+ 13	b-b2
+
+  4		p-qb3	_ pco
+  5	n-b3
+  5		b-n5
+  6	b-k2
+  6		bxn
+  7	bxb
+  7		p-k3
+  8	o-o
+  8		n-b3
+  9	r-k1
+  9		b-k2
+ 10	q-q3
+
+  2		n-kb3	_ wa 7.a
+  3	p-q4
+  3		nxp
+  4	p-qb4
+  4		n-kb3
+  5	n-qb3
+  5		p-kn3
+  6	p-kr3
+  6		b-n2
+  7	b-k3
+  7		o-o
+  8	q-q2
+  8		n-b3
+  9	n-b3
+
+/ YUGOSLAV DEFENSE
+/ 1	p-k4
+  1		p-q3	"Yugoslav Defense
+  2	p-q4
+  2		n-kb3
+  3	n-qb3
+  3		p-kn3
+  4	p-b4
+  4		b-n2
+  5	n-b3
+  5		o-o
+  6	b-q3
+  6		p-b4
+  7	p-q5
+  7		p-k3
+  8	pxp
+  8		bxp
+  9	p-b5
+  9		b-b1
+ 10	o-o
+ 10		n-b3
+
+/ IRREGULAR
+/ 1	p-k4
+  1		p-kn3	_ wa 64
+  2	p-q4
+  2		b-n2
+  3	p-kb4
+  3		p-n3
+  4	n-kb3
+  4		b-n2
+  5	b-q3
+  5		p-k3
+  6	o-o
+  6		n-k2
+  7	p-b5
+
+  3		p-q3	_ kings indian pco 275.127
+
+  2		p-q3	_ pco 104.3
+  3	b-qb4
+  3		b-n2
+  4	n-kb3
+  4		n-kb3
+  5	q-k2
+  5		n-b3
+  6	p-kr3
+  6		o-o
+  7	n-b3
+  7		p-k4
+  8	pxp
+  8		pxp
+  9	b-k3
+  9		q-k2
+ 10	o-o-o
+ 10		b-k3
+ 11	n-kn5
+ 11		bxb
+ 12	qxb
+ 12		kr-q1
+ 13	b-b5
+ 13		q-k1
+ 14	n-n5
+ 14		rxr+
+ 15	rxr
+ 15		r-b1
+ 16	bxp
+ 16		p-n3
+ 17	k-n1
+ 17		n-qr4
+ 18	qxp+
+ 18		qxq
+ 19	nxq
+ 19		kxn
+ 20	bxp
+ 20		r-qn1
+ 21	bxn
+ 21		rxn
+ 22	bxp

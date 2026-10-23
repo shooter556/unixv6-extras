@@ -1,0 +1,6 @@
+: loop
+if $1x = x exit
+ar x $1
+../sfile2 *.mac
+shift
+goto loop

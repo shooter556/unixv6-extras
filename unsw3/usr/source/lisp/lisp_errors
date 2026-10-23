@@ -1,0 +1,108 @@
+0	L I S P / 11
+1	Allocation failure - initializtion
+2	Argument not a string - err
+3	Too few free cells - garbage collect
+4	Input syntax error - read
+5	End of file on input - read
+6	Arguments not a list - apply
+7	Illegal function type - apply
+8	Unknown function - apply
+9	Incorrect argument count - apply
+10	Improper list structure - apply
+11	Attempt to take c...r of atom - apply
+12	Apply: function = \
+13	Apply: argument = \
+14	Argument not a list - clist
+15	Entering special debug mode ...
+16	INTERRUPT
+17	QUIT
+18	Locals not a list - bind
+19	Local not a symbolic atom - bind
+20	Values not a list - bind
+21	Number of locals and values differ - bind
+22	Unbound variable - eval
+23	Argument not a list - eval
+24	Eval: form = \
+25	Unknown function - eval
+26	Incorrect argument count - eval
+27	End of file within $$-artifact - read
+28	End of file within string - read
+29	Argument not a list - *append
+30	Argument not a list - nconc
+31	Argument not a list - reverse
+32	Too few arguments - prin
+33	Invalid channel - prin
+34	Invalid channel - read
+35	Invalid channel - outstr
+36	Argument not a string - outstr
+37	Too few arguments - outstr
+38	Invalid channel - terpri
+39	Too few arguments - eval
+40	Incorrect argument types - err
+41	Invalid channel - readch
+42	Invalid channel - eof
+43	Too few arguments - min
+44	Too few arguments - max
+45	Too few arguments - comparisons
+46	Incompatible types - comparisons
+47	Invalid channel - close
+48	Unreasonable file name - openi
+49	Open did not succeed - openi
+50	Unreasonable file name - openo
+51	Create failed - openo
+52	Unreasonable file name - delete
+53	Delete failed - delete
+54	Null name - mkatom
+55	Argument not a string - mkatom
+56	Argument not a string - genseed
+57	Atomic argument - car
+58	Atomic argument - cdr
+59	Atomic argument - last
+60	Atomic argument - rplaca
+61	Atomic argument - rplacd
+62	Argument not list - map
+63	Argument not list - mapc
+64	Argument not list - maplist
+65	Argument not list - mapcar
+66	Argument count mismatch - pair
+67	Argument not list - pair
+68	Argument not list - assoc
+69	Not dotted pair - assoc
+70	Zero modulus - remainder
+71	Too few arguments - quotient
+72	Invalid argument types - quotient
+73	Divide by zero - quotient
+74	Overflow - quotient
+75	Invalid argument types - *times
+76	Overflow - *times
+77	Too few arguments - difference
+78	Invalid argument type - minus
+79	Overflow - minus
+80	Overflow - *plus
+81	Invalid argument types - *plus
+82	Invalid argument - abs
+83	Invalid argument - float
+84	Invalid argument - sign
+85	Invalid argument - entier
+86	Too large for an integer - entier
+87	Invalid argument - setch
+88	Program syntax error - prog
+89	Label not found - prog
+90	Syntax error - for
+91	Syntax error - while
+92	Too few arguments - select
+93	Bad clause - select
+94	Not symbolic atom - set
+95	Argument not string - concat
+96	Argument not string - substr
+97	Argument not string - dupl
+98	Argument not string - ascii
+99	Illegal radix - radix
+100	Argument not symbolic atom - intern
+101	Argument not a string - incon
+102	Atom has no value - val
+103	Improper context - eval
+104	Improper context - apply
+105	Not symbolic atom - unset
+106	Illegal special atom - read
+107	End of file in special atom - read

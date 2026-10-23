@@ -1,0 +1,115 @@
+if $2x != x goto both
+goto $1x
+: allx
+echo all tables to be prepared.
+sh $0 1 I
+sh $0 2 II
+sh $0 3 III
+sh $0 4 IV
+sh $0 5 V
+sh $0 6 VI
+sh $0 7 VII
+sh $0 8 VIII
+: tx
+echo preparing ptxx
+cat tocx? >cattoc
+ptx -t cattoc ptxx
+rm cattoc
+echo preparing tocs
+ed - tocx1
+1,$s/([IV]*) /" "/
+1,$s/.*/.xx "&"/
+w toc1
+e tocx2
+1,$s/([IV]*) /" "/
+1,$s/.*/.xx "&"/
+w toc2
+e tocx3
+1,$s/([IV]*) /" "/
+1,$s/.*/.xx "&"/
+w toc3
+e tocx4
+1,$s/([IV]*) /" "/
+1,$s/.*/.xx "&"/
+w toc4
+e tocx5
+1,$s/([IV]*) /" "/
+1,$s/.*/.xx "&"/
+w toc5
+e tocx6
+1,$s/([IV]*) /" "/
+1,$s/.*/.xx "&"/
+w toc6
+e tocx7
+1,$s/([IV]*) /" "/
+1,$s/.*/.xx "&"/
+w toc7
+e tocx8
+1,$s/([IV]*) /" "/
+1,$s/.*/.xx "&"/
+w toc8
+q
+echo toc preparation finished
+exit
+: 1x
+echo prepare tocx1
+sh $0 1 I
+exit
+: 2x
+echo prepare tocx2
+sh $0 2 II
+exit
+: 3x
+echo prepare tocx3
+sh $0 3 III
+exit
+: 4x
+echo prepare tocx4
+sh $0 4 IV
+exit
+: 5x
+echo prepare tocx5
+sh $0 5 V
+exit
+: 6x
+echo prepare tocx6
+sh $0 6 VI
+exit
+: 7x
+echo prepare tocx7
+sh $0 7 VII
+exit
+: 8x
+echo prepare tocx8
+sh $0 8 VIII
+exit
+: x
+echo usage: sh tocrc "[12345678] [all] [t]"
+exit
+: both
+chdir /srce/usr/docmention/man/man$1
+echo in man$1, prepare xa
+ls >xa
+ed - xa
+v/\.[12345678]$/d
+g/intro.2/d
+g/^/s//e /\
+.a\
+/NAME/1p
+w
+q
+echo prepare xb
+ed - <xa >xb
+echo rewrite xa
+echo "1,$s/ *\\\*- */("$2") /" >xa
+if $1 != 2 goto 1f
+echo including intro
+echo 0a >>xa
+echo "intro(II) introduction to system calls" >>xa
+echo . >>xa
+: 1f
+echo w /srce/usr/docmention/man/man0/tocx$1 >>xa
+echo edit xb with xa
+ed - xb <xa
+echo tocx$1 written and exit
+rm xa xb

@@ -1,0 +1,33 @@
+.th MAS I 1/26/76
+.sh NAME
+mas \*- Motorola M6800 assembler
+.sh SYNOPSIS
+.bd mas
+name ...
+.sh DESCRIPTION
+.it Mas
+assembles the concatenation of the specified files.
+.s3
+The object file, in Mikbug loader format, is left in the file
+.it "m.out"
+and the listing in the file
+.it "m.lst."
+.sh FILES
+/lib/mas2		pass 2 of the assembler
+.br
+/tmp/motm?.[0-5]	temporary
+.br
+m.out			object
+.br
+m.lst			listing
+.sh "SEE ALSO"
+`Motorola M6800 Microprocessor Programming Manual'.
+.br
+`UNIX Motorola M6800 Assembler Reference Manual'.
+.sh DIAGNOSTICS
+When syntatic or semantic errors occur the line-number
+and filename in which it occurred is output with a
+self-explanatory description of the error.
+Errors in pass 1 cause cancellation of pass 2.
+.sh BUGS
+Symbol table overflow is not checked.

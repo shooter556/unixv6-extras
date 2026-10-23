@@ -1,0 +1,43 @@
+echoall
+cc -O -c calloc.c
+cc -O -c clrerr.c
+cc -O -c data.c
+as -o doprnt.o doprnt.s
+cc -O -c doscan.c
+cc -O -c error.c
+cc -O -c fgets.c
+cc -O -c filbuf.c
+cc -O -c flsbuf.c
+cc -O -c fopen.c
+cc -O -c fprintf.c
+cc -O -c fputs.c
+cc -O -c freopen.c
+cc -O -c fseek.c
+cc -O -c ftell.c
+cc -O -c gcvt.c
+cc -O -c getpw.c
+cc -O -c gets.c
+cc -O -c getw.c
+cc -O -c intss.c
+cc -O -c printf.c
+cc -O -c puts.c
+cc -O -c putw.c
+cc -O -c rdwr.c
+cc -O -c rew.c
+cc -O -c scanf.c
+cc -O -c setbuf.c
+cc -O -c sprintf.c
+cc -O -c strcat.c
+cc -O -c strcmp.c
+cc -O -c strcpy.c
+cc -O -c strlen.c
+cc -O -c strout.c
+cc -O -c stuff.c
+cc -O -c system.c
+cc -O -c tmpnam.c
+cc -O -c ungetc.c
+ar rv /lib/libS.a
+rm *.o
+chmod 644 /lib/libS.a
+cp stdio.h /usr/include/stdio.h
+chmod 644 /usr/include/stdio.h

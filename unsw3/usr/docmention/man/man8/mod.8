@@ -1,0 +1,57 @@
+.th MOD VIII June/77
+.sh NAME
+mod \*- modify documentation database
+.sh SYNOPSIS
+.bd mod
+.sh DESCRIPTION
+.it mod
+is used to modify the database used by
+.it doc
+(I).
+The main use of this database is to document changes and local peculiarities
+for a particular installation.
+.s3
+.it mod
+is designed for interactive use but, since it uses standard input
+and output, it can be used in more cunning ways.
+.s3
+.it mod
+includes all the facilities available under
+.it doc.
+As well it supports the following commands:
+.s3
+.nf
+	-k string = insert keyword 'string';
+	-l string n = link keyword 'string' to title 'n';
+	-x string n = kill link between keyword 'string' & title 'n';
+	-d string or n = delete keyword 'string' or title 'n';
+	-e n = edit title 'n';
+	-w n = write title 'n' & abstract to file 'n';
+	-? n = list keywords linked to title 'n';
+	-i filename = insert title & abstract from file;
+	-r filename n = replace title & abstract 'n' with file;
+	carriage return = list commands;
+	rubout = return to command level;
+	control D = exit.
+.fi
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 25
+.fi
+.dt
+/usr/pub/keywords
+.br
+/usr/pub/keylinks
+.br
+/usr/pub/titles
+.br
+/usr/pub/abstracts
+.sh DIAGNOSTICS
+self-explanatory
+.sh "SEE ALSO"
+doc(I)
+.sh AUTHOR
+Peter Hewitt (University of New South Wales)
+.sh BUGS
+Command syntax analysis is primitive - core dumps have occurred.

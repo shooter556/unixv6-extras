@@ -1,0 +1,22 @@
+: loop
+if $1x = x exit
+if $1 = all goto all
+echo "-->" $1
+cc -O -s $1.c; cp a.out $1; rm a.out
+shift
+goto loop
+:
+: all
+:
+echo "--> crd"
+cc -O -s crd.c; cp a.out crd; rm a.out
+echo "--> ear"
+cc -O -s ear.c; cp a.out ear; rm a.out
+echo "--> spl"
+cc -O -s spl.c; cp a.out spl; rm a.out
+echo "--> go"
+cc -O -s go.c; cp a.out go; rm a.out
+echo "--> stop"
+cc -O -s stop.c; cp a.out stop; rm a.out
+echo "--> tell"
+cc -O -s tell.c; cp a.out tell; rm a.out

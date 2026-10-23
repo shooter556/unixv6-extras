@@ -1,0 +1,19 @@
+this directory contains two subdirectories and four files
+
+orig	this directory and sub directories contains
+	an original level 6 unix system ( ie  UNTOUCHED )
+
+updat	this directory and sub directories contains
+	an original level 6 unix system updated by
+	a diff listing which indicated the differences
+	between level 6 unix and bell unix !!
+
+unix_changes	diff listing of changes twixt level 6 unix & bell unix
+
+change_notes	commentary describing the differences
+
+t.c & up.c	two programs used to produce updat from orig
+		using the diff listing !!
+
+
+					ian J

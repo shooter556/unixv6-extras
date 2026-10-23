@@ -1,0 +1,1 @@
+file /bin/$1 /etc/$1 /usr/bin/$1

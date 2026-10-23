@@ -1,0 +1,324 @@
+.th SLUP I "1 July 77"
+.sh NAME
+slup \*- source librarian and update program
+.sh SYNOPSIS
+.bd slup
+library -[function][subswitch][/modname]... file1 file2 ... filen
+.sh DESCRIPTION
+.it Slup
+is an improved
+librarian or archiver with the ability to make logged modifications
+to source files that are stored in the library.
+.s3
+When
+.it slup
+is called without arguments it will print out
+a very brief summary of the available commands.
+.s3
+When given only a library name,
+.it slup
+tests the validity of
+the named file to make sure that it is indeed a source library.
+.s3
+If
+.it slup
+is called with more than one argument then the following
+list of switches applies.
+If no switch is supplied then the default is
+"\fB-i\fR".
+.s3
+Most switches may be followed by `v' for verbose.
+The only exception is "\fI-n\fR".
+This usually means that the name of the module gets typed
+before the operation is attempted.
+In the case of the "\fB-l\fR" switch, it actually gives
+a much more informative output.
+.s3
+There is a strange thing called groups built into this librarian.
+Any modules may be optionally included in up to 16 named
+groups.
+If this is done it is possible to extract one or more groups
+by name.
+This allows very simple grouping of files, still
+allowing some files to be common to a number of packages.
+The group functions are supposed to have group specifiers
+instead of modset specifers.
+.s3
+	-switches[/groupname]...
+.s3
+A group-name is up to 10 characters long.
+.s3
+.lp +6 5
+-n	Create a new library.
+.s3
+.lp +6 5
+-i	Requires a following list of file names which are inserted
+into the library.
+If a module of the same name is already in the library,
+.it slup
+is
+aborted.
+.s3
+.lp +6 5
+-r	Identical in operation to "\fB-i\fR" except that modules
+already contained in the library may be replaced.
+.s3
+.lp +6 5
+-l	List the names of all of the modules contained in the
+library.
+If a list of names is supplied, then only they are listed.
+.s3
+.lp +6 5
+-x[c]
+.br
+Extract all of the modules in the library.
+If a list of names is supplied then only those are extracted.
+.sp
+The `\fIc\fR' sub-switch
+forces the extraction of common files if no module names
+are specified.
+.s3
+.lp +6 5
+\&-xo	Used to extract the original file
+without any modifications applied at all.
+.s3
+.lp +6 5
+\&-xu[/modnames]...
+.br
+Used to produce a file which when
+applied to
+.it slup
+as update directives would make the
+modifications necessary to produce the current library.
+.s3
+.lp +6 5
+-p[a][c][d][y][?]
+.br
+Slightly similar to `\fI-x\fR' in that this function
+extracts a module from the library.
+The difference is that no source file is produced.
+Instead, a listing is produced on the printer describing
+the file in the library.
+The sub-switches are used to select different printing options.
+`\fIa\fR' select all printing options; i.e. everything
+gets printed that I can think of.
+`\fIc\fR' allows included common files to be listed.
+`\fId\fR' prints any deleted lines.
+`\fIy\fR' prints any lines contained in yanked modification sets.
+`\fI?\fR' will be a temporary measure whilst we think of
+a good switch to allow directives be printed.
+The default if no sub-switches are used is: "\fId?\fR".
+.s3
+.lp +6 5
+-d	Delete the named modules from the library.
+.s3
+.lp +6 5
+-du[/modname]...
+.br
+Delete named modifications from each of the
+named source files in the library.
+If no modification names are specified, then all modification
+sets will be deleted.
+.s3
+.lp +6 5
+-u[p]
+.lp +6 5
+-t[p]
+.br
+Update the modules in the library.
+The update directives are taken from standard input
+(i.e. at the terminal).
+For the format and description of the directives to update
+the source files see below.
+If the `\fIp\fR' sub-switch is used then a report will be
+produced describing the effect of the update run.
+The `\fIt\fR' (test) function is different from update in
+the following respects:
+the library itself is not altered in any way;
+the temporary updated modules are always extracted
+immediately after the update.
+.s3
+.lp +6 5
+-c	Will flag the specified files as being common files.
+About all that this means is that you may have to use
+"\fI-xc\fR" when you want to extract them.
+.s3
+.lp +6 5
+-g/groupname...
+.br
+The modules in the specified groups will be involved in
+some other function to be specifed with another
+function switch.
+.s3
+.lp +6 5
+-gi/groupname...
+.br
+Add the named modules to the specified groups.
+.s3
+.lp +6 5
+-gd/groupname...
+.br
+Delete the specified group-names from the group directory.
+.s3
+.lp +6 5
+-gn/groupname...
+.br
+Add the specified group-names to the group directory.
+.i0
+.dt
+.s3
+UPDATE DIRECTIVES
+.br
+.s3
+The update directives are structured somewhat like editor
+commands.
+They all begin with an \fIescape\fR character which is by
+default `*', but may be changed.
+If it is desired to enter a text line beginning with the
+escape character, then the escape character may itself be
+escaped by preceding it with a reverse-slant (`\\').
+All modification runs on any source module must be
+given a unique name.
+This must be different from all modification set names
+already associated with that particular source module.
+The modification set name may have up to 10 characters.
+.s3
+Some of the update directives require a line specifier.
+This is formatted thus:
+.br
+	[modsetname.]linenumber
+.br
+The null modsetname represents the original source file.
+The format of the line specifier will now be: ".[linenumber]".
+If no modsetname or `.' is given then a default name
+is used.
+This is set with the "\fI*modname\fR" directive and
+is initally the null modsetname.
+.s3
+.lp +5 5
+*p [char]
+.lp +5 5
+*prefix [char]
+.br
+Change the current escape character to "char".
+.s3
+.lp +5 5
+*dk filename
+.lp +5 5
+*deck filename
+.br
+Set \fIslup\fR up to update the named source module.
+If another source module was just being updated, the updated
+module is placed in safe keeping for replacing in the library.
+.s3
+.lp +5 5
+*id modset
+.lp +5 5
+*ident modset
+.br
+Name to be used for this modification set.
+.s3
+.lp +5 5
+*m modset
+.lp +5 5
+*modname modset
+.br
+A name to be used as the default name in any following
+source file line address specifiers.
+.s3
+.lp +5 5
+*a linespec
+.lp +5 5
+*after linespec
+.lp +5 5
+*i linespec
+.lp +5 5
+*insert linespec
+.br
+Specify a position in the file to insert some text.
+Any text following this directive is inserted after the
+specified line.
+.s3
+.lp +5 5
+*b linespec
+.lp +5 5
+*before linespec
+.br
+Has a similar function to "\fI*after\fR" but allows text
+to be inserted before a line instead of after.
+.s3
+.lp +5 5
+*d linespec1[,linespec2]
+.lp +5 5
+*delete linespec1[,linespec2]
+.br
+Deletes all text between the two line-specifiers.
+"Linespec1" must be less than "linespec2" in value.
+If only one line-specifier is supplied then only that line will
+be deleted.
+.s3
+.lp +5 5
+*r linespec1[,linespec2]
+.lp +5 5
+*restore linespec1[,linespec2]
+.br
+Restores all previously deleted text between the two
+line-specifiers.
+.s3
+.lp +5 5
+*c filename
+.lp +5 5
+*call filename
+.br
+When the file is extracted, then the specified module in the
+library is included at this point.
+The included module will often be a "common" file.
+This is simply a line in the text; not a directive.
+.s3
+.lp +5 5
+*y modsetname
+.lp +5 5
+*yank modsetname
+.br
+Will yank the specified modification set from this file.
+When a modification set is yanked then anything that that
+modification set did will be ignored.
+.s3
+.lp +5 5
+*u modsetname
+.lp +5 5
+*unyank modsetname
+.br
+Unyanks the specified modification set from this file.
+.s3
+.lp +5 5
+*e
+.lp +5 5
+*exit
+.br
+Exit from this update run.
+Mainly supplied so that MPL may be used in update mode within
+command files.
+.s3
+.lp +5 5
+** ....
+.lp +5 5
+*/ ....
+.br
+Allows comments to be inserted with the update directives.
+These do not come out on the resultant file.
+In the case with the asterisk (**), the comment gets saved in
+the library and will come out on listings.
+.i0
+.dt
+.sh FILES
+/tmp/slup#
+.sh "SEE ALSO"
+macro(I), object(V), lpr(I)
+.sh AUTHOR
+Craig McGregor (University of New South Wales)
+.sh BUGS
+Many and varied.
+.br
+Groups and non-source library features are not fully implemented.
+Similarly common files.

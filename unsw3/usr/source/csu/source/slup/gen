@@ -1,0 +1,5 @@
+slup a -n
+cp slupgrp.c x.z
+cp slupstr.c x.q
+slup a -iv x.z x.q
+: rm x.z x.q

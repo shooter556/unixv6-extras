@@ -1,0 +1,70 @@
+.tl 'LINK(I)'12/17/75'LINK(I)'
+NAME
+	link	- 	fortran linker
+
+SYNOPSIS
+	link -flags ... files
+
+DESCRIPTION
+
+	The named object files are combined to produce a runnable UNIX module.
+The flags are as follows:
+
+	-ls	print a load map
+
+	-no	produce no out file
+
+	-p1	combine text and data segments.
+		make the out file non-shareable.
+
+	-ns	place no symbol information in the out file
+
+	-go	place only global symbols in the out file
+
+	-o=fn	place the out code in the named file.
+
+	-m=fn	place the load map in the named file.  If the
+		file name is blank,  the load map is directed
+		to the standard output. Implies "-ls"
+
+	-nl	library modules are excluded from the map and 
+		cross reference.
+	-cr:xxx	A global cross reference is produced on the
+		listing file. The optional flags are:
+			a	symbols in alphabetical order.
+				default is in module order
+			t	omit symbols used only once.
+			s	omit symbols declared but not
+				referenced.
+			f	omit internal fortran-type .
+				symbols.
+			
+
+	-id	Set for separate i/d space. Fortran programs
+		may not be separated.
+
+	If no out file is explicitly specified,  and -no is not indicated,  the
+name of the out file is that of the first object file with the extension ".out" .
+If no map file is explicitly specified,  and -ls is indicated,  the name of
+the map file is that of the first object file with the extension ".map".
+If an object file cannot be opened, the extension ".obj"
+is appended to the file name,  and another open is attempted.   The following
+special switches may be mixed with the file names:
+
+	-f4	this is an abbreviation for the fortran
+		library "/lib/f4"
+	-i:n	the name is declared as an undefined global.
+		this is useful for dragging in library
+		routines at a special place in the out file.
+	-e:n	the name is not considered sufficient grounds
+		to enter a library module until countered by
+		an "-i:".  It is not clear what this is useful
+		for.
+
+EXAMPLE
+	a fortran compile,load, and go with subroutines from before and no error messages:
+
+	fortran main
+	link main sub1 sub2 sub3 "-i:$short" -f4
+	main.out
+

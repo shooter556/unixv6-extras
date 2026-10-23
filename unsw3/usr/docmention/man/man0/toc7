@@ -1,0 +1,5 @@
+.xx "crfork, crexit, crread, crwrite, crexch, crprior" "coroutine scheme"
+.xx "mm" "macros for making manuals"
+.xx "ms" "macros for formatting manuscripts"
+.xx "plot: openpl et al." "graphics interface"
+.xx "salloc" "string allocation and manipulation"

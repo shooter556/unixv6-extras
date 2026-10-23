@@ -1,0 +1,116 @@
+
+
+		X    X	 XXXX	XXXXX	 XXXX
+		XX  XX	X    X	X    X	X
+		X XX X	X    X	X    X	 XXXX
+		X    X	X    X	X    X	     X
+		X    X	X    X	X    X	X    X
+		X    X	 XXXX	XXXXX	 XXXX
+
+
+
+mod000		25/3/78		KFH		mas 0
+
+	This!
+	The final entry of 'S9' onto 'm.out' was suppressed by ChrisM
+	(date unknown) so that the user can type it and can tell if
+	the load was successful.  The actual modification was altered slightly
+	by replacing the procedure call (in mas21.c) with the close instruction
+	(by KFH).
+
+
+mod001		2/2/78		SWB		mas 0 2[1367]
+
+	Suppresses unnecessary code on 'ORG' directive.
+	Suppress '00' output on 'RMB' directive.
+	Suppress unnecessary output of last line onto 'm.out' by simple test.
+	Line length increased to 132 characters.
+
+
+mod002		2/2/78		KFH		mas 1[1] 2[1]
+
+	Signal processing added to clean up rubbish in /tmp before exitting
+	when 'DEL' or 'QUIT' received.  This exit procedure ('mexit') was
+	used in a few other places, for a tidy exit.
+
+
+mod003		22/2/78		KFH		mas 21
+
+	Altered command line '-l' and '-o' options :
+
+		  mas file [morefiles] -ojack -lfred
+
+	writes 'm.out' to 'jack' and 'm.lst' to 'fred' - may be in any order.
+	They may also be path names.
+
+
+mod004		27/2/78		SWB		mas 0 1[23] 2[23]
+
+	Added '\r', '\b' recognition.
+
+
+mod005		17/3/78		KFH		mas 0 1[127] 2[12367]
+
+	Use system utilities 'fopen' and 'getc' for i-o. This involved re-use
+	of a register variable 'n' in 'mas11.c' as a buffer pointer for the
+	initial test for the character '#'. If this test is not successful
+	the buffer must be reset as though no characters had been read.
+	Similarly the variable 'intptr' was introduced in 'mas21.c' for this
+	purpose. The procedure 'getch' in 'mas22.c' dissappeared.  It was
+	necessary to redefine 'EOF' as -1 (returned by 'getc').
+
+
+mod006		28/3/78		SWB		mas 0 1[12] 2[12]
+
+	Extended label length to seven characters by making full
+	use of the symbol table.  Added 'LMAX' = max. no. of characters
+	in a label.  Improved flexibility of program by adding two 'sizeof'
+	tests for the size of a 'symbol' element.
+
+
+mod007		1/4/78		KFH		mas 0 1[1-7] 2[1-7]
+
+	The old 'mas1.h' and 'mas2.h' were combined into 'mas0.h' (as they were
+	almost identical).  Stylistic improvements were made to all programs.
+	The dummy first file descriptor (which is immediately closed) was
+	changed from 6 (pass 1) and 10 (pass 2) to -1.
+
+
+mod008		12/4/78		SWB		mas 0 1[157] 27
+
+	A define for the new constant "NSYMBOL"  was entered in mas0.h.
+	This defines the size of the symbol table.  Symbol table overflow
+	checking was added.
+	Similarly for forward/back temporary labels: the new constant is
+	NFB and symbol table overflow is checked in "deffb".
+	Two resulting error routines: "symtblerr" & "fberr".
+
+
+mod009		14/4/78		KFH		mas 26
+
+	Segmentation bug fixed (although probably never used!).  With the
+	seg -C directive, the segmentation character should remain with the
+	global symbols - it was being prepended to the locals on printout.
+
+
+mod010		21/7/78		SWB		mas 13
+
+	The FCC directive was made more tolerant of strange characters.
+
+
+mod011		24/7/78		SWB		mas [12][137]
+
+	An include-external-file directive under the name of "icl" was
+	implemented. Following the pseudo-mnemonic must be given
+	the name of an existing "masable" file. File names can be
+	pathnames of up to 30 characters.
+
+
+mod012		31/7/78		SWB		mas [12]2
+
+	The procedure "digit" was replaced by a macro equivalent "DIGIT".
+
+
+mod013		10/8/78		SWB		mas 26
+
+	Comment lines are now untouched.

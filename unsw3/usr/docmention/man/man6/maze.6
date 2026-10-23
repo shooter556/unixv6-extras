@@ -1,0 +1,23 @@
+.th MAZE VI 9/27/75
+.sh NAME
+maze \*- draw a maze
+.sh SYNOPSIS
+.bd /usr/games/maze
+[length [width]]
+.sh DESCRIPTION
+Maze draws a maze of given size in a format suitable for the lineprinter.
+A path through the maze is an alternatingly vertical and horizontal
+line which does not pass through a non-blank character,
+and which ends at the exit at the top left
+and starts at the entrance somewhere else on the perimeter.
+.ti+5
+There is guaranteed to be exactly one non-backtracking path through
+any maze (i.e. the author would like to see any counterexamples).
+If the length or the width is omitted or has 
+(in the program's humble opinion)
+an implausible value,
+a default value is substituted
+(currently 31 in either case).
+.sh AUTHOR
+Tom Duff.
+.sh BUGS

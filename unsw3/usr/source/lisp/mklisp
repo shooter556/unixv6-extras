@@ -1,0 +1,17 @@
+mkdir temp$$$
+chdir temp$$$
+ar x ../libsource
+../sfile1 *
+mv lsplib ../lsplib
+rm *
+chdir ..
+rmdir temp$$$
+macro -ns header.mac lispa.mac
+macro -ns header.mac lispb.mac
+macro -ns header.mac lispc.mac
+macro -ns header.mac lispd.mac
+macro -ns header.mac lispe.mac
+macro -ns header.mac lispf.mac
+macro -ns header.mac lispg.mac
+link -id -ls lisp?.obj lsplib
+rm *.obj

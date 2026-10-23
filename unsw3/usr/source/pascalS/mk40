@@ -1,0 +1,7 @@
+echoall
+cc -f -c -O *.c 
+ld -n /lib/fcrt0.o *.o -lc -la -lp -la -lc
+cp a.out $1
+chmod 755 $1
+ls -l $1
+rm a.out

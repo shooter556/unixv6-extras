@@ -1,0 +1,2779 @@
+	.title	star trek
+	.enabl	ama
+	.mcall	gtsym$
+	.list	me
+	gtsym$
+	.nlist	me
+
+midlx	=	1000
+midly	=	0600
+
+ticks	=	60.	;clock ticks/second
+
+;
+; dataaq	active body count?
+; dataaz	player #1 dfile
+; subaaa	tstpri/tstbrx?
+; subaaj	$divd
+;
+zzzzzz	=	.
+;
+;
+jmp	start
+;
+;
+
+pwrvec	=	024
+
+.=	zzzzzz+1000
+
+stack	=	.
+
+start:	jmp	@#go
+sunmas:	.word	66000		;sun's mass (gravitational field)
+thrust:	.word	44000		;total rocket thrust factor
+omega:	.word	600		;delta turn angle
+databe:	.word	74000
+	1000
+sunrad:	.word	10		;sun's radius (for collision sensing)
+gogo:	reset
+	mov	#stack,sp
+	mov	#gogo,@#pwrvec
+	mov	#br7,@#pwrvec+2
+	clr	@#ps
+	mov	#4,comets	;;comets??
+	mov	#2,r5		;;players???
+	mov	r5,ships	;player count
+	mov	#dlist,r0
+	mov	#dataaz,r1
+10$:	mov	#djmp,(r0)+
+	mov	r1,(r0)+
+	add	#10,r1
+	mov	#<"  >,(r1)+	;initialize players score
+	mov	#<"  >,(r1)+
+	mov	#<" 0>,(r1)+
+	add	#22,r1
+	mov	r0,(r1)		;connect up djmp
+	add	#26,r1
+	clr	(r1)		;clear out score
+	add	#160,r1		;next player
+	dec	r5
+	bgt	10$
+	mov	r0,vdlist
+newgam:	mov	#point!int7,r2
+	mov	#stars,r3
+12$:	mov	r2,(r3)+
+	mov	#8.,r5		;8 stars of each intensity
+14$:	jsr	pc,random
+				;this algorithm will be repeated.
+	asr	r1		;first get rid of non-random bit
+	mov	r1,r0
+	asr	r0
+	asr	r0
+	sub	r0,r1		;now r1 has 0.75 of original value
+	asr	r1
+	asr	r1
+	asr	r1
+	asr	r1
+	asr	r1		;then divide by 32
+				;this results in a random number
+				;between +/-577 (octal)
+	add	#midlx,r1
+	bic	#^c<maxx>,r1
+	bis	#intx,r1
+	mov	r1,(r3)+
+	jsr	pc,random
+	asr	r1
+	mov	r1,r0
+	asr	r0
+	asr	r0
+	sub	r0,r1
+	asr	r1
+	asr	r1
+	asr	r1
+	asr	r1
+	asr	r1
+	add	#midly,r1
+	bic	#^c<maxx>,r1
+	mov	r1,(r3)+
+	dec	r5
+	bgt	14$
+	sub	#200,r2		;one intensity step
+	cmp	r2,#<point!int2>	;minimum intensity
+	bge	12$
+	mov	vdlist,r0
+	clr	switch
+	mov	ships,r5	;player count
+	mov	#10716,r3
+16$:	mov	#<"25>,-34.(r3)	;initialze torpedoes
+	mov	#25.,(r3)+
+	clr	(r3)		;torpedoe tube timer
+	mov	-68.(r3),12(r3)
+	add	#pwrvec,r3
+	mov	#4,r4
+18$:	clr	(r3)+		;initial velocity = 0
+	dec	r4
+	bgt	18$
+	mov	r3,r2
+	add	#-94.,r2
+	mov	#4,r4
+20$:	mov	(r2)+,(r3)+	;get initial position
+	dec	r4
+	bgt	20$
+	clr	(r3)+		;ship id = 0
+	mov	r0,(r3)+
+	mov	#djmp,(r0)+
+	mov	r3,(r0)+	;connect to dlist
+	mov	r3,r2
+	mov	#point,(r2)+	;generate ship's location
+	clr	(r2)+
+	clr	(r2)+
+	mov	#shortv!int6,(r2)+
+	clr	(r2)+		;torpedoe tube
+	clr	(r2)+
+	mov	#<shortv!int6!blkon>,(r2)+
+	clr	(r2)+		;jet
+	mov	#<shortv!int4!blkoff>,(r2)+
+	mov	r3,r1
+	add	#-61.,r1
+22$:	mov	#intx,(r2)+
+	tstb	(r1)+		;generate area for ship outline
+	beq	24$
+	bpl	22$
+				;	0 end of list
+				;	+ intensify
+				;	- don't intensify
+	clr	-2(r2)
+	br	22$
+24$:	mov	#djmp,-2(r2)
+	mov	r0,(r2)		;connect back to dlist
+	mov	r0,-(sp)
+	mov	r5,-(sp)
+	mov	-30.(r3),r0	;get the initial angle
+	jsr	pc,rotate	;rotate the ship to match
+	mov	(sp)+,r5
+	mov	(sp)+,r0
+	add	#174,r3		;next ship
+	dec	r5
+	bgt	16$
+	mov	r0,dataah
+	mov	#go,r3
+	mov	comets,r5	;comet count
+	bgt	26$
+	jmp	42$		;none?
+26$:	mov	r0,-(sp)
+28$:	mov	#4,r4
+30$:	clr	(r3)+		;initialize velocity
+	dec	r4
+	bgt	30$
+	mov	#2,r2
+32$:	jsr	pc,random
+	asr	r1
+	mov	r1,(r3)+	;initialize position
+	clr	(r3)+
+	dec	r2
+	bgt	32$
+	jsr	pc,random
+	mov	#2,(r3)+	;comet id = 2
+	mov	(sp)+,r0
+	mov	r0,(r3)+
+	mov	#djmp,(r0)+
+	mov	r3,(r0)+	;connect to dlist
+	mov	r0,-(sp)
+	mov	r5,-(sp)
+	mov	r3,-(sp)
+	mov	#point,(r3)+
+	clr	(r3)+
+	clr	(r3)+
+	mov	#shortv,(r3)+
+	mov	(pc)+,(r3)+
+	gt$rel	-7,-15
+	mov	#char!int4,(r3)+
+	mov	#<'*>,(r3)+
+	mov	#djmp,(r3)+
+	mov	r0,(r3)+	;connect back to dlist
+	mov	(sp),r3
+	jsr	pc,tstsun	;generated in sun?
+	bgt	34$
+	mov	(sp)+,r3
+	br	38$		;if already hit by sun, don't bother
+				;(what about dlist?)
+34$:	jsr	pc,subaak
+	mov	r1,r4
+	mov	#stack,r0
+	clr	r1
+	jsr	pc,subaaj
+	clc
+	ror	r1
+	adc	r1
+	mov	r1,-(sp)
+				;comet size?
+	mov	sunmas,r4
+	jsr	pc,subaah
+	asr	r0
+	ror	r1
+	jsr	pc,subaak
+	mov	r1,r0
+	mov	(sp)+,r1
+	mov	r0,-(sp)
+	mov	2(sp),r3
+	mov	-8.(r3),r4
+	neg	r4
+	mov	-12.(r3),r5
+	jsr	pc,subaag
+	asl	r1
+	rol	r0
+	asl	r1
+	rol	r0
+	asl	r1
+	rol	r0
+	asl	r1
+	rol	r0
+	asl	r1
+	rol	r0
+	asl	r3
+	rol	r2
+	asl	r3
+	rol	r2
+	asl	r3
+	rol	r2
+	asl	r3
+	rol	r2
+	asl	r3
+	rol	r2
+	asl	r1
+	adc	r0
+	asl	r3
+	adc	r2
+	mov	r0,r4
+	mov	r2,r5
+	mov	(sp)+,r1
+	jsr	pc,subaag
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	tst	rseed
+	bpl	36$
+	neg	r0
+	neg	r2
+	neg	r1
+	sbc	r0
+	neg	r3
+	sbc	r3
+36$:	mov	(sp)+,r4
+	mov	r1,-18.(r4)
+	mov	r3,-14.(r4)
+	mov	r4,r3
+	mov	r0,-20.(r3)
+	mov	r2,-16.(r3)
+38$:	add	#34,r3
+	mov	(sp)+,r5
+	dec	r5
+	ble	40$
+	jmp	28$
+40$:	mov	(sp)+,r0
+42$:	mov	r0,fdlist	;point to free part of dlist
+	mov	r3,fspace	;and space for matching dfiles
+	mov	#18.,r5		;generate some null dlist entries
+44$:	mov	#djmp,(r0)+
+	tst	(r0)+
+	mov	r0,-2(r0)	;insert null pointer
+	dec	r5
+	bgt	44$
+	mov	#dnop,(r0)+	;non-djmp to allow end of dlist test
+	mov	#djmp,(r0)+
+	mov	#dfile,(r0)	;link back to start
+;
+; now get to work.  all dfiles generated at this point, so
+; startup display may be run.
+;
+	mov	#intclx,@#lkv	;connect startup clock
+	mov	#br6,@#lkv+2
+	mov	#intdsx,@#gtstpv ;and startup display processor
+	mov	#br2,@#gtstpv+2
+	mov	#ticks,tictoc
+	movb	#<'3>,cntdwn	;countdown from here
+	mov	vdlist,r0	;want to put a special dfile in here
+	mov	#djmp,(r0)+
+	mov	(r0),-(sp)	;so we take out the normal one
+	mov	#dfilex,(r0)	;and insert our own (first)
+	mov	#<statsa!sinof!ital0!sync>,@#dfilex
+	mov	#dfilex,@#dpc	;and start the display
+	mov	#100,@#lks	;and then the clock
+46$:	wait			;wait for count-down to finish
+	tst	@#dfilex
+	bne	46$
+	mov	vdlist,r0	;all finished.  so, we can now put
+	mov	#djmp,(r0)+	;the normal first dlist entry back
+	mov	(sp)+,(r0)	;in (it was saved you know)
+	mov	#1,tictoc	;quick kick for generation of ships
+	mov	#intclk,@#lkv	;normal clock
+	mov	#intdst,@#gtstpv ;and display processor
+	mov	#<statsa!sinof!lplite!ital0!sync>,@#dfile
+	mov	ships,surviv	;they are all still alive!
+	clr	dataaq
+	mov	#dfile,@#dpc	;all ready, so start display
+	mov	#100,@#lks	;and clock
+48$:	wait
+	cmp	surviv,#1	;only 1 surviver?
+	bgt	48$		;no. more than one.
+	blt	50$		;maybe they are all dead
+	cmp	ships,#1	;did we only start off with one?
+	beq	48$		;yes. carry on
+50$:	tst	dataaq
+	bgt	48$
+	mov	#intdsx,@#gtstpv ;put the startup display file back in
+	clr	@#lks		;and stop the clock
+	com	@#dfilex	;make a halt?
+	mov	#dstop,@#dfile
+52$:	wait
+	tst	@#dfilex
+	bne	52$
+	tst	surviv		;were there any survivors at all?
+	ble	56$		;no.
+	mov	vdlist,r0	;lets find the surviver
+54$:	tst	(r0)+		;skip "djmp"
+	mov	(r0)+,r3
+	cmp	r0,r3		;null djmp?
+	beq	54$		;yes.  this one got wiped
+	inc	-44.(r3)	;survived. assumed to be ship.
+	mov	-44.(r3),r1	;get the upped score
+	mov	#-84.,r2	;and where to display it
+	add	r3,r2
+	mov	#6,r5		;and the number of digits
+	jsr	pc,$print	;and print it all out
+56$:	jmp	newgam		;now let someone else play
+	.page
+intclk:	mov	@#swr,switch	;switch register buffer
+	dec	tictoc
+	bgt	10$
+	jsr	r5,subaaa
+	.word	br3,	zaaafm
+	clr	@#dsr		;ring bell!!
+				;because i couldn't get in. too much
+				;activity
+10$:	rti
+;
+; if pre-interrupt priority .ge. test val then return,
+; else set to higher priority and jump to routine.
+; requires 2 arguments -
+;	1. test priority
+;	2. routine address
+;
+subaaa:	clr	-(sp)
+	mov	6(sp),(sp)	;interrupt priority on stack
+	bic	#^c<br7>,(sp)
+	cmp	(sp)+,(r5)+	;is it too low?
+	bge	10$		;no
+	mov	-2(r5),@#ps	;yes. set higher
+	mov	(r5),r5		;and make jump
+	rts	r5
+10$:	tst	(r5)+
+	rts	r5
+zaaafm:	mov	#3,tictoc
+	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	r2,-(sp)
+	mov	r3,-(sp)
+	mov	r4,-(sp)
+	mov	r5,-(sp)
+	mov	vdlist,r2
+10$:	cmp	(r2)+,#djmp	;end of djmp list?
+	bne	40$		;yes.
+	mov	(r2)+,r3
+	cmp	r3,r2		;ignore null djmps. (somebody got wiped)
+	beq	10$
+	mov	r2,-(sp)
+	movb	-4(r3),r2
+	tstb	-3(r3)		;is body dying?
+	beq	20$
+	add	#6,r2
+20$:	jsr	pc,@30$(r2)
+	mov	(sp)+,r2
+	br	10$		;try for next on list
+30$:	.word	subaas		;still surviving ships,
+	.word	subaat		;comets
+	.word	subaau		;and torpedoes
+	.word	subaav		;these are the dying ones.
+	.word	subaaw
+	.word	subaax
+40$:	mov	(sp)+,r5
+	mov	(sp)+,r4
+	mov	(sp)+,r3
+	mov	(sp)+,r2
+	mov	(sp)+,r1
+	mov	(sp)+,r0
+	jsr	r5,subaaa
+	.word	br2,	zaaafn
+	rti
+; ship
+subaav:	cmpb	-3(r3),#1
+	beq	zaaaay
+	cmpb	-3(r3),#-64.
+	beq	zaaaay
+	incb	-3(r3)
+	bmi	zaaaaz
+	beq	zaaadb
+	cmpb	-3(r3),#64.
+	beq	zaaadc
+	mov	#databd,r4
+	mov	#10,r0
+zaaabc:	bitb	#1,-3(r3)
+	bne	zaaaay
+	mov	#10,r5
+	add	r3,r5
+zaaadd:	add	(r4)+,(r5)+
+	tst	(r5)+
+	dec	r0
+	bgt	zaaadd
+	bitb	#6,-3(r3)
+	bne	zaaaay
+	sub	#200,6(r3)
+zaaaay:	jmp	subaat
+zaaadc:	jsr	r5,subaaf
+	.byte	-64.
+	.even
+	br	zaaaaz
+zaaadb:	tstb	-41.(r3)
+	beq	zaaaba
+	decb	-3(r3)
+	br	zaaaaz
+zaaaba:	dec	dataaq
+zaaabb:	mov	-2(r3),r4	;dfile's entry in dlist
+	add	#4,r4
+	mov	r4,-2(r4)	;disconnect dfile
+zaaaaz:	rts	pc
+; comet
+subaaw:	cmpb	-3(r3),#1
+	beq	zaaaay
+	incb	-3(r3)
+	cmpb	-3(r3),#64.
+	beq	zaaabb
+	mov	#11426,r4
+	mov	#4,r0
+	br	zaaabc
+; torp
+subaau:	dec	-22.(r3)
+	bgt	10$		;torpedoe still active?
+	incb	-3(r3)		;about time too.
+	mov	#<point!int7>,(r3)
+10$:	jmp	positn
+; torp
+subaax:	incb	-3(r3)
+	cmpb	-3(r3),#32.	;have we died away yet?
+	bgt	20$
+	bitb	#3,-3(r3)	;time to fade a bit more?
+	bne	10$
+	sub	#200,(r3)	;down 1 brightness level
+10$:	jmp	positn
+20$:	mov	-24.(r3),r4	;tell parent space-ship that we
+	decb	-41.(r4)	;finally died away
+	br	zaaabb
+; ship
+subaas:	dec	-40.(r3)	;how long since torpedoe was fired?
+	bgt	10$		;not long enough
+	clr	-40.(r3)	;it should be loaded by now
+	tstb	-42.(r3)	;unless of cource we are out of
+	beq	10$		;torpedoes.
+	bis	#intx,10(r3)	;intensify torpedoes
+10$:	mov	-110.(r3),-(sp)	;get this guy's switch register mask
+	clr	r0		;initialize turn angle
+	bit	(sp),switch	;calculate turning movement
+	beq	15$
+	add	omega,r0	;turn counter-clockwise
+15$:	clc
+	ror	(sp)
+	bit	(sp),switch
+	beq	20$
+	sub	omega,r0	;turn clockwise
+20$:	tst	r0
+	beq	25$		;don't waste time if no turn
+	add	-30.(r3),r0
+	mov	r0,-30.(r3)	;update ship's angle
+	jsr	pc,rotate	;and rotate ship to match
+25$:	asr	(sp)
+	bit	(sp),switch	;any thrust?
+	beq	30$		;no
+				;increase velocities
+	add	-26.(r3),-18.(r3)
+	adc	-20.(r3)
+	add	-22.(r3),-14.(r3)
+	adc	-16.(r3)
+	add	-28.(r3),-20.(r3)
+	add	-24.(r3),-16.(r3)
+	bis	#intx,16(r3)	;intensify jet
+	br	35$
+30$:	bic	#intx,16(r3)	;no thrust - turn jet off
+35$:	asr	(sp)
+	bit	(sp),switch	;firing torpedoes?
+	beq	50$		;no
+	bit	#intx,10(r3)	;is there one in tube yet?
+	beq	50$		;no
+	cmpb	-41.(r3),#9.	;yes. but can only remotely control
+	bge	50$		;a limited number
+	mov	fdlist,r4	;now look for a free dfile to
+				;generate the torpedoe in
+40$:	cmp	(r4)+,#djmp	;end of dlist?
+	bne	50$		;yes. no slots available
+	mov	(r4)+,r5
+	cmp	r5,r4		;is this slot already full?
+	bne	40$		;yes. can't use
+	bic	#intx,10(r3)	;turn off torpedoe tube glow
+	mov	#20.,-40.(r3)	;no more torpedoes for this long
+	incb	-41.(r3)	;now this ship owns 1 more active torp.
+	mov	r3,-(sp)
+	sub	#4,r4
+	mov	r4,r5
+	sub	fdlist,r5	;calculate where the dfile goes
+	asl	r5
+	asl	r5
+	asl	r5
+	asl	r5		;each chunk is 64. bytes long
+	add	fspace,r5
+	mov	r3,(r5)+
+	mov	#150.,(r5)+	;torpedoe's lifetime
+	mov	r3,r0
+	add	#-38.,r0
+	add	#-20.,r3	;veloc
+	mov	#4,r1
+45$:	mov	(r3)+,(r5)
+	add	(r0)+,(r5)+
+				;veloc incr?
+				; slightly sick??
+	mov	(r3)+,(r5)+
+	dec	r1
+	bgt	45$
+	mov	#4,(r5)+	;torp id = 4
+	mov	r4,(r5)+
+	mov	r5,r0
+	mov	#point!int4,(r5)+
+	mov	#<intx!midlx>,(r5)+
+	mov	#<midly>,(r5)+
+	mov	#djmp,(r5)+
+	mov	r4,(r5)		;connect back to dlist
+	add	#4,(r5)
+	mov	r0,2(r4)	;actually connect to dlist when ready
+	mov	(sp)+,r3
+	decb	-42.(r3)	;one less torpedoe
+	movb	-42.(r3),r1
+	mov	r3,r2
+	add	#-74.,r2	;display it here
+	mov	#2,r5		;digits
+	jsr	pc,$print
+50$:	tst	(sp)+		;fall thru to comets
+subaat:	jsr	pc,tstsun	;collided with sun?
+	bgt	10$
+	tstb	-3(r3)		;not if we're already dying
+	bne	positn
+	jsr	r5,subaaf
+	.byte	1
+	.even
+	br	positn		;don't test for other deaths
+10$:	mov	r3,-(sp)
+	jsr	pc,subaak
+	mov	r1,r4
+	mov	#stack,r0
+	clr	r1
+	jsr	pc,subaaj
+	clc
+; gravity??????
+	ror	r1
+	adc	r1
+	mov	r1,-(sp)
+	mov	-12.(r3),r4
+	mov	-8.(r3),r5
+	jsr	pc,subaag
+	asl	r1
+	rol	r0
+	asl	r1
+	rol	r0
+	asl	r1
+	rol	r0
+	asl	r1
+	rol	r0
+	asl	r1
+	rol	r0
+	asl	r3
+	rol	r2
+	asl	r3
+	rol	r2
+	asl	r3
+	rol	r2
+	asl	r3
+	rol	r2
+	asl	r3
+	rol	r2
+	asl	r1
+	adc	r0
+	asl	r3
+	adc	r2
+	mov	(sp)+,r4
+	mov	r2,-(sp)
+	mov	r0,-(sp)
+				;drag in
+	mov	sunmas,r1
+	neg	r1
+	jsr	pc,subaah
+	asl	r1
+	adc	r0
+	mov	r0,r1
+	mov	r4,r0
+	mov	(sp)+,r4
+	mov	(sp)+,r5
+	mov	r0,-(sp)
+	jsr	pc,subaag
+	asl	r1
+	adc	r0
+	asl	r3
+	adc	r2
+	mov	r0,r4
+	mov	r2,r5
+	mov	(sp)+,r1
+	jsr	pc,subaag
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+				;xtra veloc
+	mov	(sp)+,r4
+	add	r1,-18.(r4)
+	adc	-20.(r4)
+	add	r3,-14.(r4)
+	adc	-16.(r4)
+	mov	r4,r3
+	add	r0,-20.(r3)
+	add	r2,-16.(r3)
+				;update position
+positn:	add	-18.(r3),-10.(r3)
+	adc	-12.(r3)
+	add	-14.(r3),-6.(r3)
+	adc	-8.(r3)
+	mov	-20.(r3),r0
+	add	-12.(r3),r0
+	rol	r0
+	asr	r0
+	mov	r0,-12.(r3)
+	neg	r0
+	asr	r0
+	asr	r0
+	add	-12.(r3),r0
+	add	#<midlx*32.>,r0
+	asr	r0
+	asr	r0
+	asr	r0
+	asr	r0
+	asr	r0
+	adc	r0		;round it up
+	bic	#^c<maxx>,r0	;don't want intensity bit trouble
+	bic	#<maxx>,2(r3)
+	bis	r0,2(r3)	;update the dfile x position
+	mov	-16.(r3),r0
+	add	-8.(r3),r0
+	rol	r0
+	asr	r0
+	mov	r0,-8.(r3)
+	neg	r0
+	asr	r0
+	asr	r0
+	add	-8.(r3),r0
+	add	#<midly*32.>,r0
+	asr	r0
+	asr	r0
+	asr	r0
+	asr	r0
+	asr	r0
+	adc	r0		;round up
+	bic	#^c<maxx>,r0
+	mov	r0,4(r3)	;update dfile y position
+	rts	pc
+rotate:	add	#400,r0		;round upwards
+	mov	r0,r1
+	swab	r1
+	bic	#^c<76>,r1	;get 5 low order bits of 7 bit angle
+	asl	r1		;and select double word
+	rol	r0
+	rol	r0
+	rol	r0
+	rol	r0
+	mov	r0,r5
+	bic	#^c<6>,r5	;and now the quadrant
+	bit	#2,r5
+	bne	10$
+; quad 0,1
+	mov	databj(r1),-26.(r3)	;veloc incr.
+	mov	databj+2(r1),-22.(r3)
+	mov	databm(r1),-28.(r3)
+	mov	databm+2(r1),-24.(r3)
+	mov	databk(r1),-34.(r3)	;torpedoe veloc incr
+	mov	databk+2(r1),-32.(r3)
+	mov	databl(r1),-38.(r3)
+	mov	databl+2(r1),-36.(r3)
+	bit	#4,r5
+	beq	17$
+; quad 1
+	neg	-28.(r3)
+	neg	-26.(r3)
+	sbc	-28.(r3)
+	neg	-34.(r3)
+	neg	-38.(r3)
+	br	13$
+; quad 2,3
+10$:	mov	databj(r1),-22.(r3)
+	mov	databj+2(r1),-26.(r3)
+	mov	databm(r1),-24.(r3)
+	mov	databm+2(r1),-28.(r3)
+	mov	databk(r1),-32.(r3)
+	mov	databk+2(r1),-34.(r3)
+	mov	databl(r1),-36.(r3)
+	mov	databl+2(r1),-38.(r3)
+	bit	#4,r5
+	bne	13$
+; quad 2
+	neg	-28.(r3)
+	neg	-26.(r3)
+	sbc	-28.(r3)
+	neg	-34.(r3)
+	neg	-38.(r3)
+	br	17$
+; quad 1,3
+13$:	neg	-24.(r3)
+	neg	-22.(r3)
+	sbc	-24.(r3)
+	neg	-32.(r3)
+	neg	-36.(r3)
+17$:	mov	60$(r5),r5	;quadrant?
+	asl	r1
+	asl	r1		;32. * 32. byte chunks
+	asl	r1
+	add	#12466,r1
+	mov	r3,-(sp)
+	mov	r3,r4
+	add	#-64.,r4
+	add	#10,r3		;torp tube
+	clr	-(sp)
+	clr	-(sp)
+20$:	mov	r3,-(sp)
+	movb	(r4)+,r3
+	beq	57$		;end of display?
+	bpl	23$
+	neg	r3		;absolute value
+23$:	add	r3,r1
+	jmp	(r5)
+27$:	movb	(r1),r0		; x	quad 0
+	movb	1(r1),r2	; y
+	br	43$
+30$:	movb	(r1),r2		; y	quad 1
+	movb	1(r1),r0	;-x
+	neg	r0
+	br	43$
+33$:	movb	(r1),r0		;-x	quad 2
+	movb	1(r1),r2	;-y
+	neg	r0
+	br	40$
+37$:	movb	(r1),r2		;-y	quad 3
+	movb	1(r1),r0	; x
+40$:	neg	r2
+43$:	sub	r3,r1
+	mov	(sp)+,r3
+	sub	(sp),r0
+	add	r0,(sp)
+	sub	2(sp),r2
+	add	r2,2(sp)
+	tst	r2
+	bge	47$
+	neg	r2		;absolute value
+	bis	#<misvy>,r2	;and sign
+47$:	tst	r0
+	bge	50$
+	neg	r0		;absolute value
+	bis	#<misvy>,r0	;and sign
+50$:	swab	r0
+	asr	r0
+	bis	r0,r2		;join x  y pieces
+53$:	tst	(r3)+		;data or command?
+	bmi	53$		;command
+	mov	-(r3),r0
+	bic	#^c<intx>,r0	;save intensify flag
+	bis	r0,r2
+	mov	r2,(r3)+	;new data with old intensify flag
+	br	20$
+57$:	tst	(sp)+
+	tst	(sp)+
+	tst	(sp)+
+	mov	(sp)+,r3
+	rts	pc
+60$:	27$	;quadrant	0
+	30$	;		1
+	33$	;		2
+	37$	;		3
+tstsun:	mov	-12.(r3),r1
+	mov	r1,r4
+	jsr	pc,subaah	;calc. x**2
+	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	-8.(r3),r1
+	mov	r1,r4
+	jsr	pc,subaah	;calc. y**2
+	add	(sp)+,r1
+	adc	r0
+	add	(sp)+,r0	;now have: x**2+y**2
+	cmp	r0,sunrad	;within sun's radius yet?
+	rts	pc
+;
+; test for collission or torpedoe hit.
+;
+zaaafn:	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	r2,-(sp)
+	mov	r3,-(sp)
+	mov	r4,-(sp)
+	mov	r5,-(sp)
+	mov	vdlist,r5	;start of adjustable dlist
+5$:	cmp	(r5)+,#djmp
+	beq	7$
+	mov	(sp)+,r5
+	mov	(sp)+,r4
+	mov	(sp)+,r3
+	mov	(sp)+,r2
+	mov	(sp)+,r1
+	mov	(sp)+,r0
+	rti
+7$:	mov	(r5)+,r3	;null djmp?
+	cmp	r3,r5
+	beq	5$		;yes
+	mov	r5,-(sp)
+	movb	-4(r3),-(sp)	;get id
+	tstb	-3(r3)		;alive?
+	beq	15$		;yes
+	cmpb	-4(r3),#4	;torpedoe?
+	beq	10$		;yes. dying torpedoes are useless
+	cmpb	-3(r3),#2	;how dead?
+	blos	13$
+10$:	tst	(sp)+
+	tst	(sp)+
+	br	5$
+13$:	comb	1(sp)		;mark as a dying body
+15$:	cmp	(r5)+,#djmp	;anything left to collide with?
+	beq	20$
+17$:	tst	(sp)+
+	mov	(sp)+,r5
+	br	5$
+20$:	mov	(r5)+,r4
+	cmp	r4,r5
+	beq	15$
+	tstb	-3(r4)
+	beq	23$
+	cmpb	-3(r4),#2	;two dying bodies can't collide
+	bhi	15$
+	tst	(sp)
+	bmi	15$
+23$:	mov	-12.(r3),r0	;difference in position (hi end)
+	sub	-12.(r4),r0
+	mov	-8.(r3),r2
+	sub	-8.(r4),r2
+	jsr	pc,subaae
+	movb	-4(r4),r1
+	tstb	(sp)
+	beq	35$
+	add	(sp),r1
+	bic	#-64.,r1
+	cmp	r0,databo(r1)
+	bgt	15$
+25$:	tst	(sp)
+	bmi	27$
+	jsr	r5,subaaf
+	.byte	1
+	.even
+27$:	tstb	-3(r4)
+	bne	30$
+	mov	r3,r2
+	mov	r4,r3
+	jsr	r5,subaaf
+	.byte	1
+	.even
+	mov	r2,r3
+	tst	(sp)
+	bmi	15$
+	comb	1(sp)
+	cmp	r1,#10
+	bne	15$
+	mov	#-20.,r0
+	mov	r0,r2
+	add	r3,r0
+	add	r4,r2
+	add	(r0),(r2)
+	asr	(r2)
+	mov	(r2)+,(r0)+
+	cmp	(r2)+,(r0)+
+	add	(r0),(r2)
+	asr	(r2)
+	mov	(r2)+,(r0)+
+	br	17$
+30$:	movb	#-1,1(sp)
+	br	15$
+databo	=	.-4
+	1000
+	640
+	500
+35$:	cmp	r0,56$(r1)
+	bgt	15$
+	cmp	r0,53$(r1)
+	bgt	45$
+37$:	cmp	r1,#4
+	bne	25$
+	tst	(sp)
+	blt	25$
+	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	r2,-(sp)
+	mov	r3,-(sp)
+	mov	r4,-(sp)
+	mov	r5,-(sp)
+	mov	-24.(r4),r2
+	cmp	r2,r3
+	bne	40$
+	dec	-44.(r2)
+	br	43$
+40$:	inc	-44.(r2)
+43$:	mov	-44.(r2),r1
+	add	#-84.,r2
+	mov	#6,r5		;had a kill?
+	jsr	pc,$print	;new score
+	mov	(sp)+,r5
+	mov	(sp)+,r4
+	mov	(sp)+,r3
+	mov	(sp)+,r2
+	mov	(sp)+,r1
+	mov	(sp)+,r0
+	br	25$
+45$:	jsr	pc,subaad
+	cmp	r0,60$(r1)
+	ble	37$
+	tst	r1
+	beq	50$
+	jmp	15$
+50$:	mov	r4,r0
+	mov	r3,r4
+	mov	r0,r3
+	jsr	pc,subaad
+	mov	r4,r2
+	mov	r3,r4
+	mov	r2,r3
+	cmp	r0,60$
+	ble	25$
+	jmp	15$
+53$:	1000
+	1000
+	400
+56$:	4000
+	2400
+	2000
+60$:	5000
+	5000
+	4400
+subaad:	clr	-(sp)
+	mov	-12.(r3),r0
+	add	-34.(r3),r0
+	sub	-12.(r4),r0
+	mov	r0,-(sp)
+	mov	-8.(r3),r2
+	add	-32.(r3),r2
+	sub	-8.(r4),r2
+	mov	r2,-(sp)
+	jsr	pc,subaae
+	mov	r0,4(sp)
+	mov	-32.(r3),r2
+	neg	r2
+	asl	r2
+	add	(sp)+,r2
+	mov	-34.(r3),r0
+	neg	r0
+	asl	r0
+	add	(sp)+,r0
+	jsr	pc,subaae
+	add	(sp)+,r0
+	rts	pc
+;
+; absolute r0,r2 (15 bit num including sign)
+; r0 = max(r0,r2) + .5*min(r0,r2)
+;
+subaae:	asl	r0		;extend sign
+	asr	r0
+	bpl	10$
+	neg	r0		;absolute value
+10$:	asl	r2		;extend sign
+	asr	r2
+	bpl	20$
+	neg	r2		;absolute value
+20$:	cmp	r0,r2
+	ble	30$
+	asr	r2		;halve
+	br	40$
+30$:	asr	r0		;halve
+40$:	add	r2,r0		;total
+	rts	pc
+subaaf:	cmpb	-4(r3),#4	;torpedoe?
+	beq	10$		;yes. skip (unkillable)
+	mov	@#ps,-(sp)	;save ps
+	mov	#br7,@#ps	;and inhibit interrupts
+	movb	(r5)+,-3(r3)	;;;
+	inc	r5		;;;
+	inc	dataao		;;;
+	mov	#dstop,@#dfile	;;;start kill
+	mov	(sp)+,@#ps	;;;reset priority
+	rts	r5
+10$:	mov	#point!int7,(r3)
+	movb	(r5)+,-3(r3)
+	inc	r5
+	rts	r5
+intdst:	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	r2,-(sp)
+	mov	r3,-(sp)
+	mov	r4,-(sp)
+	mov	r5,-(sp)
+5$:	mov	vdlist,r4	;start of adjustable dlist
+10$:	cmp	r4,fdlist	;test start of torpedoe area
+	bge	25$
+	cmp	#djmp,(r4)+	;is it this dfile?
+	bne	25$		;no.
+	mov	(r4)+,r3	;maybe. get the djmp addr
+	cmp	r3,r4
+	beq	10$		;no. null djmp
+	cmpb	#1,-3(r3)	;killed?
+	beq	15$
+	cmpb	#-64.,-3(r3)	;already dying?
+	bne	10$
+	mov	r3,r5
+	br	55$
+15$:	movb	-4(r3),r5
+	jmp	@20$(r5)
+20$:	.word	40$	;ship
+	.word	60$	;comet
+25$:	mov	#br7,@#ps
+	tst	dataao
+	bgt	35$
+30$:	mov	#<statsa!sinof!lplite!ital0!sync>,@#dfile
+	mov	#dfile,@#dpc	;restart display
+	mov	(sp)+,r5
+	mov	(sp)+,r4
+	mov	(sp)+,r3
+	mov	(sp)+,r2
+	mov	(sp)+,r1
+	mov	(sp)+,r0
+	rti
+35$:	mov	#br2,@#ps
+	br	5$
+40$:	dec	surviv
+	inc	dataaq
+	mov	#databb,r0
+	mov	#20,r2
+45$:	mov	r3,r5
+	add	#6,r5
+	mov	#shortv!int7,(r5)+
+	clr	@#dsr
+50$:	mov	(r0)+,(r5)+
+	dec	r2
+	bgt	50$
+55$:	mov	#djmp,(r5)+
+	mov	-2(r3),(r5)
+	add	#4,(r5)
+	mov	#br7,@#ps
+	incb	-3(r3)
+	dec	dataao
+	ble	30$
+	mov	#br2,@#ps
+	br	10$
+60$:	mov	#databd+20,r0
+	mov	#10,r2
+	br	45$
+subaag:	mov	r5,-(sp)
+	neg	(sp)
+	mov	r4,-(sp)
+	neg	(sp)
+	mov	r5,-(sp)
+	mov	#15.,r5		;bit count
+	clr	r2
+	clr	r3
+	clr	r0
+	ror	r1		;startoff without sign trouble
+	bcc	30$
+	clc
+	br	33$
+10$:	bcs	37$
+13$:	add	(sp),r2
+	bvc	17$
+	ror	r2
+	br	20$
+17$:	asr	r2
+20$:	ror	r3
+	add	r4,r0
+	bvc	27$
+	ror	r0
+	br	30$
+23$:	asr	r2
+	ror	r3
+27$:	asr	r0
+30$:	ror	r1		;get next bit
+	dec	r5		;all done yet?
+	blt	60$		;yes
+	bcc	23$
+	asr	r2
+	ror	r3
+	asr	r0
+33$:	ror	r1
+	dec	r5		;all done?
+	blt	57$
+	bcc	13$
+37$:	add	4(sp),r2
+	bvc	40$
+	ror	r2
+	br	43$
+40$:	asr	r2
+43$:	ror	r3
+	add	2(sp),r0
+	bvc	50$
+	ror	r0
+	br	53$
+47$:	asr	r2
+	ror	r3
+50$:	asr	r0
+53$:	ror	r1
+	dec	r5		;end of loop?
+	blt	60$
+	bcs	47$
+	asr	r2
+	ror	r3
+	asr	r0
+	ror	r1
+	dec	r5		;all done?
+	bge	10$
+	add	(sp),r2
+	add	r4,r0
+	br	60$
+57$:	add	4(sp),r2
+	add	2(sp),r0
+60$:	mov	(sp)+,r5
+	tst	(sp)+
+	tst	(sp)+
+	rts	pc
+; multiply?
+subaah:	mov	r5,-(sp)
+	mov	r4,-(sp)
+	neg	(sp)
+	mov	#15.,r5		;bit count
+	clr	r0		;clear hi end
+	ror	r1
+	bcc	20$
+	clc
+	br	25$
+5$:	bcs	30$
+10$:	add	r4,r0
+	bvc	15$
+	ror	r0
+	br	20$
+15$:	asr	r0
+20$:	ror	r1
+	dec	r5
+	blt	50$
+	bcc	15$
+	asr	r0
+25$:	ror	r1
+	dec	r5
+	blt	45$
+	bcc	10$
+30$:	add	(sp),r0
+	bvc	35$
+	ror	r0
+	br	40$
+35$:	asr	r0
+40$:	ror	r1
+	dec	r5
+	blt	50$
+	bcs	35$
+	asr	r0
+	ror	r1
+	dec	r5
+	bge	5$
+	add	r4,r0
+	br	50$
+45$:	add	(sp),r0
+50$:	tst	(sp)+
+	mov	(sp)+,r5
+	rts	pc
+;
+; print decimal output
+;
+$print:	mov	#10.,r4		;conversion base
+	mov	r1,-(sp)
+	bpl	10$		;absolute value
+	neg	r1
+10$:	clr	r0
+	jsr	pc,subaaj
+	asr	r0		;adjust remainder
+	add	#<'0>,r0
+	movb	r0,-(r2)	;enter char
+	dec	r5		;update field length
+	tst	r1		;only leading zeroes left?
+	bne	10$		;no
+	tst	(sp)+
+	bpl	20$		;what about sign
+	movb	#<'->,-(r2)
+	dec	r5
+20$:	dec	r5
+	bmi	30$
+	movb	#<' >,-(r2)	;blank fill unused space
+	br	20$
+30$:	rts	pc
+;
+; divide r0,r1 by r4
+; r0 - remainder*2
+; r1 - answer
+;
+subaaj:	mov	#21,-(sp)
+	neg	r4
+10$:	add	r4,r0
+	bcs	20$
+	sub	r4,r0		;restore old value
+	clc
+20$:	rol	r1		;collect result bit
+	rol	r0		;and try next
+	dec	(sp)		;finished?
+	bgt	10$		;no
+	neg	r4
+	tst	(sp)+
+	rts	pc
+subaak:	clc
+	ror	r0
+	ror	r1
+	mov	#100000,r4
+	mov	#intx,r5
+10$:	add	r5,r4
+	add	r4,r0
+	bcs	20$
+	sub	r4,r0		;no carry, restore old
+	asl	r1
+	rol	r0
+	br	30$
+20$:	rol	r1		;collect bit
+	rol	r0
+	sub	r5,r4
+30$:	asr	r5		;all bits used?
+	bne	10$		;no
+	bcc	40$		;yes
+	tst	r1		;last one just went (sign?)
+	bpl	10$
+	inc	r4
+	br	10$
+40$:	rts	pc
+;
+; random number generator
+;
+;  value returned in r0,r1
+;
+random:	mov	rseed,r1	;get seed
+	mov	#<8.*1444.-3>,r4
+	jsr	pc,subaah
+	asr	r0
+	ror	r1
+	add	#33031,r1
+	mov	r1,rseed
+	rts	pc
+;
+; count once/sec. to 0 and stop display and clock.
+;
+intclx:	dec	tictoc		;end of 1 second?
+	bgt	10$
+	decb	cntdwn
+	cmpb	cntdwn,#<'0>
+	beq	20$
+	mov	#ticks,tictoc	;ticks per second
+10$:	rti
+20$:	clr	@#lks
+	mov	#dstop,@#dfilex
+	rti
+intdsx:	clr	@#dfilex
+	rti
+dfilex:	.word	statsa
+	.word	point
+	gt$pnt	200,0
+	.word	longv!int2!line0
+	gt$vec	0,maxy,i
+	gt$vec	maxy,0,i
+	gt$vec	0,-maxy,i
+	gt$vec	-maxy,0,i
+	.word	point
+	gt$pnt	midlx-7,midly-13.
+	.word	char!int6
+cntdwn:	.byte	0		;digit in screen centre at init.
+	.even
+	.word	djmp,	dlist
+dfile:	.word	statsa!sinof!lplite!ital0!sync
+	.word	point
+	gt$pnt	200,0
+	.word	longv!int2!line0
+	gt$vec	0,maxy,i
+	gt$vec	maxy,0,i
+	gt$vec	0,-maxy,i
+	gt$vec	-maxy,0,i
+	.word	point
+	gt$pnt	midlx,midly
+	.word	relatv!int4!lpoff!blkon	;actual sun (blinking)
+	gt$rel	10,0,i
+	gt$rel	-1,3,i
+	gt$rel	-1,3,i
+	gt$rel	-3,1,i
+	gt$rel	-3,1,i
+	gt$rel	-3,-1,i
+	gt$rel	-3,-1,i
+	gt$rel	-1,-3,i
+	gt$rel	-1,-3,i
+	gt$rel	1,-3,i
+	gt$rel	1,-3,i
+	gt$rel	3,-1,i
+	gt$rel	3,-1,i
+	gt$rel	3,1,i
+	gt$rel	3,1,i
+	gt$rel	1,3,i
+	.word	relatv!int4!blkoff
+	gt$rel	1,3,i
+	gt$rel	-1,3,i
+	gt$rel	-1,3,i
+	gt$rel	-3,1,i
+	gt$rel	-3,1,i
+	gt$rel	-3,-1,i
+	gt$rel	-3,-1,i
+	gt$rel	-1,-3,i
+	gt$rel	-1,-3,i
+	gt$rel	1,-3,i
+	gt$rel	1,-3,i
+	gt$rel	3,-1,i
+	gt$rel	3,-1,i
+	gt$rel	3,1,i
+	gt$rel	3,1,i
+	gt$rel	1,3,i
+stars:	. = .+<<8.*2+1>*6*2>
+dlist:	. = .+156
+	.word	000010	;left-most bit of swr to test
+	.word	0		;initial angle
+				;and position
+	.word	20000,	0,	20000,	0
+dataaz:	.word	point
+	gt$pnt	1617,maxy
+	.word	char!int4
+	.ascii	/012345/	;score
+	.word	point
+	gt$pnt	1617,1317
+	.word	char!int0
+	.ascii	/01/		;torpedoe count
+	.ascii	/ TORPS/
+	.word	djmp,	0
+	.byte	-32.,	-2	;torpedoe tube
+	.byte	-4		;jet
+	.byte	-6,	8.,	10.,	12.	;ship profile
+	.byte	14.,	16.,	18.,	6.
+	.byte	22.,	24.,	8.,	-16.
+	.byte	26.,	28.,	18.,	0
+	.even
+	.blkw		;score
+	.blkw		;torpedoe count
+	.blkw		;torpedoe tube load timer
+	.blkw	4	;torp velocity incr.
+	.blkw		;angle
+	.blkw	4	;veloc. incr
+	.blkw	4	;veloc
+	.blkw	4	;position
+	.blkw		;id and status
+	.blkw		;dlist link back
+	.blkw	28.
+	.word	100000	;left-most bit of swr to test
+	.word	100000	;initial angle
+	.word	-20000,	0,	-20000,	0
+	.word	point
+	gt$pnt	0,60
+	.word	char!int4
+	.ascii	/012345/	;score
+	.word	point
+	gt$pnt	0,0
+	.word	char!int0
+	.ascii	/99/		;torpedoe count
+	.ascii	/ TORPS/
+	.word	djmp,	0
+	.byte	-32.,	-2	;torpedoe tube
+	.byte	-4		;jet
+	.byte	-6,	8.,	10.,	12.	;ship profile
+	.byte	14.,	16.,	18.,	6.
+	.byte	20.,	22.,	8.,	-16.
+	.byte	28.,	30.,	18.,	0
+	.even
+	.blkw		;score
+	.blkw		;torpedoe count
+	.blkw		;torpedoe tube load timer
+	.blkw	4	;torp velocity incr.
+	.blkw		;angle
+	.blkw	4	;veloc. incr
+	.blkw	4	;veloc
+	.blkw	4	;position
+	.blkw		;id and status
+	.blkw		;dlist link back
+	.blkw	28.
+databb:	0
+	40200
+	1
+	40201
+	20502
+	40001
+	20200
+	60201
+	502
+	60200
+	101
+	60301
+	402
+	40101
+	200
+	40301
+databd:	200
+	202
+	401
+	401
+	202
+	202
+	401
+	401
+	0
+	40201
+	20301
+	60201
+	301
+	60301
+	201
+	40301
+	201
+	400
+	2
+	400
+vdlist:	.word	0		;portion of dlist that gets entries
+				;dynamically removed (when destroyed)
+dataah:	0
+fdlist:		.word	0	;portion of dlist for generating
+				;torpedoes and fragments.
+fspace:	.word	0		;space for generation of dfiles of
+				;torpedoes and fragments
+	0
+ships:	.word	0		;no. of ships
+comets:	.word	0		;no. of comets generated
+tictoc:	.word	0		;clock tick count
+switch:	.word	0		;switch register buffer
+dataao:	0
+surviv:		.word	0		;no. of ships still on screen
+dataaq:	0
+rseed:	.word	123456		;random number generator seed.
+databm:	. = .+200
+databj:	. = .+200
+databk:	. = .+200
+databl:	. = .+200
+dataat:	.byte	-21.,	0
+	.byte	-29.,	0
+	.byte	-21.,	3.
+	.byte	-8.,	5
+	.byte	10.,	5
+	.byte	27.,	0
+	.byte	10.,	-5
+	.byte	-8.,	-5
+	.byte	-21.,	-3
+	.byte	-24.,	3
+	.byte	-24.,	10.
+	.byte	-10.,	10.
+	.byte	-10.,	-10.
+	.byte	-24.,	-10.
+	.byte	-24.,	-3
+	.byte	3,	0
+.	=	zzzzzz+014470
+go:	reset
+	mov	#stack,sp
+	mov	#go,@#pwrvec
+	mov	#br7,@#pwrvec+2
+	clr	@#ps
+	mov	#profil,r0
+	mov	#profle,r1
+	mov	#databj,-(sp)	;a
+	mov	#databm,-(sp)	;b
+	mov	#databk,-(sp)	;c
+	mov	#databl,-(sp)	;d
+	mov	#12530,-(sp)	;e
+10$:	mov	(r0)+,r4
+	mov	-(r1),r5
+	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	thrust,r1
+	jsr	pc,subaag
+	mov	r5,-(sp)
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	mov	(sp)+,r5
+	mov	r3,-(sp)
+	mov	16(sp),r3
+	mov	r1,(r3)+	;(a)+
+	mov	(sp)+,r1
+	mov	r1,(r3)+	;(a)+
+	mov	r3,14(sp)
+	mov	12(sp),r3
+	mov	r0,(r3)+	;(b)+
+	mov	r2,(r3)+	;(b)+
+	mov	r3,12(sp)
+	mov	#2000,r1
+	jsr	pc,subaag
+	asl	r1
+	adc	r0
+	asl	r3
+	adc	r2
+	mov	10(sp),r3
+	mov	r0,(r3)+	;(c)+
+	mov	r2,(r3)+	;(c)+
+	mov	r3,10(sp)
+	mov	databe,r1
+	jsr	pc,subaag
+	mov	r5,-(sp)
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r0
+	ror	r1
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	asr	r2
+	ror	r3
+	mov	(sp)+,r5
+	asl	r1
+	adc	r0
+	asl	r3
+	adc	r2
+	mov	6(sp),r3
+	mov	r0,(r3)+	;(d)+
+	mov	r2,(r3)+	;(d)+
+	mov	r3,6(sp)
+	tst	r5
+	beq	30$
+	mov	#20,-(sp)
+	mov	#dataat,r1
+	mov	6(sp),r3
+20$:	movb	(r1)+,r0
+	movb	(r1)+,r2
+	mov	r1,-(sp)
+	mov	r3,-(sp)
+	jsr	pc,subaam
+	asl	r1
+	adc	r0
+	asl	r3
+	adc	r2
+	mov	(sp)+,r3
+	mov	(sp)+,r1
+	movb	r0,(r3)+
+	movb	r2,(r3)+	;16.* (e)+
+	dec	(sp)
+	bgt	20$
+	tst	(sp)+
+	mov	r3,4(sp)
+30$:	mov	(sp)+,r1
+	mov	(sp)+,r0
+	cmp	r0,#15516
+	beq	40$
+	jmp	10$
+40$:	mov	#gogo,@#stack+2
+	jmp	@#gogo
+subaam:	mov	r0,-(sp)
+	mov	r2,r1
+	jsr	pc,subaag
+	mov	r2,-(sp)
+	mov	r3,-(sp)
+	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	10(sp),r1
+	jsr	pc,subaag
+	add	(sp)+,r3
+	adc	r2
+	add	(sp)+,r2
+	nop
+	sub	(sp)+,r1
+	sbc	r0
+	sub	(sp)+,r0
+	tst	(sp)+
+	rts	pc
+;
+; profile of space ship for display file generation.
+;
+profil:	.word	32767.
+	.word	32729.
+	.word	32611.
+	.word	32414.
+	.word	32139.
+	.word	31786.
+	.word	075175
+	.word	074205
+	.word	073102
+	.word	071666
+	.word	070343
+	.word	066713
+	.word	065156
+	.word	063320
+	.word	061362
+	.word	057330
+	.word	055203
+	.word	052766
+	.word	050464
+	.word	046100
+	.word	043435
+	.word	040717
+	.word	036127
+	.word	033273
+	.word	030374
+	.word	025440
+	.word	022451
+	.word	017432
+	.word	014371
+	.word	011311
+	.word	006214
+	.word	003110
+	.word	000000
+profle	=	.
+
+	.nlist
+.	=	stars
+	10446
+	10046
+	16600
+	12
+	12725
+	point
+	11625
+	13746
+	106
+	11304
+	4737
+	10024
+	10446
+	16304
+	2
+	4737
+	10024
+	62604
+	6204
+	12037
+	106
+	62004
+	11037
+	204
+	10425
+	21363
+	2
+	1410
+	101004
+	62737
+	-22.
+	106
+	403
+	62737
+	26
+	106
+	4737
+	2114
+	10501
+	12700
+	23340
+	4737
+	1112
+	5045
+	5045
+	12637
+	106
+	4737
+	2114
+	12600
+	12604
+	12603
+	12602
+	12601
+	5726
+	207
+	20527
+	17716
+	101052
+	10037
+	23264
+	11304
+	4737
+	10024
+	10401
+	16304
+	2
+	4737
+	10024
+	60104
+	6204
+	10437
+	23266
+	12701
+	23260
+	423
+	20527
+	17712
+	101026
+	10037
+	22744
+	11304
+	4737
+	10024
+	10401
+	16304
+	2
+	4737
+	10024
+	60104
+	6204
+	10437
+	22746
+	12701
+	22740
+	12104
+	20427
+	173400
+	1402
+	10425
+	772
+	207
+	5737
+	3716
+	1427
+	20027
+	31
+	3424
+	20027
+	1560
+	2021
+	16304
+	2
+	21304
+	2001
+	11304
+	4737
+	10024
+	10437
+	23032
+	10037
+	23030
+	10637
+	3702
+	12725
+	173400
+	12725
+	23024
+	207
+	5003
+	20100
+	103005
+	10102
+	1445
+	10001
+	241
+	402
+	10002
+	1440
+	6102
+	103437
+	6102
+	103441
+	6102
+	103444
+	6102
+	103447
+	6102
+	103452
+	6102
+	103455
+	6102
+	103460
+	6102
+	164000
+	djmp
+	7754
+.	=	zzzzzz+010714
+	103002
+	60103
+	5502
+	6303
+	6102
+	103002
+	60103
+	5502
+	6303
+	6102
+	103002
+	60103
+	5502
+	6303
+	6102
+	103002
+	60103
+	5502
+	6303
+	6102
+	103002
+	60103
+	5502
+	6303
+	6102
+	103002
+	60103
+	5502
+	6303
+	6102
+	103002
+	60103
+	5502
+	6303
+	6102
+	103002
+	60103
+	5502
+	6303
+	6102
+	103002
+	60103
+	5502
+	6303
+	6102
+	103002
+	60103
+	5502
+	6303
+	6102
+.	=	zzzzzz+011162
+	207
+	6303
+	6102
+	160002
+	100076
+	6303
+	6102
+	60002
+	100077
+	6303
+	6102
+	60002
+	100100
+	6303
+	6102
+	60002
+	100101
+	6303
+	6102
+	60002
+	100102
+	6303
+	6102
+	60002
+	100103
+	6303
+	6102
+	60002
+	100104
+	6303
+	6102
+	60002
+	100105
+	6303
+	6102
+	60002
+	100106
+	6303
+	6102
+	60002
+	100107
+	6303
+	6102
+	60002
+	100110
+	6303
+	6102
+	60002
+	100111
+	6303
+.	=	databm
+	6102
+	160002
+	100673
+	5203
+	6303
+	6102
+	160002
+	100672
+	5203
+	6303
+	6102
+	160002
+	100671
+	5203
+	6303
+	6102
+	160002
+	100670
+	5203
+	6303
+	6102
+	160002
+	100667
+	5203
+	6303
+	6102
+	160002
+	100666
+	5203
+	6303
+	6102
+	160002
+	100665
+	5203
+	6303
+	6102
+	160002
+	100664
+	5203
+	6303
+	6102
+	160002
+	100663
+	5203
+	207
+	52737
+	100
+	177546
+	5237
+	154
+	5237
+	160
+	32737
+	17
+	160
+	1004
+	5037
+	12502
+	5037
+	12504
+	2
+	12737
+	173400
+	22710
+	17600
+	0
+	13701
+	160
+	10002
+	100001
+	5400
+	62701
+	74
+	5300
+	3374
+	1
+	4737
+	12600
+	20137
+	160
+	101372
+	62716
+	2
+	5702
+	100727
+	137
+	334
+	10046
+	10146
+	13700
+	226
+	17701
+	160016
+	1433
+	13740
+	172000
+	62710
+	2
+	12740
+	12054
+	21127
+	173400
+	1013
+	5761
+	2
+	1417
+	10140
+	62710
+	4
+	12740
+	12054
+	16101
+	2
+	762
+	10037
+	226
+	10137
+	172000
+	12601
+	12600
+	2
+	12007
+	12001
+	750
+	5237
+	224
+	13701
+	224
+	6301
+	16101
+	12416
+	1003
+	5037
+	224
+	767
+	12737
+	12060
+	316
+	12700
+	316
+	727
+	10046
+	10146
+	13701
+	224
+	20137
+	232
+	1406
+	12737
+	17
+	234
+	10137
+	232
+	450
+	5337
+	234
+	100045
+	6301
+	171
+	12510
+	13701
+	172006
+	42701
+	^cmaxx
+	62701
+	15
+	13700
+	22662
+	6300
+	6300
+	6300
+	163700
+	22662
+	60001
+	6201
+	6201
+	6201
+	10137
+	22662
+	162701
+	733
+	6201
+	20127
+	12
+	100002
+	12701
+	12
+	22701
+	144
+	2002
+	12701
+	144
+	10137
+	140
+	52737
+	1
+	172000
+	12601
+	12600
+	2
+	16101
+	12416
+	13700
+	230
+	1403
+	42760
+	10
+	2
+	10137
+	230
+	52761
+	30
+	2
+	754
+	13700
+	230
+	1751
+	5037
+	230
+	10061
+	13224
+	42760
+	10
+	2
+	741
+	16101
+	12416
+	16137
+	177776
+	104
+	10137
+	12502
+	10137
+	12504
+	727
+	13246
+	13272
+	13316
+	13342
+	13372
+	13424
+	13460
+	13514
+	13550
+	13602
+	13634
+	13664
+	13716
+	13750
+	14002
+	14034
+	32270
+	32310
+	32320
+	32330
+	32340
+.	=	zzzzzz+012530
+	12310
+	12310
+	12310
+	12310
+	12310
+	12310
+	12310
+	12310
+	12052
+	12052
+	12052
+	12052
+	12052
+	12372
+	12372
+	12372
+	12372
+	12170
+	12372
+	12372
+	10046
+	10146
+	10246
+	10346
+	10446
+	10546
+	5004
+	16405
+	13224
+	1440
+	16401
+	13236
+	10503
+	62703
+	12
+	10361
+	22
+	17503
+	-4
+	16500
+	177776
+	1412
+	5703
+	100001
+	5403
+	5002
+	4737
+	11164
+	5775
+	-4
+	100001
+	5403
+	16405
+	13236
+	10300
+	12701
+	12
+	60501
+	4737
+	13174
+	5724
+	735
+	23737
+	140
+	142
+	1410
+	12701
+	22700
+	13700
+	140
+	10037
+	142
+	4737
+	13174
+	12605
+	12604
+	12603
+	12602
+	12601
+	12600
+	207
+	112721
+	40
+	20027
+	23420
+	103037
+	112721
+	40
+	5046
+	20027
+	144
+	2444
+	10003
+	5002
+	12700
+	144
+	4737
+	11164
+	6303
+	62703
+	24034
+	4737
+	13140
+	4737
+	13140
+	10203
+	6303
+	62703
+	24034
+	4737
+	13140
+	10716
+	4737
+	13140
+	62706
+	2
+	207
+	10746
+	112721
+	60
+	20027
+	23420
+	103736
+	105261
+	177777
+	162700
+	23420
+	770
+	10002
+	12703
+	24034
+	741
+	5766
+	2
+	1011
+	121327
+	60
+	1004
+	112721
+	40
+	5203
+	207
+	10666
+	2
+	112321
+	207
+	5700
+	100275
+	5400
+	4737
+	12772
+	10100
+	122740
+	40
+	1375
+	112710
+	55
+	207
+	13372
+	13424
+	13460
+	13514
+	0
+	13246
+	13272
+	13316
+	13342
+	170240
+	117560
+	0
+	1332
+	100000
+	20040
+	20040
+	20040
+	djmp
+	13404
+	170240
+	117560
+	372
+	1332
+	100000
+	20040
+	20040
+	20040
+	djmp
+	13436
+	170240
+	117560
+	764
+	1332
+	100000
+	20040
+	20040
+	20040
+	djmp
+	13472
+	170240
+	117560
+	1356
+	1332
+	100000
+	20040
+	20040
+	20040
+	djmp
+	13526
+	176
+	0
+	170260
+	117560
+	1604
+	367
+	100000
+	44040
+	44505
+	44107
+	20124
+	173400
+	0
+	136
+	0
+	170260
+	117560
+	1604
+	341
+	100000
+	40440
+	52114
+	52111
+	42125
+	20105
+	173400
+	0
+	134
+	0
+	170260
+	117560
+	1604
+	313
+	100000
+	42040
+	51511
+	40524
+	41516
+	20105
+	173400
+	0
+	150
+	12
+	170260
+	117560
+	1604
+	265
+	100000
+	43040
+	42525
+	20114
+	42514
+	52106
+	173400
+	0
+	152
+	0
+	170260
+	117560
+	1604
+	237
+	100000
+	53440
+	44505
+	44107
+	20124
+	173400
+	0
+	146
+	0
+	170260
+	117560
+	1604
+	211
+	100000
+	52040
+	51110
+	51525
+	20124
+	173400
+	0
+	106
+	0
+	170260
+	117560
+	1604
+	163
+	100000
+	40440
+	43516
+	42514
+	173400
+	0
+	130
+	12
+	170260
+	117560
+	1604
+	135
+	100000
+	53040
+	51105
+	53040
+	46105
+	173400
+	0
+	124
+	12
+	170260
+	117560
+	1604
+	107
+	100000
+	44040
+	51117
+	53040
+	46105
+	173400
+	0
+	122
+	764
+	170260
+	117560
+	1604
+	61
+	100000
+	53040
+	51105
+	40440
+	41503
+	173400
+	0
+	120
+	764
+	170260
+	117560
+	1604
+	33
+	100000
+	44040
+	51117
+	40440
+	41503
+	173400
+	0
+	160
+	74
+	170260
+	117560
+	1604
+	5
+	100000
+	51440
+	41505
+	47117
+	51504
+	173400
+	0
+	173412
+	5267
+	175326
+	12705
+	57360
+	22767
+	1
+	175314
+	1015
+	5067
+	173256
+	12767
+	177777
+	173274
+	4775
+	-6.
+	16567
+	20
+	175270
+	16767
+	175264
+	175256
+	16767
+	164356
+	173140
+	1421
+	16767
+	175246
+	173212
+	12767
+	177777
+	173230
+	4775
+	-6.
+	16567
+	20
+	175224
+	16767
+	175220
+	164316
+	4767
+	173302
+	707
+	16767
+	175204
+	173150
+	4767
+	173266
+	16767
+	167756
+	175160
+	4775
+	-12.
+	105767
+	3552
+	1401
+	207
+	167
+	167276
+	12503
+	12701
+	50520
+	12702
+	400
+	12123
+	5302
+	3375
+	205
+	12501
+	12703
+	50520
+	766
+	4767
+	170252
+	1402
+	4767
+	171364
+	16701
+	167670
+	16703
+	167662
+	20301
+	101402
+	167
+	170202
+	4467
+	173176
+	12767
+	64400
+	172724
+	167
+	177376
+	4767
+	10
+	304
+	4767
+	2
+	207
+	110420
+	60467
+	167620
+	5302
+	207
+	5067
+	167610
+	10102
+	160302
+	62702
+	7
+	20227
+	762
+	3402
+	12702
+	762
+	12700
+	50522
+	12704
+	1
+	4767
+	177710
+	10204
+	5204
+	5204
+	4767
+	177676
+	10304
+	4767
+	177670
+	112304
+	4767
+	177676
+	.list
+	.end	start

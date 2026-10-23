@@ -1,0 +1,119 @@
+ar(I) archive and library maintainer
+arcv(I) convert old archive files to new format
+as(I) assembler
+bas(I) basic
+basicp(I) Basic-Plus
+bc(I) arbitrary precision interactive language
+cat(I) concatenate and print
+cc(I) C compiler
+cdb(I) C debugger
+chdir(I) change working directory
+chmod(I) change mode
+cmp(I) compare two files
+comm(I) print lines common to two files
+copy(I) copy contents of a directory tree
+coreit(I) core file analyser
+cp(I) copy
+cpall(I) copy files to a directory
+cref(I) make cross reference listing
+date(I) print and set the date
+db(I) debug
+dc(I) desk calculator
+dd(I) convert and copy a file
+ddt(I) dynamic C debugger
+diff(I) differential file comparator
+doc(I) documentation enquiry facility
+dsw(I) delete interactively
+du(I) summarize disk usage
+echo(I) echo arguments
+ed(I) text editor
+em(I) editor for mortals
+eqn(I) typeset mathematics
+ev(I) expression evaluator
+exit(I) terminate command file
+fc(I) Fortran compiler
+file(I) determine file type
+find(I) find files
+fortran(I) fortran IV compiler
+goto(I) command transfer
+grep(I) search a file for a pattern
+gripe(I) enter complaints and bug reports
+if(I) conditional command
+kill(I) terminate a process
+ld(I) link editor
+libr(I) fortran librarian
+link(I) fortran linker
+list(I) ascii source lister
+ln(I) make a link
+login(I) sign onto UNIX
+lpr(I) spool files ready for printing
+ls(I) list contents of directory
+macro(I) macro assembler
+mail(I) send mail to designated users
+man(I) run off section of UNIX manual
+mas(I) Motorola M6800 assembler
+mc(I) filter which splits output into columns
+mesg(I) permit or deny messages
+mkdir(I) make a directory
+mv(I) move or rename a file
+mvall(I) move files to a directory
+narc(I) source archiver
+neqn(I) typeset mathematics on terminal
+newgrp(I) log in to a new group
+news(I) news distribution program
+nice(I) run a command at low priority
+nm(I) print name list
+nohup(I) run a command immune to hangups
+nroff(I) format text
+od(I) octal dump
+old(I) overlay linker
+opr(I) off line print
+p(I) flexible pagination of output
+para(I) improved C paragrapher and syntax checker
+passwd(I) change login password
+pc(I) Pascal compiler (generating interpreter code)
+pcc(I) interpret Pascal carriage control
+pcx(I) Pascal interpreter
+pfe(I) print floating exception
+pr(I) print file
+prof(I) display profile data
+prstop, restart, repeat(I) line printer control
+ps(I) process status
+psc(I) Pascal-S compiler/interpreter
+ptx(I) permuted title index
+pwd(I) working directory name
+pxp(I) Pascal execution profiler
+pxref(I) Pascal cross-reference program
+rc(I) Ratfor compiler
+rev(I) reverse lines of a file
+rm(I) remove (unlink) files
+rmdir(I) remove directory
+roff(I) format text
+rtpip(I) manipulate RT-11 files from UNIX
+sh(I) shell (command interpreter)
+shift(I) adjust Shell arguments
+size(I) size of an object file
+sleep(I) suspend execution for an interval
+slup(I) source librarian and update program
+sort, usort(I) sort or merge files
+speed(I) do lineprinter escapes and overstrikes
+spell(I) find spelling errors
+split(I) split a file into pieces
+stp(I) new super tp
+strip(I) remove symbols and relocation bits
+stty(I) set typewriter options
+tee(I) pipe fitting
+time(I) time a command
+tp(I) manipulate DECtape and magtape
+tr(I) transliterate
+trbas(I) translate DEC basic plus source to Unix format
+troff(I) format text
+tty(I) get typewriter name
+typo(I) find possible typos
+uniq(I) report repeated lines in a file
+wait(I) await completion of process
+wc(I) word count
+where(I) where in the manual can I find this
+who(I) who is on the system
+write(I) write to another user
+yacc(I) yet another compiler-compiler

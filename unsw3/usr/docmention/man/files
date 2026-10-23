@@ -1,0 +1,6 @@
+.nf
+.if t .ta 1.2i
+.if n .ta 14
+file entries - sep by tabs
+.fi
+.dt

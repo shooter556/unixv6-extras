@@ -1,0 +1,863 @@
+.bp
+.in 0
+.ig
+.ul 1
+..
+Appendix A
+
+.ti 30
+START - CLOSE SUMMARY
+
+.ti 3
+Power Up
+	* put ENABLE/HALT switch to HALT
+	* turn key to POWER
+	* power on all peripherals
+	* place the discs on the correct drives
+	* put RUN/LOAD switches to RUN
+	* BOOT
+	  maths and commerce
+
+	 1) Ensure the front panel lock is at POWER position.
+	 2) Ensure ENABLE/HALT switch is at HALT.
+	 3) Set switch register to 773100 octal.
+	 4) Depress and release the LOAD ADDRESS switch.
+	 5) Set switch register to 777406 octal.
+	 6) Put ENABLE/HALT switch to ENABLE.
+	 7) Depress and release the START switch.
+
+	  library and C.S.U.
+
+	 1) Ensure the front panel lock is at POWER position.
+	 2) Ensure ENABLE/HALT switch is at halt.
+	 3) Set switch register to 773110 octal.
+	 4) Depress and release LOAD ADDRESS switch.
+	 5) Put ENABLE/HALT switch to ENABLE.
+	 6) Depress and release the START switch.
+
+	  elec eng and mech eng
+
+	 1) Ensure the front panel lock is at POWER position.
+	 2) Ensure ENABLE/HALT switch is at halt.
+	 3) Set switch register to 773100 octal.
+	 4) Depress and release LOAD ADDRESS switch.
+	 5) Put ENABLE/HALT switch to ENABLE.
+	 6) Depress and release the START switch.
+
+	* turn key to LOCK
+	* startup dialogue and checks
+	* login
+	* normal commands may be entered
+
+.ti 3
+POWER DOWN
+
+	* B and/or STOP
+	* JA ???
+	* consistency checks
+	* system backup ??
+	* CLOSEDOWN, wait for "finished"
+	* Insert the 11/40 key in the lock
+	* Turn the key to the POWER position
+	* Press and release the WRITE PROTECT switch on discs
+	* Put ENABLE/HALT switch to HALT
+	* System backup ??
+	* Put RUN/LOAD switches on all disc drives to LOAD
+	* Power off all peripherals
+	* Wait for the disc drives to allow you to open their doors
+	* Remove discs to safe keeping
+	* Remove the key to safe keeping
+	* go home
+
+.bp
+.ig
+.ul 1
+..
+Appendix B
+
+.ce
+CHANGES TO LOCAL BATCH
+
+.ti 3
+This section details the changes made to BATCH since the last release.
+They are not set out in any particular order.
+.sp
+.ti 3
+Local user jobs have the facility to specify a time limit
+for their duration.
+It takes the form of a parameter "tnnn" after the job name
+e.g.
+
+	%fred,t100
+	%macro
+	...
+
+.ti 3
+The number given is the number of seconds (cpu) the job will run for
+before the system aborts it.
+The limit may go up to a maximum determined by the operator command
+
+	entl nnn
+
+.ti 3
+The default maximum is 120 seconds, and if a limit is not given
+on the job card, the default is 20 seconds.
+
+.ti 3
+Note that the time value is decimal.
+.sp 2
+.ti 3
+Two local processes (which were never used anyway) have been dropped
+(ccc, mid) and two have taken their place (shell, list).
+
+.ti 3
+The shell process (which currently is not implemented anyway) will
+take a string of commands similar to that if a user at a terminal.
+The list process will list a deck of cards, with each eor and eof
+card implying a page skip.
+.sp 2
+.ti 3
+When starting up batch, one may give various options
+to control such things as limits within the system and processes
+to be disabled.
+This is all documented elsewhere.
+.sp 2
+.ti 3
+The "cancel" command has been extended to have the ability to cancel
+a local user job that appears to be in a loop.
+.sp 2
+.ti 3
+The "count" command has been included (for some strange reason, this was
+dropped after level 5 unix).
+.sp 2
+.ti 3
+The "DQ" display now tells you all sorts of lovely information
+about what batch is doing e.g. whether a process has been
+disabled, what the last message from cyber was etc.
+.sp 2
+.ti 3
+The "ear" process will pick up certain messages from export
+and do certain things about it e.g. if the sequence "kronos
+2.1...." is received, this is assumed to mean that export
+has just been reinitialised, and so Batch will automatically
+log on again.
+.sp 2
+.ti 3
+certain processes such as submit, cyber jobs, local jobs
+etc may be enabled and disabled at the whim of the powers
+that be.
+Now, you don't have to remove ".mac" to disable macro
+jobs.
+simply say "disable macro" or even "batch macro".
+.sp 2
+.ti 3
+There are various limits within the system now to prevent
+users from running away with themselves.
+to be more specific; there are limits on:
+	execution time for local jobs;
+	number of cards in cyber card decks;
+	number of lines in cyber submit files;
+	number of sectors received from export;
+	number of cyber jobs in the batch queues.
+
+.ti 3
+usually, if a jobs exceeds one of these limits, it is
+aborted appropriately.
+the exception is when a monstrous listing is received
+from export (and users are always doing this; why they
+can't send it to central site i don't know).
+if a listing is received which exceeds the limit (set
+by "enrl"), it gets sent back to cyber and placed in the
+alternate print queue.
+it will be marked on the "dq" display with a "+" sign,
+and a message will appear at the time it is done.
+the default limit is 100 sectors which is a fairly average
+listing.
+the limit may also be set at startup time by "batch rlnnn".
+don't forget to increase the limit when printing the alternate
+queue, or else batch will forever be sending the job back
+to cyber ...
+.sp 2
+.ti 3
+a job may be purged from a queue, or entire queues purged
+by means of the "purge" command (described elsewhere).
+.sp 2
+.ti 3
+Cyber commands that are liable to alter the batch queues
+now do so e.g. if the command "d fr00abc" is entered to
+purge job "fred" from the output queue, it will also be
+dropped from the batch "at cyber" queue if it is there.
+if the job is not in the batch queue, you will get a warning.
+.sp 2
+.ti 3
+a couple of commands exist to allow you to see what is
+going on.
+they are "status" and "qlook".
+they are really only useful when something odd is going
+on, and they are documented elsewhere.
+.sp 2
+.ti 3
+one fairly important change made is in the "shell" program
+(the one that talks to your terminal; not the batch variety).
+previous versions existed which would accept a comma as
+a delimiter as well as a blank.
+since some programs expect a comma as part of their
+arguments, this "feature" has been dropped so to give
+the export command "q,o" you type "q o".
+.ti 3
+.sp 2
+specifying a '-' flag on "submit" will cause that job to be returned
+to the user's login directory rather than being printed.
+The user is advised by mail when this happens.
+If the file cannot be returned, it will print instead.
+this feature is useful if a user wants to intercept a listing when
+it returns for later punching to paper tape, for example.
+Note that the file is returned exactly as received from Cyber i.e.
+it contains the banner page, dayfile and blank compression.
+To expand the compressed blanks, the user must scan for an octal
+byte of "377".
+This is then followed by a byte count of the number of blanks to
+insert.
+Zeroes ('0') are also compressed, and these are represented by a byte
+of 376 followed by a byte count.
+.ti 3
+.sp 2
+batch assumes the existence of a file ".eilog" in the work directory
+which contains the login command required by export.
+it is a simple matter to edit this file to include a password, if wanted.
+note that only one command is assumed in this file.
+.ti 3
+.sp 2
+Certain commands that can cause destructive effects (such as "purge")
+can only be run from the terminal that batch was started up from,
+unless one is the super-user, in which case it can be run from any
+terminal.
+this makes the system reasonably cretin-proof.
+
+.bp
+.in 0
+.ig
+.ul 1
+..
+Appendix C
+
+.ti 30
+COMMAND SUMMARY
+
+ A		rewind print file being received
+ AUTOQ		continuous DQ
+ B		logoff from CYBER
+ BATCH		start batch system
+ C		send suspended printout
+ CANCEL CR	cancels the job being read on the reader
+ CANCEL LP	cancels the batch job printing on the printer
+ CANCEL MACRO	cancels the local user macro job
+ CANCEL FTN	cancels the local user fortran job
+ CANCEL SHELL	cancels the local user shell job
+ COUNT		display the various error counts on the cyber line
+ D		purges a job from a CYBER queue
+ DATE		set UNIX date and time
+ DCHECK		file system directory consistency check
+ DISABLE	disable a Batch process
+ DQ		display a Batch System queue display
+ E LP		cancel job currently being received
+ E CR		cancel job currently being sent
+ ENABLE		enable a Batch process (undoes a DISABLE)
+ ENCL		set card limit on card reader
+ ENJL		set limit on number of cyber jobs in queues
+ ENRL		set limit on size of job being received from cyber
+ ENSL		set limit on number of lines in submit jobs
+ ENTL		set limit on time a local job can use
+ F ID		to print CYBER "ID" jobs
+ F		print normal not "ID" files
+ G		use unnecessary
+ I		use unnecessary
+ ICHECK		file system consistency check
+ JA		print statistics
+ L		login to CYBER. use unnecessary
+ LOCAL		start batch system without JTD, SPL, EAR
+ LPR		print a file
+ M		send message to CYBER operator B display
+ N		stops CYBER sending printout at job end
+ O		place output job in some other queue
+ P		adjust CYBER print queue priority
+ PASSWD		set UNIX login password
+ PRSTOP		delete a printout (same as "cancel lp")
+ PURGE		purge a job from a queue, or purge entire queue
+ PS		display processes
+ Q B		display central site print queue
+ Q I		display CYBER input queue
+ Q O		display CYBER output queue
+ Q R		display CYBER rollout queue
+ Q E		display CYBER active queue
+ Q N		display last job read CYBER name
+ Q I A		total jobs in CYBER input queue
+ Q O A		total jobs in CYBER output queue
+ Q R A		total jobs in CYBER rollout queue
+ QLOOK		decode the checkpoint file
+ R		use unnecessary
+ REPEAT		print the current job on printer all over again
+ RESTART	restart the printout on the printer
+ S		suspend printout being received
+ STATUS		give some info about Batch
+ STOP		stop batch system processes
+ SUBMIT		submit a UNIX file to the Batch System input queue
+ SYNC		update system superblock
+ U		unload printout being received
+ WHO		who is logged on
+
+.bp
+.ig
+.ul 1
+..
+Appendix D
+
+.ti 30
+PERIPHERAL CLEANING AND MAINTENANCE
+
+.ti 3
+As this is from version 1 of the manual, we will refer you
+to the sheets on this subject distributed by the CSU and kept
+in the back of the green folder distributed by the same people.
+.ti 3
+in future versions of the manual we hope to include details of cleaning
+and peripheral care for the following devices.
+
+	* card reader
+	* line printer (both 400 and 600 lpm)
+	* DEC TU-10 mag tape units
+	* DEC RK-05 disc drives
+
+
+.bp
+.ig
+.ul 1
+..
+Appendix E
+
+.ti 30
+ERROR SUMMARY
+
+.nf
+.ss
+*********   **********  *********    ********   *********   **********               ********   **          **
+**********  **********  **********  **********  **********  **********              **********  **          **
+**      **  **          **      **  **      **  **      **      **                  **      **  **          **
+**      **  **          **      **  **      **  **      **      **                  **      **  **          **
+**********  ******      **********  **      **  **********      **                  **      **  **          **
+*********   ******      *********   **      **  *********       **                  **********  **          **
+**   **     **          **          **      **  **   **         **                  **********  **          **
+**    **    **          **          **      **  **    **        **                  **      **  **          **
+**     **   **********  **          **********  **     **       **                  **      **  **********  **********
+**      **  **********  **           ********   **      **      **                  **      **  **********  **********
+
+
+**********  **      **  *       **  *       **  **********  **********   ********
+**********  **      **  **      **  **      **  **********  **********  **********
+**          **      **  ***     **  ***     **      **      **          **       *
+**          **      **  ****    **  ****    **      **      **          **
+******      **      **  ** **   **  ** **   **      **      ******      *********
+******      **      **  **  **  **  **  **  **      **      ******       *********
+**          **      **  **   ** **  **   ** **      **      **                  **
+**          **      **  **    ****  **    ****      **      **          *       **     ***         ***         ***
+**          **********  **     ***  **     ***  **********  **********  **********    *****       *****       *****
+**           ********   **      **  **      **  **********  **********   ********      ***         ***         ***
+.ds
+.fi
+.bp
+.ss
+.nf
+BATCH -------------------------
+
+.ni 10
+.n2 1
+batch: already active
+batch: working directory unattainable
+batch: can't access batch directory
+batch: checkpoint error
+batch: 'process' exec failed
+batch: can't exec monitor
+batch: .checkpoint can't open
+batch: /dev/cyb.jobsu can't open
+batch: /dev/cyb.jobsd can't open
+batch: /dev/cyb.cmdsd can't open
+batch: /dev/cr.batch can't open
+batch: .rawstatistics can't open
+batch: encoded-filename can't remove
+.sp 2
+.n2 1
+batch is already running, and you can't start it twice.
+batch cannot chdir to /spool/batch/.work. call a guru.
+batch can't read the directory once it is there. call a guru.
+batch tried to do a checkpoint but could'nt. call a guru.
+in starting the rest of the system part of it (process) refused to start. call a guru.
+in trying to start the overseeing process - trouble. call a guru.
+batch wants to open the checkpoint file but can't. call a guru.
+batch wants to talk to the cyber but can't. call a guru.
+batch wants to listen to the cyber but can't. call a guru.
+batch wants to listen to the cyber but can't. call a guru.
+batch wants to listen to the card reader but can't. has someone else got it?
+batch wants to use the stats file but can't. call a guru.
+batch wants to clean up after a warm start - no can do.
+.n2 0
+
+CANCEL ------------------------
+
+.n2 1
+cancel: Not allowed
+cancel: batch not active
+cancel: usage: cancel [cr] [lp] [macro] [ftn] [shell]
+cancel: can't exec 'prstop'
+cancel: no macro process
+cancel: no ftn process
+cancel: no shell process
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+batch must be active for this to work.
+it even tells you how to use it !
+"cancel lp" works via "prstop". call a guru.
+you tried to cancel a local macro job, but there wasn't one.
+as for macro
+as for macro
+.n2 0
+
+COUNT -------------------------
+
+.n2 1
+count: nlist failed
+count: can't open memory
+.sp 2
+.n2 1
+couldn't access /unix.  call a guru.
+couldn't access /dev/kmem.  call a guru.
+.n2 0
+
+CRD ---------------------------
+
+.n2 1
+crd: file create error
+.sp 2
+.n2 1
+crd wishes to spool a job but can't get a file to put it in. call a guru.
+.n2 0
+
+DISABLE -----------------------
+
+.n2 1
+disable: Not allowed
+disable: batch not active
+disable: usage: disable [all] [cyber] [submit] [local] [macro] [ftn] [shell]
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+batch must be active.
+how to use it.
+.n2 0
+
+DQ ----------------------------
+
+.n2 1
+dq: checkpoint file ??
+.sp 2
+.n2 1
+dq wants to look at the checkpoint file but can't. call a guru.
+.n2 0
+
+ENABLE ------------------------
+
+.n2 1
+enable: Not allowed
+enable: batch not active
+enable: usage: .....
+.sp 2
+.n2 1
+as for "disable"
+as for "disable"
+as for "disable"
+.n2 0
+
+ENCL --------------------------
+
+.n2 1
+encl: Not allowed
+encl: batch not active
+encl: usage: en?? limit (where ?? is tl, cl, jl, rl, sl)
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+obvious.
+how to use it.
+.n2 0
+
+ENJL --------------------------
+
+		as for "encl"
+
+ENRL --------------------------
+
+		as for "encl"
+
+ENSL --------------------------
+
+		as for "encl"
+
+ENTL --------------------------
+
+		as for "encl"
+
+FTN ---------------------------
+
+.n2 1
+ftn: /bin/fortran can't exec
+ftn: /bin/link can't exec
+ftn: can't exec output of link
+.sp 2
+.n2 1
+fortran compiler has disappeared.  call a guru.
+fortran linker has likewise.  call a guru.
+the linked program won't run.  call a guru.
+.n2 0
+
+JTD ---------------------------
+
+.n2 1
+jtd: file open error
+.sp 2
+.n2 1
+jtd wishes to send a spooled file to the cyber but can't. call a guru.
+.n2 0
+
+LIST --------------------------
+
+.n2 1
+list: no program file
+list: no data file
+.sp 2
+.n2 1
+a work file has disappeared.  call a guru.
+ditto.
+.n2 0
+
+LOGON -------------------------
+
+.n2 1
+logon: can't open log file
+logon: can't read log file
+logon: can't open cyber line
+.sp 2
+.n2 1
+can't open the file ".eilog" containing the login sequence.  call a guru.
+can't read same file.  call a guru.
+can't talk to the cyber for some odd reason.  call a guru.
+.n2 0
+
+MAC ---------------------------
+
+.n2 1
+mac: /bin/macro can't exec
+mac: /bin/linkr can't exec
+mac: can't exec output of linkr
+mac: .sdump can't exec
+.sp 2
+.n2 1
+mac can't find the macro assembler. who stole it? call a guru.
+mac can't find the linkr. who stole it? call a guru.
+mac wants to run your job but the linkr output does not. call a guru.
+mac can't even get a dump of the failure. call a guru.
+.n2 0
+
+PURGE -------------------------
+
+.n2 1
+Purge: Not allowed
+purge: usage: purge Q [-] [[-n] job] ...
+purge: queue must be [acflmps]
+purge: can't access directory
+purge: can't open ckp file
+purge: can't read ckp file
+purge: queue empty
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+how to use it.
+incorrect queue type given.
+batch directory unattainable.  call a guru.
+checkpoint file unobtainable.  call a guru.
+checkpoint file unreadable.  call a guru.
+you can't purge a queue if it's already empty ???
+.n2 0
+
+QLOOK -------------------------
+
+.n2 1
+qlook: file open error
+.sp 2
+.n2 1
+qlook can't open the checkpoint file.  call a guru.
+.n2 0
+
+SPL ---------------------------
+
+.n2 1
+spl: file create error
+spl: format error ?
+spl: job xxxxxxx/zzz requeued to alternate print queue
+Spl: Job xxxxxxx/zzz returned as '$cccccc'
+Spl: job xxxxxxx/zzz cannot be returned; will print instead
+.sp 2
+.n2 1
+spl can't open a file to spool into. call a guru.
+spl can't understand the sequence of data from the cyber.
+a job appeared which exceeded the "enrl" limit and got sent back.
+just an informative message about a job submitted with the '-' flag.
+spl can't return a job someone wanted to intercept.  it will be printed instead.  call a guru.
+.n2 0
+
+STATUS ------------------------
+
+.n2 1
+status: ckp open error
+status: ckp read error
+.sp 2
+.n2 1
+checkpoint file unopenable.  call a guru.
+checkpoint file unreadable.  call a guru.
+.n2 0
+
+STOP --------------------------
+
+.n2 1
+Stop: Not allowed
+stop: batch not active
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+obvious.
+.n2 0
+
+SUBMIT ------------------------
+
+.n2 1
+submit: illegal job card
+submit: usage: submit [-] file
+submit: unknown batch function
+submit: file create error
+submit: can't access batch directory
+submit: checkpoint file open error
+submit: too many lines in job
+submit: batch not active
+submit: not allowed
+submit: lines exceed 80 characters
+submit: xxxxxx: file not found
+submit: xxxxxxx: empty file
+.sp 2
+.n2 1
+submit checks jobcards. this one is rs.
+submit even tells you how to use it.
+submit did not recognise the batch function requested.  mis-spelling ?
+submit could not get a work file.  call a guru.
+submit could not "chdir" to batch directory.  call a guru.
+checkpoint file unopenable.  call a guru.
+there is a limit on the number of lines in a cyber submit job (ensl command).
+batch must be active before submit will work.
+the powers that be have disabled the submit command.  complain to them.
+one or more of the lines is > 80 characters.  the line numbers are given.
+submit could not find the given file.
+the file given had nothing in it ???
+.n2 0
+
+A -----------------------------
+
+.n2 1
+a: Not allowed
+a: local running
+a: can't open ckp file
+a: batch not active
+a: message too long
+a: arg count
+a: last command not yet sent - retrying in five seconds
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+you can't talk to cyber if "local" is running !!!
+the checkpoint file is not around ?  call a guru.
+batch must be active to talk to cyber !!!
+commands are limited to a total of 20 characters, including delimiters.
+certain commands expect a certain number of args.
+if this keeps appearing, call a guru.
+.n2 0
+
+B -----------------------------
+
+		as for the a command !!
+
+C -----------------------------
+
+		as for the a command !!
+
+D -----------------------------
+
+		as for the a command !!
+
+E -----------------------------
+
+		as for the a command !!
+
+F -----------------------------
+
+		as for the a command !!
+
+G -----------------------------
+
+		as for the a command !!
+
+I -----------------------------
+
+		as for the a command !!
+
+L -----------------------------
+
+		as for the a command !!
+
+M -----------------------------
+
+		as for the a command !!
+
+N -----------------------------
+
+		as for the a command !!
+
+O ---------------------------
+
+		as for the a command !!
+
+P ---------------------------
+
+		as for the a command !!
+
+Q ---------------------------
+
+		as for the a command !!
+
+R -----------------------------
+
+		as for the a command !!
+
+S -----------------------------
+
+		as for the a command !!
+
+U -----------------------------
+
+		as for the a command !!
+
+TEXT1 -------------------------
+
+.n2 1
+encoded-file: unlink: error
+checkpoint: seek/write error
+batch hung on 'qput' - kill processes directly; don't use 'stop'
+batch hung on 'qget' - kill processes directly; don't use 'stop'
+.sp 2
+.n2 1
+the unlink routine used by all processes can't. call a guru.
+the checkpoint routine used by all processes is in error. call a guru.
+batch has its knickers in a knot.  if you can't understand the message, call a guru.
+ditto.
+.n2 0
+.ni 0
+.ds
+.fi
+
+
+.bp
+.ig
+.ul 1
+..
+Appendix F
+
+.ti 30
+FILES AND DIRECTORIES
+
+Not yet revised, and also classified.
+
+.bp
+.ig
+.ul 1
+..
+Appendix G
+
+.ti 30
+THE GURUs
+
+.in 0
+.ti 3
+catastrophe !!!
+your irresistable will has struck an unsolvable
+problem.
+you need a guru to minister to your monster.
+.ti 3
+a guru is a person skilled in the internal workings of UNIX,
+preferably having had something to do with writing
+the Batch System software.
+the list of gurus is growing steadily as more people use UNIX.
+the present guru list including names, uni addresses and
+extension phone numbers appears below.
+do not be afraid to contact a guru, after all he probably
+didnt know what to do when it happened to him for the first
+time.
+
+ELEC. ENG. BLDG.
+
+DEPT of COMMPUTING SCIENCE:
+
+	guru			room			phone
+
+	ian hayes		335			3237, 2790
+	peter ivanov		350			2825, 2790
+	john lions		349			2805
+	keith titmuss		347			2825, 2790
+
+
+Computing Services Unit
+
+	guru			room			phone
+
+	dave horsfall		1408 library		3590
+	chris doney		1408 library		3832
+	colin webb		1408 library		3590
+
+
+SCIENCES BLDG.
+
+MATHS
+
+	guru			room			phone
+
+
+
+MOVERN BROWN BLDG.
+
+COMMERCE
+
+	guru			room			phone
+
+
+
+LIBRARY STACK BLDG.
+
+LIBRARY
+
+	guru			room			phone
+
+
+MECH. ENG. BLDG.
+
+MECH. ENG.
+
+	guru			room			phone
+
+
+
+

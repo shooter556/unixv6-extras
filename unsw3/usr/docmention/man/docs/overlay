@@ -1,0 +1,142 @@
+.th "" "****" "THE UNIX OVERLAY FACILITY"
+.sp 2
+An overlay structure may be specified to link by means
+of an overlay descriptor file (odf). The presence of an odf is
+indicated by the switch -ov : in this case, the odf must be the
+first filename mentioned in the command.
+.sp
+	eg  link -ls -ov -cr odfname otherfiles libraries -f4
+.sp
+The overlay scheme is a multi-region arrangement : it
+is not tree-structured.
+.sp 2
+THE OVERLAY DESCRIPTOR FILE
+.sp
+.lp +5 3
+1. Tabs and blanks are ignored completely.
+
+.lp +5 3
+2. The first line must contain only the string ".root".
+
+.lp +5 3
+3. A segment (ie a group of routines which are to be simultaneously
+resident in a region) is specified by connecting the filenames
+with hyphens.
+
+.lp +5 3
+4. Each file (except those in root) must contain only one
+subroutine or function. **
+
+.lp +5 3
+5. A line containing only the string ".region" specifies the start
+of a new region.
+
+.lp +5 3
+6. The last line must contain only the string ".end".
+
+.lp +5 3
+7. Only the characters tab, blank, period, hyphen, a to z and 0 to 9
+are permitted in the odf.
+
+.lp +5 3
+8. The root region must contain only one segment. **
+
+.lp +5 3
+9. If any of these rules (except those marked with **) is
+violated, the message "bad overlay file" appears and the
+link is terminated.
+
+.nf
+   eg
+
+	.root
+		mainprog-sub1-sub2
+	.region
+		sub3-sub4
+		sub5-sub6-sub7-
+		sub8
+	.region
+		sub9-sub10
+		sub11-sub12-sub13
+	.end
+
+   This example specifies five segments :
+
+	segment 0 containing mainprog sub1 & sub2 - this is the root segment;
+	segment 1 containing sub3 & sub4;
+	segment 2 containing sub5 sub6 sub7 & sub8;
+	segment 3 containing sub9 & sub10;
+	segment 4 containing sub11 sub12 & sub13;
+
+   and three regions :
+
+	region 0 containing segment 0 - this is the root region;
+	region 1 containing either segment 1 or 2;
+	region 2 containing either segment 3 or 4.
+.bp
+.i0
+NOTES
+
+.fi
+.ad
+.lp +5 3
+1. There is no logical limit to the number of regions or segments.
+
+.lp +5 3
+2. A routine may only call routines :
+
+	a) which are in the same segment as itself, or,
+
+	b) which are in a region of higher number than itself; **
+
+so in the above example :
+
+	mainprog, sub1 & sub2 may call any routine;
+	sub4 may call sub3, sub9, sub10, sub11, sub12 or sub13;
+	sub9 may only call sub10.
+
+.lp +5 3
+3. When an overlaid program is executed, the load file must be in
+the current directory or /usr/bin. If the overlay handler cannot
+open the load file the message "can't open odf" appears and
+the run is terminated.
+
+.lp +5 3
+4. If an error occurs in trying to open the load file or in
+reading from it, the message "fatal overlay disk error" appears
+and the run is terminated.
+
+.lp +5 3
+5. If a macro program is required in the overlay structure, it
+must have only one entry point, the name of which
+must be the same as the module name (taken from the last .title
+directive). Note that the overlay handler alters registers
+r0, r1 and r2.
+
+.lp +5 3
+6. Variables in routines which are overlaid will be reset to
+their initial values each time the overlay segment containing
+them is loaded.  If a variable is required to retain its current
+value it should be placed in a common block.
+
+.lp +5 3
+7. Common blocks are never overlaid and so retain their integrity
+throughout the life of the program.
+
+                              ** this is not checked by the system.
+.sp 3
+.i0
+OVERVIEW OF HOW THE OVERLAY SYSTEM WORKS
+
+Each routine in the overlay structure (apart from those
+in root) has one entry point : the linker changes the value of
+this entry point so that on a call to this routine the
+overlay handler is entered instead. The overlay handler decides
+whether the segment containing the required routine is in core
+and, if not, reads the segment into core from the load file :
+execution now continues at the original entry point.
+.sp
+For each region, the largest segment is made part of
+the initial load : the remaining segments are appended to
+the end of the load file after the symbol table. (be wary  of
+"stripping" your file : use the -ns switch at link time instead!)

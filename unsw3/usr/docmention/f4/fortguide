@@ -1,0 +1,937 @@
+.sp 25
+.ce
+A Guide to the UNIX Fortran System
+.sp 3
+.ce 
+J. N. Rottman
+.sp 3
+.ce 2
+Princeton University
+Revised September 1975
+.bp
+.nr % 1 -1
+.nr t 6
+.nr b -7
+.de hd
+'sp \\nt
+.ns
+..
+.de fo
+'sp 2
+'bp
+..
+.de pp
+.tl 'Fortran guide'-%-''
+..
+.wh 0 hd
+.wh -7 fo
+.wh -5 pp
+.ce
+A Guide to the UNIX Fortran System
+
+
+	This guide describes the UNIX fortran system.  The system was adapted
+from an rt-11 version.  Most aspects of the system have not changed,  and only
+the differences and modifications are described here. For basic details the
+PDP-11______ Fortran_______ Language________ Reference_________ Manual______ (dec-11-lflra-a-d)
+should be consulted.
+
+Contents:
+.br
+
+
+1. Language changes				2
+
+2. Pause statement				4
+
+3. Shareable segments				4
+
+4. Subroutine linkage				4
+
+5. Run-time memory				5
+
+6. Device assignments				6
+
+7. Fortran i/o					7
+
+8. System i/o subroutines			10
+
+9. Arguments to the main program		13
+
+10. Random numbers				13
+
+11. Exiting to the system			13
+
+12. Bit operations				13
+
+13. Catching errors				14
+
+14. Dynamic arrays				15
+
+15. Documented flaws				17
+
+16. Run-time errors				18
+
+.bp
+1. Changes in the language accepted.
+.sp 1
+	The fortran compiler accepts programs in upper and lower case.
+Outside of hollerith constants,  all upper case is converted to lower case.
+
+ a. Data statements
+.sp 1
+	The class of data statements that are accepted by the
+compiler has been extended.  The skeletal syntax of the
+data statement has remained unchanged.
+.sp 1
+	As before, integer constants may only be assigned to
+integers, reals to reals, doubles to doubles, complexes to
+complexes, and logicals to logicals.  However, there are two
+classes of universal constants.
+.sp 1
+	The first class comprises bit oriented data:
+octal, binary, and hexadecimal constants.   The constant may
+have as many significant bits as there are bits in the data
+item to which it is being assigned.  The top bit (bit 15)
+of the first word is most significant;  the bottom bit (bit 0)
+of the last word in the data item is least significant.  Users
+should note that particular care must therefore be taken in assigning
+these data items to variables of integer*4 type.  For example,
+the data-statement:
+.sp 1
+	data i4/o177777/
+.br
+.sp 1
+where i4 is an integer*4 variable, would result in i4
+printing as zero. (Since the bits are justified into the second word
+of the variable,  which is currently ignored by the math routines.)
+.sp 1
+	The syntax for these constants is:
+		z.....		-	hexadecimal
+		o.....		-	octal
+		".....		-	octal
+		b.....		- 	binary
+
+	The second class of universal constants consists of
+hollerith data, i.e., data between single quotes (') or following
+an 'nh' specification.  Previously,  the data in one such specification
+could only be used for one element of an array,  or one simple
+or subscripted variable.   Now, in cases of an array,  bytes will
+be taken from the string until the hollerith constant is exhausted,
+filling contiguous bytes in the arrays storage area.  Unused
+characters in a hollerith constant are ignored,  and such a constant may
+not be split between two distinct variables.
+
+.bp
+examples:
+	real*4 r(4)
+	data r/'this is a string'/
+
+leaves r(1)='this', r(2)=' is ', r(3)='a st', and r(4)='ring'.
+
+	integer i1,i2
+	data i1,i2/'word#1','word#2'/
+
+leaves i1='wo', i2='wo'.
+
+	Finally, if trailing values for an array are not specified,  they are
+assumed to be zero.
+
+
+.bp
+2.  The pause statement
+	The syntactic form of the pause statement is unchanged.
+At execution time,  when a pause statement is encountered,  the message,  if
+any,  is displayed.  The fortran task then forks and invokes the shell as a child
+process.  When the shell terminates (i.e. receives a control-d),  the fortran
+task is re-activated.
+
+
+3. Shareable text segments
+
+	The fortran compiler and run-time system both distinguish between
+shareable "pure" code and non-shareable "dirty" code.  The former is
+located in the concatenated psect ".text.",  and the later in the blank
+psect,  and the common blocks.  When the fortran program is linked,  these
+two pieces are separated into a shareable segment and and private
+segment.  In general,  people writing assembly code to interface to fortran
+should not place non-shareable code in the .text. psect.
+
+
+4. Subroutine linkage
+
+	Subroutine are called with the instruction
+		jsr	pc,routine
+
+At entry to the routine,  r5 must point to an argument list of
+the following form:
+.na
+	r5-> number of arguments
+	     address of first arg.
+		.
+		.
+	     address of n'th arg
+.ad
+
+Return from a subroutine is via an "rts pc".  No registers are
+expected to be preserved across a subroutine call,  except,  of course,
+for the stack pointer.  Integer functions return their value in r0;
+real functions in r0.r1; and double and complex functions in r0...r3.
+
+
+.bp
+
+5. Run-time memory organization:
+.na
+.br
+.nf
+
+
+		------------------------
+low core	|  shareable threaded	|
+		|      code   		|
+			--------
+		|  shareable ots	|
+		|	code		|
+		-------------------------
+		| data storage		|
+		| ots scratch area	|
+		-------------------------
+		| common blocks		|
+		-------------------------
+		| line buffer		|
+		-------------------------
+		| dynamic		|
+		|   array allocation	|
+		-------------------------
+		| dynamic i/o		|
+		|   allocation		|
+		-------------------------
+		            ||
+			    \\/
+			    .
+			    .
+
+		|	stack		|
+		-------------------------
+high core
+
+.ad
+.fi
+	shareable code is in .psect '.text.'
+	data store is in .psect '.data.'
+	blank common is in .psect '.$$$$.'
+	named common 'xxxxxx' is in .psect 'xxxxxx'
+
+	The line-buffer is allocated at run-time, and
+uses $lrecl______+6 bytes. $lrecl______ may be specified at the compilation
+of the main program,  and defaults to 132.
+
+	For details of the dynamic array allocation region,  see section 14.
+
+	Each open file uses about 520 bytes in the dynamic i/o region.
+.bp
+
+.bp
+
+6. Device assignments
+
+	Fortran channel 5 is initially assigned to the standard input.
+
+	Fortran channel 6 is initially assigned to the standard output.
+Both of these may be changed by setfil,  after they have been endfile'ed.
+Legal fortran channel numbers range between 1 and 99 inclusive.  The
+default file name for channel xx is "fortxx".
+
+
+	read	f,list		is equivalent to
+	read(1,f) list
+
+	accept	f,list		is equivalent to
+	read(5,f) list
+
+	type	f,list		is equivalent to
+	write(6,f) list
+
+	print	f,list		is equivalent to
+	write(7,f) list
+
+
+.bp
+7. Modes of fortran i/o
+
+	Unix fortran supports three basic types of i/o: binary,  ascii,  and random.
+
+
+
+i. Ascii i/o
+.br
+	All ascii i/o in fortran is directed via format statements.
+Each file on which ascii i/o is being performed may be set to either ascii special mode or ascii normal mode.
+In special mode,  no extra bytes are added to those produced by the format statement; i.e., no carriage
+control conversions are performed,  and no line-feed is appended to the end of a record.  Normal ascii
+i/o has two sub-modes:  carriage control, and no carriage-control.  In carriage control submode
+the first byte of a record is interpreted as a carriage control character according to the following
+table:
+
+	+	do not advance 
+		advance 1 line (space)
+	0	advance 2 lines
+	1	advance 1 page
+	$	advance 1 line, simulate a "$" format item
+
+
+	Unless a "$" format item was encountered in the format statement,
+the record is ended by a carriage-return.   In non-carriage-control submode,  all records
+are simply terminated by a new-line.  This is the default.
+	On ascii input,  only normal no-carriage control is allowed.  An input
+record is terminated by a new-line.
+	Unix fortran supports abrupt______ field_____ termination___________
+on input.  The acceptable terminators are tab, comma, and null.
+For further details, see the rt-11 manual.
+
+
+
+ii. Binary i/o
+	Again there are two modes:  normal and special.  Normal mode conforms to fortran
+standards,  and each binary read or write involves a binary record containing
+a known number of bytes.  In binary special mode, exactly the number of bytes
+required for the i/o statement are transmitted.  This is essentially a raw
+i/o interface to the system.
+
+
+
+Notes:
+.in 10
+
+.ti 8
+1. Ascii and binary i/o may be mixed on the same file.
+
+.ti 8
+2. Input and output may not be mixed on a file without an intervening
+endfile or rewind.
+
+.ti 8
+3. It is possible to open an output file in append mode. See the description of the status bits.
+
+.ti 8
+4. Backspaces are permitted only on channels open in normal (ascii/binary ) mode.  The type of
+backspace (ascii/binary) is determined by the type of the last i/o operation on that file.
+
+.ti 8
+5. One cannot backspace past the beginning of a file.
+
+.ti 8
+6. There is a flush bit which may be set on output files,  which causes the
+buffer to be purged at the end of every i/o operation.  This bit is initially set on channel 6,
+and reset on all other channels.  It may be set via setmod;   this is useful for interactive
+types of i/o (tty output,  graphics displays,  etc.). The default is to buffer fortran input
+and output in 512 byte blocks.
+
+.in 0
+
+
+iii. Random i/o
+	There are two major changes from the rt-11 definition of random i/o for files.
+First,  the recordsize parameter in the define file statement specifies the
+size in bytes_____ for UNIX,  while it was in words for rt-11.  Secondly,  the maximum
+number of records parameter in the define file statement is ignored,  since it
+is unnecessary to specify the maximum length of a file.  Reading a random file
+past the last writen record results in an end= condition.  Record sizes
+that are a multiple of 512 bytes are most efficient.
+	Normally,  when a random file is to be opened,  a check is made to see if the
+file already exists.  If it does,  the existing file is used,  rather than
+creating a new file.  A bit may be set in the status word of a random file to force
+creation.
+	A bit may also be set in the status word to specify that a random file is to be
+read only.  Normally,  write permission is needed to open a random file;  with read-only files,
+only read permission is needed.
+
+
+
+
+Notes on all file i/o:
+.in 10
+.ti 8
+
+1. There is a UNIX limitation on the number of files that may be simultaneously open.
+A file is opened upon execution of the first i/o request to that file,  or on calling the
+system subroutine 'opens'.  A file is closed by either a rewind or endfile statement.
+The rewind statement neither resets the status word nor the file name for the channel;  the
+endfile resets both of these.
+.ti 8
+
+2. There is a status bit to delete a file on endfile'ing it.  This is useful for scratch files.
+All files are endfile'ed by normal program termination,  or fatal fortran error conditions.
+Files are not endfile'ed on program termination by non-fortran fatal errors (hangup,
+interrupt,quit,segmentation violation,  etc.) In these cases the last block of a
+sequential output file may not have been written.
+.in 0
+
+
+.bp
+8. System i/o subroutines
+
+	There are a number of fortran callable subroutines to facilitate the i/o interface.
+Many of them deal with the status word of a file,  which is detailed below:
+.na
+
+	Bit___	Name____	Meaning_______
+
+	15	input	sequential files -
+				set: file is input
+				reset: file is output
+			random files -
+				set: file is read-only
+				reset: file is read-write
+
+	14	random	all -
+				set: file is random access
+				reset: file sequential access
+
+	13	create	random -
+				set: force creation of file
+				reset: open existing file,
+					if possible
+
+	12	append	sequential -
+				set: if files exists on output,
+					append to it.
+				reset: create output file
+
+	11	carctl	sequential, ascii -
+				set: first byte of record is
+					carriage control
+				reset: terminate record with
+					new-line
+
+	10	ascspc	sequential -
+				set: ascii special mode
+				reset: ascii normal mode
+
+	9	binspc	sequential -
+				set: binary special mode
+				reset: binary normal mode
+
+	8	lstbin	sequential -
+				set: last i/o access binary
+				reset: last i/o access ascii
+
+	7	flush	sequential -
+				set: purge buffer on output
+					after each i/o op.
+				reset: buffer output to 512 bytes
+
+	6	delete	all -
+				set: delete file on endfile
+
+	5	open	all -
+				set: file is open
+
+	4	rgood	sequential -
+				backspace is possible on file
+
+
+	LSTBIN,RGOOD,RANDOM, and OPEN are read-only on
+		mode changes
+
+	RANDOM is set by define file,  and reset by endfile.
+
+	INPUT may be set by the user explicitly,  or by the
+		first sequential i/o operation being input.
+
+	APPEND and CREATE may not be changed while the file
+		is open.
+
+.ad
+
+.sp 4
+.na
+	i. call opens(n,f)
+	   integer n,f
+
+	OPENS forces an open on fortran channel number n.  This
+	is necessary to allow calls to SETTTY and GETTTY on that
+	channel. f is a flag,  and should be non-zero if the file
+	is to be opened for output
+
+
+	ii. call setfil(n,h [ ,m] )
+	    integer n,m
+	    hollerith string h
+
+	SETFIL allows any unix filename to be associated with a 
+	fortran unit number.  The channel must not be open. m, if
+	present, is used as the status word for the channel. h
+	must be a null-terminated string of characters comprising
+	the file-name. It should be noted that the compiler auto-
+	matically null-terminates any text enclosed in single
+	quotes as a subroutine argument.
+
+	e.g., call setfil(2,'../turner/somefile')
+
+
+	iii. call argfil(n, k [,m] )
+	     integer n,k,m
+
+	ARGFIL is like SETFIL except that the k'th argument to
+	the main program is used as the file name.  Remember
+	that the 1st__ argument,  by convention,  is the name of
+	the program being run.  Therefore,  k should almost
+	always be >_ 2.
+
+
+
+	iv. call setmod(n,m)
+	    integer n,m
+
+	SETMOD sets the status word of channel n to m.
+
+
+	v. call gettty(n,i)
+	   call settty(n,i)
+	   integer n,i(4)
+
+	GETTTY places the three words from a UNIX gtty request on
+	channel n in i(1),i(2), and i(3). i(4) is set to the 
+	fortran status word of channel n.
+
+	SETTTY takes the three words necessary for a UNIX stty
+	request on channel n from i(1), i(2), and i(3).  The
+	fortran status for channel n is taken from  i(4).
+
+	It is the user's responsibility to ensure that it is
+	meaningful to do a gtty/stty request on the given
+	channel.
+
+
+.bp
+9. Arguments to the main program
+
+	i. n = iargc(x)
+
+	IARGC(dummy) returns the number of arguments to the main 
+	program
+
+
+	ii. call getarg(n,a,m)
+	    integer n,m
+	    array of bytes a
+
+	GETARG places the n'th arguement to the main program
+	into the m-byte array a,  null padded.
+
+	The first argument is traditionally the name by which the
+	program was invoked.
+
+
+
+10. Random number generators
+
+	The random number generator can be called as a
+	subroutine RANDU,  or an intrinsic function,  RAN.
+	The subroutine call is as follows:
+
+		call randu(i1,i2,x)
+
+	where i1,i2 are previously defined integer variables and
+	x is the real number returned in the interval (0,1).
+	i1 and i2 should initially be set to 0.   The functional
+	call is
+
+		x = ran(i1,i2)
+
+
+11. Exiting to the system
+
+	i. call exit
+
+	call exit is equivalent to stop____.
+
+
+12. Bit operations
+
+	i. i1 = ibic(i2,i3)
+
+		i1 = ~i2 & i3
+
+	ii. i1 = iand(i2,i3)
+
+		i1 = i2 & i3
+
+	iii. i1 = ior(i2,i3)
+
+		i1 = i2 | i3
+
+	iv. i1 = ixor(i2,i3)
+
+		i1 = i2 ^ i3 (exclusive or)
+
+	v. i1 = inot(i2)
+
+		i1 = ~i2
+
+	All of the above operate on integers as 16 bit
+	logical quantities.
+
+
+	vi. call bool(s1,s2,dest,b,n)
+
+	s1,s2,dest are arrays with n bytes. b is a bit pattern
+	which describes how the dest bit is to be formed from the
+	corresponding bits in s1 and s2. Let b be the binary
+	integer wxyz.  Then we have:
+
+		s1__	s2__	dest____
+		0	0	w
+		0	1	x
+		1	0	y
+		1	1	z
+
+	e.g., call bool(r1,r2,r1,"1,100) and's the 100 bytes in
+		r1 with those in r2,  leaving the result in r1.
+
+13. Catching errors
+
+	i. call seterr(ierrno,icount)
+
+	SETERR determines the action to be taken when error
+	#ierrno occurs according to icount:
+
+		icount = 0:	ignore the error
+		icount = -1:	ignore the error but log it
+
+		icount = 1:	the error is fatal
+		1 < icount < 128:
+				the first icount -1 occurances
+				are noted and logged.  The 
+				icount'th occurance is fatal.
+
+
+.bp
+14. Dynamic array facility
+
+	Array storage allocated at compile time in fortran programs
+is static,  frequently causing wasted space.  A facility to
+dynamically obtain storage space at run-time has been added to
+the UNIX fortran system,  and is interfaced through the
+following four subroutines:
+
+
+	i. i = icore(n)
+
+.in 16
+n is the number of bytes of dynamic storage required.
+
+i is an integer, to which is assigned a pointer to the
+dynamically acquired storage region containing that many bytes.
+The region always starts on a word boundary.
+
+If n bytes of storage are not available,  the program terminates with
+the fatal error message 'OUT OF CORE.'
+.in 0
+
+
+	ii. call free(i)
+
+.in 16
+i is an integer previously returned by icore.  The block of storage
+to which i points is de-allocated.  It is disastrous to free a block not returned
+by icore.
+
+.in 0
+
+	iii. j = iaddr(z)
+.in 16
+
+	z is a variable or array of any type. iaddr returns the
+address of its argument.
+
+.in 0
+
+	iv. call dcall(s,kw,a0,...,an)
+
+.in 16
+s is an externally declared name.
+
+kw is a key integer,  with bits b0...b14 associated with
+arguments a0 ... a14.
+
+The subroutine s is called with arguments a0,...,an. However, if
+bit bi is set, the value_____ of argument ai is passed as an address
+to the subroutine.  Thus, it is possible to address dynamically
+gotten core directly in a fortran subroutine.
+
+.in 0
+.bp
+example:
+
+	external sub1
+		...
+	call dcall(sub1,1,icore(4*i*j*k),i,j,k)
+		...
+	end
+
+
+	subroutine sub1(a,i,j,k)
+	dimension a(i,j,k)
+		...
+	end
+
+
+	Storage allocation is done using a best-fit algorithm,  with the
+coalescing of adjacent blocks of storage,  and the release of free storage
+lying at the end of the array-allocation region.
+	The dynamic array allocator interacts with the i/o
+system, and is therefore subject to the same "recursive i/o"
+restrictions.
+
+.bp
+15. Documented irritants
+
+	The source language is fortran.
+
+	The parameters of a do__ may be expressions, but only
+if the expression is integer valued.  No error message is
+given for non-integer valued expressions, but erroneous
+results will occur at run-time.
+
+	Variables of type integer*4_________ are allocated 32 bits of
+storage, but computation is only accurate to 16 bits.
+
+.bp
+16. Error messages
+
+.ad
+.fi
+.in 16
+.ti 0
+Number______	Type____	Message_______
+
+
+.ti 0
+1	fatal	INTEGER OVERFLOW
+.br
+During an arithmetic operation an integer's value exceeded 32767 in magnitude.
+.ti 0
+
+2	fatal	INTEGER DIVIDE BY ZERO
+.br
+During an integer mode arithmetic operation an attempt was made to divide by zero.
+
+.ti 0
+3	fatal	COMPILER GENERATED ERROR
+.br
+A statement was executed in which the fortran compiler had reported an error.
+
+.ti 0
+4	warn	COMPUTED GOTO OUT OF RANGE
+.br
+The integer variable or expression in a computed goto was less than 1 or greater than
+the number of statement labels in the goto list.  Control passes to the next statement.
+
+.ti 0
+5	fatal	INPUT CONVERSION ERROR
+.br
+During a formatted input conversion an illegal character was detected in an input field.
+The value of the field is set to zero.
+
+.ti 0
+6	ignore	OUTPUT CONVERSION ERROR
+.br
+During an output operation the value of a number could not be placed in the field of specified
+width without a loss of precision.  The field is filled with *'s.
+
+.ti 0
+7	fatal	FLOATING OVERFLOW
+.br
+During an arithmetic operation the value of a real number  exceeded the
+largest value that can be represented.  The number is set to zero.
+
+.ti 0
+8	ignore	FLOATING UNDERFLOW
+.br
+During an arithmetic operation a real number became smaller than the smallest
+representable real number,   and is set to zero.
+
+.ti 0
+9	fatal	FLOATING ZERO DIVIDE
+.br
+During an arithmetic operation an attempt was made to divide by zero.  The result is set
+to zero.
+
+.ti 0
+10	count3	SQRT OF NEGATIVE NUMBER
+.br
+An attempt was made to take the square root of a negative number.
+The square root of the magnitude is returned.
+
+.ti 0
+11	fatal	UNDEFINED EXPONENTIAL
+.br
+An attempt was made to perform an illegal exponentiation operator.
+
+.ti 0
+12	fatal	DOMAIN ERROR ON LOG
+.br
+An attempt was made to take the logarithm of a negative number.
+Zero is returned.
+
+.ti 0
+13	fatal	WRONG NUMBER OF ARGS
+.br
+A system subroutine was called with the wrong number of arguments.
+
+.ti 0
+14	fatal	READ AFTER WRITE
+.br
+A read access followed a write on a sequential file without an intervening rewind or endfile.
+
+.ti 0
+15	fatal	WRITE AFTER READ
+.br
+A write access followed a read on a sequential file without an intervening rewind or endfile
+
+.ti 0
+16	fatal	SEQUENTIAL ACCESS TO RANDOM FILE
+.br
+A random access file was accessed in a sequential manner
+
+.ti 0
+17	fatal	RECURSIVE I/O
+.br
+An expression in the i/o list of a read or write statement has caused the initiation 
+of another read or write operation.
+
+.ti 0
+18	fatal	BAD CHANNEL NO.
+.br
+A i/o operation was attempted with a channel not in the range of 1 to 99.
+
+.ti 0
+19	fatal	OUT OF CORE
+.br
+The system has exhausted the core available for buffers and so forth.
+
+.ti 0
+20	fatal	BAD OPEN
+.br
+A fortran file could not be opened;  either the file did not exist,  or some necessary
+permissions were lacking,  or a random file could not support seeks.
+
+.ti 0
+21	fatal	REWIND TO RANDOM FILE
+.br
+An attempt was made to rewind a random access file.
+
+.ti 0
+22	fatal	UNFORMATTED READ OVERFLOWS RECORD
+.br
+During normal mode binary input,  more bytes were requested than were present
+in the input record.
+
+.ti 0
+23	fatal	I/O ERROR
+.br
+During an i/o operation,  an error occured which normally would have been caught with an
+err= construction.
+
+.ti 0
+24	fatal	EOF ON I/O
+.br
+During an i/o operation,  the end of a file was reached,  and no end= was active.
+
+.ti 0
+25	fatal	SETFIL ON OPEN FILE
+.br
+An attempt was made to call setfil with a channel number that was already open.
+
+.ti 0
+26	fatal	CANNOT BACKSPACE FILE
+.br
+An attempt was made to backspace a file which could not be backspaced.
+
+.ti 0
+27	fatal	NO DEFINE FILE
+.br
+Random access i/o was attempted on a file for which there was no previous define file.
+
+.ti 0
+28	fatal	WRITE TO READ-ONLY FILE
+.br
+An attempt was made to write to a read-only random access file
+
+.ti 0
+29	fatal	RANDOM RECORD SIZE EXCEEDED
+.br
+The number of bytes in a random read or write exceeded the record size of the random file.
+
+.ti 0
+30	fatal	DEFINE FILE ON OPEN FILE
+.br
+A define file was attempted on an already open fortran channel number.
+
+.ti 0
+31	fatal	LINE TOO BIG
+.br
+A formatted ascii input line overflowed the line buffer.
+
+.ti 0
+32	fatal	MORE THAN 1 RECORD IN ENCODE/DECODE
+.br
+Encode and Decode will only operate on single records.
+
+.ti 0
+33	fatal	INFINITE FORMAT LOOP
+.br
+The format associated with an i/o statement that includes an i/o list has no field 
+descriptors to use in transferring those variables.
+
+.ti 0
+34	fatal	FORMAT CONVERSION ERROR
+.br
+An attempt was made to output a real variable with an integer field descriptor or an
+integer variable with a real field descriptor.
+
+.ti 0
+37	fatal	CANNOT PAUSE
+.br
+The fortran program was not able to fork;  all process slots are probably temporarily
+exhausted.
+
+.ti 0
+38	fatal	ILLEGAL INSTRUCTION
+.br
+An illegal instruction interrupt occured.  This can happen when the
+wrong floating point library is used.
+
+.ti 0
+39	fatal	BUS ERROR
+.br
+A bus error interrupt has occured.  Alignment problems with equivalenced logical*1
+variables can cause this.
+
+.ti 0
+40	fatal	NOT OPEN ON GET/SET TTY
+.br
+Gettty/settty require that the fortran channel be open.
+
+.ti 0
+41	fatal	BAD OBJECT TIME FORMAT
+.br
+A syntax error was discovered in an object time format
+
+
+.ti 0
+42	fatal	SEGMENTATION VIOLATION
+.br
+A UNIX segmentation violation was discovered. A probable
+cause is an array reference out-of-bounds.
+
+.in 0
+.sp 4
+	Core may be saved at run-time by not including the text of the error messages.
+This may be done by including the module "$short" from the fortran library when linking;
+e.g.,
+	link main "-i:$short" -f4
+

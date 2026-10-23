@@ -1,0 +1,8 @@
+echoall
+cc -s -o mod -O -n mod.c -lp
+cc -s -o doc -O -n doc.c -lp
+rm -f /usr/bin/doc /usr/bin/mod
+mv doc /usr/bin/doc
+mv mod /usr/bin/mod
+chown root /usr/bin/doc /usr/bin/mod
+chmod 711 /usr/bin/doc /usr/bin/mod

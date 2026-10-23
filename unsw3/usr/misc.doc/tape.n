@@ -1,0 +1,201 @@
+.tr ~ 
+.nh
+.ll 85
+.lt 85
+.de HD
+.sp 2
+.tl 'UNSW Distribution tape''\\*t'
+.sp 2
+.ns
+..
+.de FO
+.bp
+..
+.pl 12i
+.ds t Format
+.wh 0 HD
+.wh -4 FO
+.sp 2
+.cu
+.ce
+FORMAT OF THIS DISTRIBUTION TAPE
+.sp 2
+The distribution tape was created with 'dtp'
+- essentially a modified 'tp'.
+The reason for the departure from standard Unix 'tp' is
+that this tape contains all of our collected source, with many more
+files than 'tp' can write, and with many more blocks than can be
+comfortably written with 512 byte records.
+.sp 1
+'dtp' solves these problems well.
+It writes blocks of 16K bytes and allows
+for (almost) unlimited numbers of files.
+These files can be extracted on
+a directory or individual basis.
+Dtp also has a create directory mode,
+for extracting arbitrary chunks of
+a file system
+(no more mkdirs).
+'dtp' is used just like 'tp' except for some perverse reason
+some of the flags used to control 'dtp' are different.
+'dtp.5' and 'dtp.8' are attached
+the diferences with 'tp' should be obvious.
+'dtp' will run on the standard version 6 Unix system.
+.sp 1
+A listing produced by dtp of the distribution tape has been included
+in the package. You can scan it to isolate just what you are interested
+in from the distribution.
+.sp 1
+The format of this distribution tape is as follows.
+.sp 1
+.nf
+.in +7
+ start     end     size          description
+record   record
+
+    1 -->         16K bytes      'dtp' directory.
+      -->         16K bytes      'dtp' dumped files.
+
+  TAPE MARK
+
+    1 -->  14     512 bytes      copy of 'dtp' a.out.
+
+  TAPE MARK
+
+    1 --> 54      512 bytes      copy of 'dtp' source.
+
+  TAPE MARK
+  TAPE MARK
+.in -7
+.fi
+.sp 1
+The ~~~~~~~~ record also contains a copy
+of the dtp program ('dtp' is the first
+thing in the dump, so it is the first thing after the directory).
+The 'dtp' in the second tape file is identical to this one.
+The source of dtp is in the third tape file in case your system has changed
+in some dramatic way from standard Unix, such that this version of dtp will
+not run. The source for our version of dtp can be found somewhere in the dump.
+Dtp will extract it. See the copy
+of dtp(V) and dtp(VIII) enclosed.
+.ds t Contents
+.bp
+.ce
+.cu
+CONTENTS OF TAPE
+.sp 1
+The 'dtp' part of the tape was created with the command 'dtp nm0 dtp usr'.
+Thus it can be extracted partially or in full into any directory
+on your system called 'usr'.
+.sp 1
+The first task to be accomplished is to extract
+from the tape the 'dtp' program so that you can then extract
+the various files and directories from the tape.
+As you can see two copies of 'dtp' are stored on the tape
+either will do.
+The following two commands can be used to extract firstly
+the one from the first file or secondly the copy from the second file.
+.sp 1
+.nf
+	dd if=/dev/rmt0 bs=16k of=dtp skip=     count=1
+	chmod 700 dtp
+.sp 1
+	dd if=/dev/rmt0 bs=1b of=dtp conv=noerror skip=      count=14
+	chmod 700 dtp
+.sp 1
+.fi
+.sp 1
+If you posess a filesystem with 19,000 free blocks
+and can create a 600 block file in /tmp
+for the 'dtp' workarea
+then to extract all the files on this tape,
+mount tape on unit rmt0
+and use the following commands:
+.nf
+.in +7
+.sp 1
+mkdir usr
+dtp xcm0		*** Xtract - Create directories - 800bpi - unit=0
+.in -7
+.fi
+.sp 1
+If you posess a filesystem with 20,000 free blocks
+and can't create a 600 block file in /tmp
+then to extract all the files on this tape,
+mount tape on unit rmt0
+and use the following commands:
+.nf
+.in +7
+.sp 1
+mkdir usr
+dtp xcm0t temp		*** Xtract - Create directories - 800bpi - unit=0
+			*** temp is used by 'dtp' as work area.
+.sp 1
+.in -7
+.fi
+If only a specific directory and its sub-directories
+is required then the following precedures can be followed.
+With the tape comes a listing of the contents of the tape
+this listing was created by:
+.br
+	dtp lm0 | pr -2 -h "UNSW - third distribution" > /dev/lp
+.br
+To get a full listing of the contents you could use the following
+command:
+.br
+	dtp lmv0
+.br
+BOTH of the above assume that a 600 block file can be created
+in /tmp.
+If you can't create a 600 block file in /tmp then
+to get a full listing use:
+.br
+	dtp lmv0t temp
+.br
+This requires that you can create a 600 block file (temp)
+in the current directory.
+.sp 1
+In what follows no
+mention will be made of the 'dtp' temp file
+but you can always specify it.
+.sp 1
+As you can see from the tape contents the directory usr
+has seven subdirectories:
+.nf
+	docmention	full and complete documentation directories
+	lib		all the libraries currently in use at UNSW
+	binaries		some necessary binaries - esp if new C-compiler to be used
+	include		contains miscellaneous .h files
+	misc.doc		contains all the documentation included with tape
+	source		entire source directories
+	sys		our 'UNIX'
+.fi
+.sp 1
+If you don't have enough space for a full extraction
+of the tape contents or you merely wish to view sections
+of it a little at a time then what follows will help.
+.sp 1
+If you only wish to extract the sys directory
+then use the following commands:
+.br
+	mkdir usr
+.br
+	dtp xmc0 usr/sys
+.sp 1
+If you only wish to extract the source/s1 directory
+then use the following commands:
+.br
+	mkdir usr
+.br
+	dtp xmc0 usr/source/s1
+.sp 1
+If you only wish to extract a single file, say usr/sys/dmr/lp.c
+then use the following commands:
+.br
+	mkdir usr usr/sys usr/sys/dmr
+.br
+	dtp xm0 /usr/sys/dmr/lp.c
+.sp 1
+Tape i/o errors hopefully will not happen but if they do
+then the 'i' option of 'dtp' can be used to ignore them,
+but results in this case cannot be guarenteed.

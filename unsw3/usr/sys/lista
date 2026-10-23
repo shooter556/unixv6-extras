@@ -1,0 +1,56 @@
+if $1x = x exit
+cc -LOI z.h rmcom.c
+pr -l66 -h "parameter files" z.l > $1
+pr -l66 -h rmcom.c rmcom.l >> $1
+rm *.l
+cd ken
+cc -LO *.c
+pr -l66 -h alloc.c alloc.l >> ../$1
+pr -l66 -h clock.c clock.l >> ../$1
+pr -l66 -h fio.c fio.l >> ../$1
+pr -l66 -h iget.c iget.l >> ../$1
+pr -l66 -h malloc.c malloc.l >> ../$1
+pr -l66 -h nami.c nami.l >> ../$1
+pr -l66 -h once.c once.l >> ../$1
+pr -l66 -h pipe.c pipe.l >> ../$1
+pr -l66 -h prf.c prf.l >> ../$1
+pr -l66 -h rdwri.c rdwri.l >> ../$1
+pr -l66 -h sig.c sig.l >> ../$1
+pr -l66 -h slp.c slp.l >> ../$1
+pr -l66 -h subr.c subr.l >> ../$1
+pr -l66 -h sys1.c sys1.l >> ../$1
+pr -l66 -h sys2.c sys2.l >> ../$1
+pr -l66 -h sys3.c sys3.l >> ../$1
+pr -l66 -h sys4.c sys4.l >> ../$1
+pr -l66 -h sysent.c sysent.l >> ../$1
+pr -l66 -h text.c text.l >> ../$1
+pr -l66 -h trap.c trap.l >> ../$1
+rm *.l
+cd ../dmr
+cc -LO *.c
+pr -l66 -h bio.c bio.l >> ../$1
+pr -l66 -h tty.c tty.l >> ../$1
+pr -l66 -h cr.c cr.l >> ../$1
+pr -l66 -h crd.c crd.l >> ../$1
+pr -l66 -h dj.c dj.l >> ../$1
+pr -l66 -h dz.c dz.l >> ../$1
+pr -l66 -h ei.c ei.l >> ../$1
+pr -l66 -h hp.c hp.l >> ../$1
+pr -l66 -h ht.c ht.l >> ../$1
+pr -l66 -h kl.c kl.l >> ../$1
+pr -l66 -h lp.c lp.l >> ../$1
+pr -l66 -h mem.c mem.l >> ../$1
+pr -l66 -h msc.c msc.l >> ../$1
+pr -l66 -h partab.c partab.l >> ../$1
+pr -l66 -h rk.c rk.l >> ../$1
+pr -l66 -h sys.c sys.l >> ../$1
+rm -f *.l
+cd ../conf
+pr -l66 l70.s >> ../$1
+pr -l66 m70.s >> ../$1
+pr -l66 powerf.s >> ../$1
+cp c.hp0 c.c; cc -LO c.c
+pr -l66 -h c.c c.l >> ../$1
+rm c.l c.c
+pr -l66 -h sysfix.c sysfix.l >> ../$1
+cd ..

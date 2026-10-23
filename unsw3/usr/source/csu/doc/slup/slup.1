@@ -1,0 +1,517 @@
+.th SLUP I "78/01/15"
+.ds S SLUP
+.sh NAME
+slup - source librarian and update program
+.sh SYNOPSIS
+.bd slup
+library -[function][subswitch][/identifier]... file1 file2 ... filen
+.sh DESCRIPTION
+\*S is an archiver or librarian,
+a program that maintains groups of files combined
+into a single library file.
+It is loosely base on the CDC Kronos Modify utility,
+and has the ability to make logged modifications to
+source programs stored in these libraries.
+.s3
+When a file is copied into the library,
+it is called a module,
+and takes the last argument of the file pathname
+as the module name.
+Any sets of modifications are called modsets and
+must be given a modset name, unique within the module.
+.s3
+In use,
+files are incorporated into the library file,
+the modules are modified under the direction of directives
+supplied through "standard input",
+at which point they may be extracted.
+Extraction simply creates a file separate from the
+library with the same name as the module,
+containing the module with any modifications included.
+If any errors are discovered in update directives
+or anything else before the library itself is actually
+modified,
+the library is preserved intact.
+.s3
+It is possible to "yank" and "unyank" a modset from the
+library.
+This means that the modset information is left inside
+the library,
+but,
+flagged as inactive.
+.s3
+When \*S is called without arguments it will print out
+a very brief summary of the available commands.
+.s3
+When given only a library name, \*S tests the validity of
+the named file to ensure that it is indeed a source library.
+.s3
+If \*S is called with more than one argument then the following
+list of switches applies.
+Note that if no switch is supplied then the assumed switch
+is "\fB-i\fR".
+.s3
+All switches except group function switches may be
+followed by `\fBv\fR' for verbose.
+This usually means that the name of the module gets typed
+before the operation is attempted.
+In the case of the "\fB-l\fR" switch, it actually gives
+a much more informative output.
+.s3
+.lp +5 5
+-n[v]
+.br
+Create a new library.
+.s3
+.lp +5 5
+-i[v]
+.br
+Requires a following list of names of files which are to
+be inserted into the library file.
+It is an error if the library already contains
+a module with the same name.
+.s3
+.lp +5 5
+-r[v]
+.br
+Identical in operation to "\fB-i\fR" except that modules
+already contained in the library may be replaced.
+.s3
+.lp +5 5
+-l[a][g][m][x][d][v]
+.br
+List the names of all of the modules contained in the
+library.
+If a list of names is supplied, then only they are listed.
+.lp +10 5
+`\fBa\fR':	List all possible things.
+.lp +10 5
+`\fBg\fR':	List the defined group names for the library.
+.lp +10 5
+`\fBm\fR':	Lists all of the modset names used anywhere
+within the library.
+.lp +10 5
+`\fBx\fR':	Give a cross-reference of which modules were
+modified by which modsets.
+.lp +10 5
+`\fBd\fR':	List the documentation comments associated with
+each modset.
+.lp +10 5
+`\fBv\fR':	List the insertion dates and the names of any
+modifications alongside the module names.
+.s3
+.lp +5 5
+-x[s][v]
+.br
+Extract the named modules from the library.
+This means that the modules are copied from the library
+file into new files
+with the same names as the modules.
+If no names are given,
+then every module in the library is extracted.
+.lp +10 5
+`\fBs\fR':	Extract a version of the module with
+handling any of the "\fB*call\fR" or "\fB*prefixc\fR"
+extract-time directives.
+.s3
+.lp +5 5
+-xo[v]
+.br
+Extract a version of the named modules that corresponds
+to the original modules without any modifications
+in effect.
+.s3
+.lp +5 5
+-xu[v][/modsets]...
+.br
+Used to produce a file which when
+supplied to \*S as update directives would make the
+modifications necessary to reproduce the current library.
+Unless the output filename is explicitly specified with
+the "\fB-o\fR" switch,
+it will be constructed by adding a suffix of ".mod" to
+the library name.
+.s3
+.lp +5 5
+-p[a][c][d][y][l][s][0][v]
+.br
+Similar to `\fB-x\fR' in that this function
+extracts a module from the library.
+The difference is that no source file is produced.
+Instead, a listing is produced on the printer describing
+the module in the library.
+The sub-switches are used to select different printing options.
+.lp +10 5
+`\fB0\fR':	Produce just the basic listing without
+any extra options.
+.lp +10 5
+`\fBa\fR':	Selects all printing options.
+.lp +10 5
+`\fBc\fR':	Allows included common modules to be listed.
+.lp +10 5
+`\fBd\fR':	Prints any deleted lines.
+.lp +10 5
+`\fBl\fR':	Allows directives to be printed.
+.lp +10 5
+`\fBs\fR':	ignore extraction-time directives.
+.lp +10 5
+`\fBy\fR':	Prints any lines contained in yanked modification sets.
+i.e. "\fB*call\fR" and "\fB*prefixc\fR".
+.lp +10 5
+The default if no sub-switches are used is: "\fBd\fR".
+.s3
+.lp +5 5
+-d[v]
+.br
+Delete the named modules from the library.
+.s3
+.lp +5 5
+-du[v]/modset...
+.br
+Delete named modsets from each of the
+named source modules in the library.
+.s3
+.lp +5 5
+-u[p]
+.lp +5 5
+-t[p]
+.br
+Update the modules in the library.
+The update directives are taken from standard input
+(i.e. at the terminal).
+For the format and description of the directives to update
+the source modules see below.
+If the `\fBp\fR' sub-switch is used then a report will be
+produced describing the effect of the update run.
+The `\fBt\fR' (test) function is different from
+`\fBu\fR' (update) in the following respects:
+the library itself is not altered in any way;
+the temporary updated modules are always extracted
+immediately after the update.
+.s3
+.lp +5 5
+-c[+/-]
+.br
+Depending on the sign specified,
+this switch will either give (`\fB+\fR') or take away (`\fB-\fR')
+common status of a module,
+which prevents the module being extracted unless
+a "\fB-xa\fR" command line switch is used.
+This is a convenience for modules that are only
+"\fIcalled\fR".
+.s3
+.lp +5 5
+-e[char]
+.br
+Specify the default escape or prefix character to be used
+by the `\fB-x\fR' and `\fB-u\fR' switches.
+This changes the initial escape character used to specify
+directives,
+and also,
+the character used when the "\fB*prefix\fR" and the "\fB*prefixc\fR"
+commands are used without any argument.
+If no character is specified then the original default
+character is used, i.e. `*'.
+May be helpful if the file being extracted has a number
+of asterisks in the first column.
+.s3
+.lp +5 5
+-o filename
+.br
+Specify the filename to be used for list output from the
+`\fB-p\fR' switch.
+If no output file is specified, then the file is spooled
+for printing on the line printer.
+The same switch may be used to specify the
+output filename used for "\fB-xu\fR".
+.i0
+.dt
+.s3
+For convenience,
+\*S allows a "\fIgroupname\fR" to be given to a set of modules.
+Modules may optionally be included in any of up to 16 named
+groups.
+If this is done,
+it is possible to extract one or more groups
+of modules by name.
+This allows very simple grouping of modules,
+still allowing some modules to be common to a number of packages.
+The group functions are supposed to have group specifiers
+instead of modset specifers in their command lines.
+.s3
+.lp +5 5
+-g/groupname...
+.br
+The modules in the specified groups will be involved in
+some other function to be specifed with another
+function switch.
+.br
+e.g.
+.br
+slup mylib -g/group1/group2 -xv
+.s3
+.lp +5 5
+-gm/groupname...
+.br
+Create the specified groups within the library file.
+.s3
+.lp +5 5
+-gr/groupname...
+.br
+Remove these groupnames from the library.
+No modules are affected.
+.s3
+.lp +5 5
+-gi/groupname...
+.br
+Add the named modules to the specified groups.
+.br
+e.g.
+.br
+slup mylib -g/newgroup file1.c file2.s file3.h
+.s3
+.lp +5 5
+-gd/groupname...
+.br
+Drop these modules from the specified groups.
+.i0
+.dt
+.s3
+UPDATE DIRECTIVES
+.s3
+When in update mode ("\fB-u\fR" or "\fB-t\fR" switches),
+\*S accepts directives from standard input which are used
+to specify any changes to be made to the source modules contained
+in the current library.
+.s3
+The update directives are structured somewhat like editor
+commands.
+They all begin with an \fBescape\fR character which is by
+default `*', but may be changed.
+Any line which doesn't look like a directive is assumed
+to be a text line to be inserted into the last referenced
+source module.
+If it is desired to enter a text line beginning with the
+escape character, then the escape character may itself be
+escaped by preceding it with a reverse-slant (`\\').
+All modification sets applied to a source module
+must be given a name.
+This must be different from all modification set names
+already associated with that particular source module.
+The modification set name may have up to 14 characters.
+.s3
+To actually make any modifications,
+it is necessary to give a name to the modset with
+the "\fB*ident\fR" directive.
+Then it is necessary to specify which module with
+a "\fB*deck\fR" directive.
+.s3
+Some of the update directives require a line-specifier.
+This is formatted thus: "[modsetname.]linenumber"
+.br
+The null modsetname refers to the original source module.
+The format of the line-specifier will now be: ".[linenumber]".
+If only a linenumber is given then a default name
+is used.
+This is set with the "\fB*modname\fR" directive and
+is initially the null modsetname.
+.s3
+.lp +5 5
+*p [char]
+.lp +5 5
+*prefix [char]
+.br
+Change the current escape character to "char".
+If no character is supplied, the the default is used.
+This is a `*' unless set by the `\fB-e\fR' switch.
+The change remains in force until the end of the \*S
+run unless another "\fB*prefix\fR" directive is
+encountered in the meantime.
+.s3
+.lp +5 5
+*dk filename
+.lp +5 5
+*deck filename
+.br
+Specify the name of the next module to be updated by \*S
+in this update run.
+.s3
+.lp +5 5
+*nd filename
+.lp +5 5
+*newdeck filename
+.br
+Set \*S up to create a new module within the library.
+It is an error to attempt to recreate an existing module.
+.s3
+.lp +5 5
+*id modset
+.lp +5 5
+*ident modset
+.br
+Name to be given to this modification set.
+It must be unique for the module.
+.s3
+.lp +5 5
+*m [modset]
+.lp +5 5
+*modname [modset]
+.br
+A name to be used as the default name in any following
+line address specifiers.
+.s3
+.lp +5 5
+*a linespec
+.lp +5 5
+*after linespec
+.lp +5 5
+*i linespec
+.lp +5 5
+*insert linespec
+.br
+Specify a position in the module to insert some text.
+Any text following this directive is inserted after the
+specified line.
+.s3
+.lp +5 5
+*b linespec
+.lp +5 5
+*before linespec
+.br
+Has a similar function to "\fB*after\fR" but allows text
+to be inserted before a line instead of after.
+.s3
+.lp +5 5
+*ap
+.lp +5 5
+*append
+.br
+Similar to after/before but appends to the end of the module.
+This is useful if it is required to add a subroutine to the
+end of a module and the number of lines is not known.
+.s3
+.lp +5 5
+*d linespec1[,linespec2]
+.lp +5 5
+*delete linespec1[,linespec2]
+.br
+Deletes all text between the two line-specifiers, inclusive.
+"Linespec1" must be less than or equal to "linespec2" in value.
+If only one line-specifier is supplied then only that line will
+be deleted.
+It should be pointed out that the deleted text is simply
+flagged within the library without actually losing the
+deleted lines.
+This means that the deleted text may be recovered by
+yanking the deleting modset,
+or by including a "\fB*restor\fR" directive in a
+later modset.
+.s3
+.lp +5 5
+*r linespec1[,linespec2]
+.lp +5 5
+*restore linespec1[,linespec2]
+.br
+Restores all previously deleted text between the two
+line-specifiers.
+.s3
+.lp +5 5
+*y modsetname[,*]
+.lp +5 5
+*y modsetname1,modsetname2
+.lp +5 5
+*yank modsetname[,*]
+.lp +5 5
+*yank modsetname1,modsetname2
+.br
+Will yank the specified modification sets from this module.
+The form containing the asterisk will yank in chronological
+order all modsets since and including the named modset.
+The form containing the two modset names will yank that
+range.
+It is an error if the two modsets were not created in
+that order.
+When a modification set is yanked then anything that that
+modification set did will be ignored.
+.s3
+.lp +5 5
+*u modsetname[,*]
+.lp +5 5
+*u modsetname1,modsetname2
+.lp +5 5
+*unyank modsetname[,*]
+.lp +5 5
+*unyank modsetname1,modsetname2
+.br
+Unyanks the specified modification set from this module.
+.s3
+.lp +5 5
+*e
+.lp +5 5
+*exit
+.br
+Exit from this update run.
+Mainly supplied so that \*S may be used in update mode within
+command files.
+.i0
+.dt
+.s3
+Some directives are handled as normal text lines during
+an update run.
+These have special significance during an extraction run
+however.
+.s3
+.lp +5 5
+*c filename
+.lp +5 5
+*call filename
+.br
+When the module is extracted,
+then the specified module in the
+library is included at this point.
+The included module will often be a "common" module.
+.s3
+.lp +5 5
+*pc [char]
+.lp +5 5
+*prefixc [char]
+.br
+Change the escape character used when extracting the
+modules to "char".
+The default character is `*'.
+The default of `*' may be overridden by the "-e" switch
+on the command line.
+The escape character set by this command remains in effect
+until the end of the current module,
+("call"ed modules don't count),
+or until another "\fB*prefixc\fR" directive.
+.i0
+.dt
+.s3
+There are two directives simply used for documentation
+purposes.
+.s3
+.lp +5 5
+*/ ....
+.lp +5 5
+** ....
+.br
+Allows comments to be inserted with the update directives.
+These are not included upon extraction of any modules.
+The comments prefixed `**' are simply flushed from the input
+stream when they are read.
+The others however are saved within the library,
+any may be listed by the "-ld" command line switch.
+These comments also appear the file produced by
+the "-xu" command.
+.i0
+.dt
+.sh FILES
+/tmp/slup#
+.sh "SEE ALSO"
+Modify Reference Manual (Control Data \(rg) (60281700F)
+.br
+.sh AUTHOR
+Craig McGregor
+.sh BUGS
+None known.

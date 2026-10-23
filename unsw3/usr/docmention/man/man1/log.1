@@ -1,0 +1,62 @@
+.th LOG I 9/9/77
+.sh NAME
+log \*- file exchange package for remote unices
+.sh SYNOPSIS
+.bd log
+remote
+.sh DESCRIPTION
+.it Log
+enables you to talk to another operating system
+via a remote file
+(\ sometimes a dial up tty line\ )
+in an almost transparent fashion.
+The exception is the local quit code
+which opens the door to
+.it log'\c
+s more interesting features.
+
+.it Log
+has 2 modes: ``tty'' & ``file''.
+
+After invoking
+.it log
+you are in transparent ``tty'' mode
+talking to the remote file.
+
+The quit code
+reported at the start of ``tty'' mode
+returns your tty to ``file'' mode,
+and if, hopefully, you have been talking to another UNIX system,
+you may now exchange files with it.
+(\ 
+.it log
+will invoke an image of itself to talk to on the other system\ ).
+.it Log
+now uses a moderately sophisticated file exchange protocol for
+transferring binary files with full crc checks, timeouts, etc.
+The number of bytes transferred is reported at the end of each transfer.
+
+The file exchange syntax is demonstrated by the null command
+( just type <cr> ).
+There is a facility for local escape to the shell,
+and for changing the quit code.
+Also, in this mode, DEL will get you out of
+.it log.
+.sh "SEE ALSO"
+.it utalk
+(I) to talk to less intelligent systems
+.sh DIAGNOSTICS
+.it Log
+may report protocol errors.
+Too many mean you have a bad line
+(\ which will slow up file transfer\ ).
+.sh AUTHOR
+Ian Johnstone
+( University of New South Wales )
+.br
+Piers Lauder
+( University of Sydney )
+.sh BUGS
+Listing large files in ``tty'' mode will
+lose characters if the remote line has a higher speed
+than your output device.

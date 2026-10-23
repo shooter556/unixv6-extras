@@ -1,0 +1,118 @@
+.th MM VII "1 July 77"
+.SH NAME
+mm \*- macros for making manuals
+.sh SYNOPSIS
+nroff -\fBmm\fR [options] file ...
+.br
+troff -\fBmm\fR [options] file ...
+.sh DESCRIPTION
+This package of
+.it nroff
+and
+.it troff
+macro definitions is used for producing the manual entries in
+the "Unix Programmer's Manual".
+.sp
+The macros supplied are:
+.lp +6 5
+\&.th	Enter the title/heading.
+Needs three arguments.
+.br
+e.g.
+.ti +5
+\&.th APROG I 77/2/11
+.br
+where the arguments are:
+1) the program/package name.
+2) the section number in upper-case roman numerals.
+3) the date of last edit (year/month/day at CSU).
+.sp
+.lp +6 5
+\&.sh	Produce a subheading.
+.br
+e.g.
+.ti +5
+\&.sh NAME
+.br
+The standard subheadings are: NAME, SYNOPSIS, DESCRIPTION, FILES,
+"SEE ALSO", DIAGNOSTICS, AUTHOR and BUGS.
+.sp
+.lp +6 5
+\&.bd	Prints the single argument in bold font
+(if
+.it nroff
+instead of
+.it troff
+it simply underlines the argument).
+.br
+e.g.
+.ti +5
+\&.bd bold
+.sp
+.lp +6 5
+\&.it	Prints the single argument in italics.
+(underlines if \fInroff\fR)
+.sp
+.lp +6 5
+\&.lp	Labelled paragraph.
+Common usage is: ".lp +6 5".
+This example sets the left margin 6 spaces to the right of its
+previous position and places the label 5 positions to the left of
+that position.
+When all labelled paragraphs in a group have been entered, then
+two more macros are used:
+.sp
+.lp +12 5
+\&.i0	reset the indentation origin.
+(note the zero in the name)
+.sp
+.lp +12 5
+\&.dt	define tabs.
+.sp
+.lp +6 5
+\&.s1
+.lp +6 5
+\&.s2
+.lp +6 5
+\&.s3	Do some (unknown) amount of spacing.
+The actual amount does not seem to be constant between
+some the sets of macros.
+Usually, only "\fI.s3\fR" is used.
+.sp
+.i0
+.dt
+For those people who do not have
+.it troff
+manuals, here is a very
+brief description of two features that are commonly used in
+.it troff
+programs and ignored by the
+.it nroff
+processor.
+"\\fX" is a
+.it troff
+command used to change the font.
+`X' is a single character used to specify the appropriate font.
+The standard ones are: R(roman, normal text), I(italics), B(bold).
+Another common command is "\\sn" which is used to set the size
+of the print font used.
+`n' is the size of the font used in characters per inch.
+i.e. "\\s10" is used to set the size to pica (10 characters to
+the inch), which is the default size used.
+One interesting convention used in the manuals is that
+the word "unix" is printed in upper-case of a smaller size.
+The way this is done is: "\\s8UNIX\\s10".
+The reason for these descriptions is that sometimes it is
+found that the ".it" and ".bd" macros are not sufficiently
+powerful.
+.sh FILES
+.lp +18 18
+/usr/lib/tmac.m	the standard macro file
+.lp +18 18
+man/man0/[knt]aa	files supplied on the \s8UNIX\s10
+documentation disk. "naa" is the \fInroff\fR version and "taa" the
+\fItroff\fR version.
+.i0
+.dt
+.sh "SEE ALSO"
+nroff(I), troff(I)

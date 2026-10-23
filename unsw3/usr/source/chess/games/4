@@ -1,0 +1,848 @@
+/ FRENCH DEFENCE
+/ 1	p-k4
+  1		p-k3	"French Defence
+  2	p-q4
+  2		p-q4
+  3	n-qb3
+  3		n-kb3
+  4	b-n5
+  4		b-k2
+  5	p-k5
+  5		kn-q2
+  6	bxb		_ wa 33
+  6		qxb
+  7	b-q3
+  7		p-qr3
+  8	qn-k2
+  8		p-qb4
+  9	p-qb3
+  9		n-qb3
+ 10	q-q2
+ 10		p-qn4
+ 11	p-kb4
+ 11		p-b4
+ 12	n-b3
+ 12		o-o
+ 13	o-o
+ 13		p-b5
+ 14	b-b2
+ 14		p-n5
+ 15	p-kr3
+ 15		p-qr4
+ 16	p-n4
+ 16		p-n3	_ wa 5.a
+ 17	npxp
+ 17		knpxp
+ 18	k-r2
+
+ 10		o-o	_ pco 75.o
+ 11	p-kb4
+ 11		p-b4
+ 12	n-b3
+ 12		p-qn4
+ 13	o-o
+ 13		b-n2
+ 14	p-kr3
+
+  7		o-o	_ wa 34
+  8	p-b4
+  8		p-qb4
+  9	n-n5
+:c34
+  9		p-qr3
+ 10	n-q6
+ 10		pxp
+ 11	bxp+
+ 11		kxb
+ 12	q-r5+
+ 12		k-n1
+ 13	n-b3
+ 13		p-kn3
+ 14	q-r6
+ 14		p-b3
+ 15	qxp+
+ 15		q-n2
+ 16	q-r5
+ 16		n-b3
+ 17	o-o
+
+ 13		p-b3	_ wa 5.c
+ 14	o-o
+ 14		n-qb3
+ 15	qr-k1
+ 15		p-qn4
+ 16	p-kn4
+
+  9		p-b5	_ wa 5.b
+ 10	bxp+
+ 10		kxb
+ 11	q-r5+
+ 11		k-n1
+ 12	n-kb3
+ 12		p-b3
+ 13	o-o
+
+  8		p-kb3	_ wa 35
+  9	pxp
+  9		qxp
+ 10	p-kn3
+ 10		p-b4
+ 11	pxp
+ 11		nxp
+ 12	n-b3
+ 12		n-b3
+ 13	o-o
+ 13		b-q2
+ 14	q-q2
+ 14		nxb
+ 15	pxn
+
+ 13		nxb	_ wa 5.d
+ 14	qxn
+ 14		b-q2
+ 15	qr-k1
+
+  7		q-n5	_ wa 36
+  8	n-k2
+  8		p-qb4
+  9	p-qr3
+  9		q-n3
+ 10	n-n5
+ 10		p-b5
+ 11	n-q6+
+ 11		k-k2
+ 12	q-q2
+ 12		n-qb3
+ 13	q-n5+
+ 13		k-b1
+ 14	q-r5
+ 14		p-n3
+ 15	q-r6+
+ 15		k-n1
+ 16	n-k8
+
+ 14		n-q1	_ wa 5.h
+ 15	n-b4
+ 15		pxb
+ 16	nxp+
+
+ 12		p-kr3	_ wa 5.g
+ 13	q-b4
+ 13		r-b1
+ 14	qxp+
+
+ 12		p-b3
+ 13	nxb+
+ 13		rxn
+ 14	bxrp
+ 14		r-r1
+ 15	pxp+
+
+ 10		o-o	_ wa 5.f
+ 11	p-qb4
+
+  8		qxnp	_ wa 5.e
+  9	o-o
+  9		p-qr3
+ 10	p-b4
+ 10		p-qb4
+ 11	p-b5
+ 11		pxqp
+ 12	r-n1
+ 12		q-r6
+ 13	r-n3
+ 13		q-b4
+ 14	n-r4
+ 14		q-b3
+ 15	pxp
+ 15		pxp
+ 16	nxp
+ 16		qxn
+ 17	q-r5+
+
+  7		p-qb4	_ wa 37
+  8	n-n5
+  8		pxp
+  9	p-kb4
+  9		p-b3
+ 10	n-b7+
+ 10		k-q1
+ 11	nxr
+ 11		pxp
+ 12	pxp
+ 12		nxp
+ 13	n-b3
+ 13		q-n5+
+ 14	q-q2
+ 14		nxn+
+ 15	pxn
+ 15		qxp
+ 16	q-n5+
+
+  9		n-qb3	_ wa 38
+ 10	n-b7+
+ 10		k-q1
+ 11	nxr
+ 11		p-b3
+ 12	n-b3
+ 12		pxp
+ 13	pxp
+ 13		knxp
+ 14	o-o
+ 14		nxb
+ 15	qxn
+ 15		p-k4
+ 16	qr-k1
+ 16		p-k5
+ 17	q-q2
+ 17		q-b3
+ 18	n-n5
+
+  9		k-q1	_ wa 39
+ 10	n-kb3
+ 10		n-qb3
+ 11	o-o
+ 11		p-b3
+ 12	q-k1
+ 12		q-b4
+ 13	q-n3
+ 13		p-kn3
+ 14	q-r4
+ 14		k-k2
+ 15	q-r6
+ 15		k-b2
+ 16	n-q6+
+ 16		k-n1
+ 17	bxp
+
+  9		o-o	_ wa 40
+ 10	n-b7
+ 10		p-b3
+ 11	pxp
+ 11		qxp
+ 12	n-b3
+ 12		qxp
+ 13	nxr
+ 13		p-k4
+ 14	n-b7
+
+  8		o-o	_ wa 5.i
+  9	p-kb4
+*c34
+
+  5		n-k5	_ wa 5.i
+  6	nxn
+  6		pxn
+  7	bxb
+  7		qxb
+  8	q-k2
+  8		n-q2
+  9	o-o-o
+  9		p-kb4
+ 10	pxpep
+ 10		nxp
+ 11	p-kb4
+ 11		pxpep
+ 12	nxp
+ 12		p-qn3
+ 13	p-kn3
+ 13		b-n2
+ 14	b-n2
+
+ 11		o-o	_ pco 77.e
+ 12	p-kn3
+ 12		p-qn3
+ 13	b-n2
+ 13		b-n2
+ 13	n-r3
+
+  8		p-qn3	_ pco 77.c
+  9	o-o-o
+  9		b-n2
+ 10	p-kn3
+ 10		p-qb4
+ 11	b-n2
+ 11		pxp
+ 12	bxp
+ 12		n-b3
+ 13	p-kb4
+ 13		o-o-o
+
+  6		bxb	_ pco 77.b
+  7	nxb
+  7		qxn
+  8	p-kn3
+  8		p-qb4
+  9	p-qb3
+  9		n-b3
+ 10	p-kb4
+ 10		q-k2
+ 11	n-b3
+ 11		b-q2
+ 12	q-q2
+ 12		o-o
+ 13	b-q3
+
+  5		n-n1	_ mco 122.g
+  6	p-kr4
+  6		bxb
+  7	pxb
+  7		qxp
+  8	n-r3
+  8		q-k2
+  9	q-n4
+  9		p-kb4
+ 10	q-n3
+ 10		n-q2
+
+  4		b-n5	_ wa 41
+  5	p-k5
+  5		p-kr3
+  6	b-q2
+  6		bxn	_ mco 124.22
+  7	pxb
+  7		n-k5
+  8	q-n4
+  8		p-kn3
+  9	b-q3
+  9		nxb
+ 10	kxn
+ 10		p-qb4
+ 11	p-kr4
+ 11		n-b3
+ 12	r-r3
+ 12		pxp
+ 13	pxp
+ 13		q-n3
+ 14	n-b3
+
+ 13		b-q2	_ pco 81.i
+ 14	p-qb3
+ 14		q-k2
+ 15	n-k2
+ 15		n-r4
+  8		k-b1	_ mco 124.22
+  9	p-kr4
+  9		p-kb4
+ 10	pxpep
+ 10		qxp
+ 11	n-b3
+ 11		n-b3
+ 12	q-b4
+ 12		nxb
+ 13	qxn
+ 13		p-k4
+
+  9		p-qb4	_ mco 122.d
+ 10	r-r3
+ 10		q-r4
+ 11	b-q3
+ 11		nxb
+ 12	r-n3
+ 12		p-kn3
+ 13	kxn
+ 13		pxp
+ 14	qxqp
+ 14		n-b3
+ 15	q-kb4
+ 15		p-q5
+ 16	n-b3
+ 16		qxp+
+ 17	k-k2
+
+ 10	b-q3
+ 10		nxb
+ 11	kxn
+ 11		q-r4
+
+  6		kn-q2	_ mco 124.21
+  7	q-n4
+  7		b-b1
+  8	n-b3
+  8		p-qb4
+  9	n-qn5
+  9		p-kn3
+ 10	b-q3
+ 10		r-kn1
+ 11	p-b4
+ 11		pxqp
+ 12	pxqp
+ 12		n-b4
+ 13	qxqp
+ 13		pxp
+ 14	n-q6+
+ 14		bxn
+ 15	pxb
+ 15		qxp
+ 16	o-o
+ 16		nxb
+ 17	qxn
+ 17		n-b3
+ 18	kr-k1+
+
+  4		pxp
+  5	nxp
+  5		b-k2
+  6	bxn
+  6		pxb
+  7	n-kb3		_ mco 123.16
+  7		p-n3
+  8	q-k2
+  8		b-n2
+  9	o-o-o
+  9		p-b3
+ 10	p-b4
+ 10		q-b2
+ 11	k-n1
+ 11		n-q2
+ 12	n-b3
+ 12		o-o-o
+ 13	p-kn3
+
+  8		p-kb4	_ mco 123.b
+  9	n-b3
+  9		p-qb3
+
+  8		b-r3
+  9	p-b4
+  9		p-qb3
+ 10	o-o-o
+ 10		q-b2
+
+  8		p-qb4
+  9	p-q5
+
+  7		p-kb4	_ mco 123.18
+  8	n-qb3
+  8		b-b3
+  9	q-q2
+  9		p-b4
+ 10	o-o-o
+ 10		pxp
+ 11	nxp
+ 11		n-b3
+ 12	b-n5
+ 12		bxn
+ 13	qxb
+ 13		qxq
+ 14	rxq
+ 14		b-q2
+
+  6		bxb	_ mco 122.14
+  7	n-kb3
+  7		n-q2
+  8	q-q2
+  8		p-qn3
+  9	b-n5
+  9		b-n2
+ 10	nxb+
+ 10		pxn
+ 11	q-b3
+ 11		p-qr3
+ 12	b-b6
+ 12		bxb
+ 13	qxb
+ 13		r-r2
+ 14	o-o-o
+ 14		q-r1
+ 15	q-b3
+ 15		q-q4
+ 16	k-n1
+ 16		p-qr4
+ 17	q-k3
+
+  5		qn-q2	_ mco 123.a
+  6	nxn+
+  6		nxn
+  7	n-b3		_ mco 127.38
+  7		p-b4
+  8	b-qb4
+  8		pxp
+  9	o-o
+  9		b-k2
+ 10	q-k2
+ 10		p-kr3
+ 11	b-b4
+ 11		o-o
+ 12	qr-q1
+ 12		b-q2
+ 13	rxp
+ 13		q-n3
+
+  3		pxp	_ wa 42
+  4	nxp
+  4		qn-q2
+  5	p-kn3
+  5		kn-b3
+  6	b-kn5
+  6		b-k2
+  7	bxn
+  7		nxb
+  8	b-n2
+  8		nxn
+  9	bxn
+  9		b-b3
+ 10	n-k2
+ 10		o-o
+ 11	q-q3
+ 11		p-kn3
+ 12	o-o-o
+ 12		p-k4
+ 13	p-kr4
+
+  4		n-kb3	_ mco 127.a
+  5	nxn+
+  5		pxn
+  6	n-b3
+  6		p-n3
+  7	b-kb4
+  7		b-qn2
+  8	b-n5+
+  8		p-b3
+  9	b-q3
+  9		b-q3
+ 10	b-n3
+ 10		q-b2
+ 11	q-k2
+ 11		n-q2
+ 12	o-o-o
+
+  4		b-k2
+  5	n-kb3
+  5		n-kb3
+  6	nxn+
+  6		bxn
+  7	p-b3
+
+  3		b-n5	_ wa 43
+  4	p-k5
+  4		p-qb4
+  5	p-qr3
+  5		pxp	_ mco 133.61
+  6	pxb
+  6		pxn
+  7	q-n4
+  7		p-kn3
+  8	n-b3
+  8		q-b2
+  9	b-q3
+  9		n-qb3
+ 10	o-o
+ 10		nxkp
+ 11	nxn
+ 11		qxn
+ 12	b-kb4
+ 12		q-n2
+ 13	pxp
+ 13		p-k4	_ wa 6.a
+ 14	b-n5+
+ 14		k-k2
+ 15	q-r4+
+ 15		p-b3
+ 16	bxp
+ 16		p-n4
+ 17	b-q6+
+
+ 10		kn-k2	_ pco 84.36
+ 11	r-k1
+ 11		b-q2
+ 12	pxp
+ 12		o-o-o
+ 13	p-n5
+ 13		n-qn1
+ 14	q-n4
+ 14		b-k1
+ 15	b-n5
+ 15		r-q2
+ 16	rxp
+ 16		q-n3
+ 17	r-r8
+ 17		q-q1
+ 18	n-q4
+ 18		p-r3
+ 19	b-b6
+ 19		r-n1
+ 20	p-n6
+
+  5		bxn+	_ wa 44
+  6	pxb
+  6		n-k2
+  7	q-n4
+  7		n-b4
+  8	b-q3
+  8		p-kr4
+  9	q-r3
+  9		n-b3
+ 10	n-b3
+ 10		pxp
+ 11	p-n4
+
+  9		pxp	_ fr
+ 10	pxp
+ 10		q-r5
+ 11	qxq
+ 11		nxq
+ 12	p-n3
+
+  7		pxp	_ pco 83.n
+  8	qxnp
+  8		r-n1
+  9	qxp
+  9		q-r4
+ 10	r-n1
+ 10		qxp+
+ 11	b-q2
+ 11		q-b2
+ 12	p-kb4
+ 12		qn-b3
+ 13	n-b3
+ 13		b-q2
+ 14	n-n5
+ 14		rxn
+ 15	pxr
+ 15		o-o-o
+ 16	qxp
+
+  9		q-b2
+ 10	n-k2
+ 10		qn-b3
+ 11	p-kb4
+ 11		b-q2
+ 12	q-q3
+ 12		pxp
+ 13	nxp
+ 13		p-r3
+ 14	r-qn1
+ 14		r-qb1
+ 15	b-q2
+
+  7		q-r4
+  8	b-q2
+  8		q-r5
+  9	qxnp
+  9		r-n1
+ 10	qxrp
+ 10		pxp
+ 11	n-k2
+ 11		qn-b3
+ 12	p-kb4
+ 12		r-n3
+ 13	p-r4
+ 13		b-q2
+ 14	p-r5
+ 14		r-kn1
+ 15	p-r6
+
+  6		q-b2	_ wa 6.c
+  7	p-kb4
+  7		pxp
+  8	pxp
+  8		q-b6+
+  9	b-q2
+  9		qxqp
+ 10	n-b3
+ 10		q-b4
+ 11	b-q3
+ 11		n-qb3
+ 12	n-n5
+ 12		p-kn3
+ 13	p-kr4
+ 13		p-kr4
+ 14	r-r3
+ 14		n-r3
+ 15	b-k3
+ 15		q-r4+
+ 16	k-b1
+ 16		n-kn5
+ 17	b-n1
+
+  5		b-r4	_ wa 6.b mco 133.62
+  6	p-qn4
+  6		pxqp
+  7	q-n4
+  7		n-k2
+  8	pxb
+  8		pxn
+  9	qxnp
+  9		r-n1
+ 10	qxp
+ 10		qn-b3
+ 11	n-b3
+ 11		q-b2
+ 12	b-qn5
+ 12		b-q2
+ 13	o-o
+ 13		o-o-o
+ 14	b-n5
+ 14		nxkp
+ 15	nxn
+ 15		bxb
+ 16	nxp
+ 16		bxr
+ 17	nxr
+ 17		rxb
+ 18	nxkp
+ 18		rxp+
+ 19	k-r1
+ 19		q-k4
+ 20	rxb
+ 20		qxn
+ 21	kxr
+ 21		q-n5+
+
+ 11		qxp
+ 12	r-qn1
+ 12		q-b2
+ 13	b-kb4
+ 13		b-q2
+ 14	b-n3
+ 14		o-o-o
+
+  6		pxnp	_ mco 1333.62
+  7	n-n5
+  7		n-qb3
+  8	kn-b3
+  8		p-qr3
+  9	n-q6+
+  9		k-b1
+ 10	b-q3
+ 10		p-n6+
+ 11	k-b1
+ 11		b-b2
+ 12	nxb
+ 12		pxp
+ 13	bxbp
+ 13		rxn
+ 14	p-kr4
+ 14		b-n3
+ 15	b-k3
+ 15		q-b2
+ 16	p-r5
+ 16		p-r3
+ 17	b-q3
+ 17		n-r4
+ 18	r-r4
+ 18		n-b5
+ 19	b-b1
+ 19		n-k2
+
+  4		p-qn3	_ pco 86.m
+  5	q-n4
+  5		b-b1
+  6	b-kn5
+  6		q-q2
+  7	o-o-o
+  7		b-r3
+  8	n-r3
+  8		bxb
+  9	krxb
+  9		n-qb3
+ 10	p-b4
+ 10		kn-k2
+ 11	bxn
+ 11		nxb
+ 12	q-k2
+ 12		p-kr4
+ 13	n-kn5
+
+  4		p-kb3
+  5	n-b3
+  5		p-qb4
+  6	p-qr3
+  6		b-r4
+  7	p-qn4
+  7		pxnp
+  8	n-qn5
+  8		n-b3
+  9	rpxp
+  9		b-b2
+ 10	p-b3
+ 10		kn-k2
+ 11	pxp
+ 11		pxp
+ 12	b-q3
+
+  4		n-k2	_ pco 84.40
+  5	p-qr3
+  5		b-r4
+  6	b-q2
+  6		n-q2
+  7	n-b3
+  7		p-qb4
+  8	pxp
+  8		p-qr3
+  9	p-qn4
+  9		b-b2
+ 10	b-kb4
+ 10		p-b3
+ 11	pxp
+ 11		bxb
+ 12	pxn
+ 12		qxp
+ 13	q-q4
+ 13		p-k4
+ 14	qxqp
+ 14		n-b3
+
+  8		b-b2	_ pco 86.o
+  9	b-qn5
+  9		o-o
+ 10	bxn
+ 10		bxb
+ 11	o-o
+
+  4		q-q2	_ mco 135.72
+  5	b-q3
+  5		p-qn3
+  6	n-b3
+  6		n-qb3
+  7	o-o
+  7		b-n2
+  8	n-k2
+  8		o-o-o
+  9	p-b3
+  9		b-k2
+ 10	n-n3
+ 10		n-r3
+ 11	n-r5
+ 11		n-b4
+
+  3		p-qb4	_ mco 126.35
+  4	kpxp
+  4		kpxp
+  5	pxp
+  5		p-q5
+  6	b-n5+
+  6		n-b3
+  7	bxn+
+  7		pxb
+  8	qn-k2
+  8		bxp
+  9	n-kb3
+  9		q-r4+
+ 10	b-q2
+ 10		q-n3
+ 11	o-o
+ 11		qxp
+ 12	r-k1
+ 12		n-k2
+ 13	n/2xp
+
+  3		p-qb3	_ mco 126.j
+  4	n-b3
+  4		n-b3
+  5	b-kn5
+  5		b-k2
+  6	p-k5
+  6		n-k5
+  7	bxb
+  7		qxb
+  8	b-q3
+  8		q-n5
+  9	bxn
+  9		pxb
+ 10	p-qr3
+ 10		qxnp
+ 11	nxp
+ 11		q-n4
+ 12	q-q2

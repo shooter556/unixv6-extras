@@ -1,0 +1,132 @@
+		Software from Computing Services Unit
+		=====================================
+
+	This distribution is divided into several directories
+in an attempt to rationalize the source.  The directories are:
+	1) batch:	binaries for batch system.  Mount as "/spool/batch".
+	2) bin:		some useful binaries for other programs inc. batch.
+	3) doc:		some pretty sparse documentation.
+	4) source:	source programs for various things.
+			Sub-divided into several parts:
+		1) batch:	source & run files for batch.
+		2) gt40:	some interesting gt40 programs.
+		3) minibatch:	a "small" version of batch.
+		4) other:	some interesting source programs.
+		5) slup:	source for "slup".
+
+1) batch:
+	the batch system is able to run jobs from a card reader or
+a terminal.  the jobs are split into 2 classes: remote & local.
+remotejobs are transmitted to a cyber-like mainframe running
+quebec export/import (qei).  The deck setup corresponds to the setup
+used for running jobs at the central site.
+local jobs are run on the local processor, and include fortran
+and macro-11.  they are identified by a job card with a '%' in
+column 1. the "doc" directory contains further info on this.
+batch assumes the existence of a directory "/spool/batch" in which
+all (or most) binaries are found.  the batch daemons live in a
+subdirectory ".work", along with a checkpoint of the queues.
+a couple of commands also live in "/bin" - dq ( & autoq), submit,
+and some auxiliary commands "pef" and "lked".  note particularly
+that some programs are links to each other.
+the file "pgm.m" will build each specified component of the system
+and "all.m" will do the lot.  this must be done for example if the
+size of the text area changes.
+
+note that batch relies on certain system extensions.  to memory, they
+are: p & v calls (enqueue & dequeue sys calls), tlimit call and setpsw
+call.  some signals are also assumed - cpu time limit and system shutdown.
+
+2) bin:
+	some programs that may be useful in their binary form.
+3) doc:
+	some limited documantation.  as always, documentation lags
+	behind development !!!
+4) source:
+	certain source directories ...
+	1) batch:
+		the entire source & build files for "batch".
+	2) gt40:
+		some interesting gt40 programs.  they include terminal
+		emulators, games and downline loaders.
+		the source for lunar, psw & spw3 was obtained by
+		disassembling dec binaries !!!  (spw3 is a version of
+		spw for 3 consenting adults).
+	3) minibatch:
+		this is a real batch system, but it has none of the
+		facilities that "batch" offers.  it merely takes jobs
+		from the card reader and sends them to cyber.  any output
+		is dumped to the line printer directly.
+	4) other:
+		certain interesting programs are here ...
+		some of them (in fact most) rely on certain system mods
+		e.g online disk formatting needs the special rk driver
+		that accepts stty calls ...
+	5) slup
+		this is the amazing "source librarian and update program".
+		based loosely on kronos modify, it the means by which
+		program modifications are kept under control ...
+
+5) sys:
+	some system features are here.  they are *.h files
+	and "ken" & "dmr" programs.
+	1) ken:
+		sys5.c contains certain system calls in use
+		at our system.
+	2) dmr:
+		some beautiful drivers live here ...
+		1) ax.c:
+			a driver for ampex rk05-like disks (based
+			on childrens museum rk05 driver)
+		2) cr.c:
+			a driver for a cr-11 card reader (slightly
+			system dependant -- assumes "useron" e.g.).
+			by defining the symbol "CRBUF" one gets a special
+			buffered version (home grown).
+		3) ei.c:
+			this is the driver for the dp-11 and it simulates
+			a 200-ut terminal for use by batch.
+			the devices are implemented thusly:
+			cdevsw:
+			ycopen, ycclose, ycread, ycwrite, nodev (commands)
+			yjopen, yjclose, yjread, yjwrite, nodev (jobs)
+			/dev:
+			x	0	cyb.cmdsd	commands down
+			x	1	cyb.cmdsu	commands up
+			y	0	cyb.jobsd	jobs down
+			y	1	cyb.jobsu	jobs up
+		4) lp.c:
+			this line printer driver will also drive
+			a calcomp plotter and a versatec printer/plotter.
+			it will accept stty calls to change the mode of
+			its devices.
+			a special "compressed" plot format is also accepted
+			in which a zero byte is interpreted as an escape
+			code. action depends on the following byte:
+			if nonzero, emit that number of null bytes,
+			else take the next byte again as a function code.
+			they are:
+			1) eot 004-	send remote eot
+			2)  nl 012-	send remote new line (buffer clear)
+			3)  ff 014-	send remote form feed.
+			use of these escape codes and compressed plot
+			files vastly reduces the overhead in versatec plotting.
+		5) pt.c:
+			a driver for pertec rk05-like disks (as for ax.c).
+		6) rk.c:
+			a vastly improved childrens museum rk05 driver.
+			apart from several bugs and deficiencies being
+			fixed, it also supports:
+			1) online disk formatting (see dskfmt.c)
+			2) contiguous rk05 volumes (useful for rk05-f)
+			3) automatic calculation of offset for i-list
+			  (depending on size of "logical" drive)
+
+
+please address any queries to:
+	dave horsfall
+	c/- computing services unit
+	university of nsw
+	kensington
+	nsw
+	australia

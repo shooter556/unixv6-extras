@@ -1,0 +1,83 @@
+.bp 1
+.ro
+.po 10
+.ll 90
+.ds
+.he 'UNIX BATCH SYSTEM GUIDE.'V3.0 - Level 6.5'Page   %'
+.m2 5
+.ig
+.ul 1
+..
+			CONTENTS
+
+
+ SUMMARY
+
+
+ 1. INTRODUCTION
+
+ 2. HARDWARE
+	2.1 CYBER
+	2.2 MODEMS
+	2.3 PDP-11
+		2.3.1 CPU
+		2.3.2 Memory
+		2.3.3 Console
+		2.3.4 Card Reader
+		2.3.5 Printer
+		2.3.6 DP-11
+		2.3.7 Discs
+		2.3.8 Air Conditioners
+
+ 3. SOFTWARE
+	3.1 CYBER
+		3.1.1  Quebec Export/Import
+		3.1.2  Kronos
+	3.2 PDP-11
+		3.2.1  Definitions
+		3.2.2  UNIX
+		3.2.3  The "BATCH" Process
+		3.2.4  The "EAR" Process
+		3.2.5  The "CRD" Process
+		3.2.6  The "SPL" Process
+		3.2.7  The "LPD" Process
+		3.2.8  The "PRINT" Process
+		3.2.9  The "MAC" Process
+		3.2.10 The "FTN" Process
+		3.2.11 The "SHELL" process
+		3.2.12 The "LIST" process
+		3.2.13 The "JTD" Process
+		3.2.14 The "JA" Process
+		3.2.15 The 200-UT Driver
+		3.2.16 The Card Reader Driver
+		3.2.17 The Printer Driver
+
+
+ 4. OPERATION
+	4.1 POWER UP
+	4.2 BOOTING
+	4.3 RUNNING
+		4.3.1 Startup
+		4.3.2 Login
+		4.3.3 Commands
+		4.3.4 Trouble
+		4.3.5 What To Do When You Are Bored
+	4.4 SYSTEM CLOSE DOWN
+	4.5 POWER DOWN
+
+ 5. SYSTEM MAINTENANCE
+
+	5.1 SYSTEM BACKUP
+		5.1.1 Backup (3 or more disc systems)
+		5.1.2 UNIX.RKDF (2 disc systems)
+	5.2 FILE SYSTEM MAINTENANCE
+
+ APPENDIX A - Start-Close Summary
+ APPENDIX B - Changes to Local Batch
+ APPENDIX C - Command Summary
+ APPENDIX D - Peripheral Maintenance Summary
+ APPENDIX E - Error Summary
+ APPENDIX F - Files and Directories Summary
+ APPENDIX G - Who To Call For Help
+
+.nx 6om0.1

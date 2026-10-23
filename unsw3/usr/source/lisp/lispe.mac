@@ -1,0 +1,804 @@
+
+	.list
+	.list me
+	.title	kernal
+	.ident	/v001/
+.hiseg
+
+
+; kernal functions for the interpreter
+
+	global	<.nil,.label,.funarg,.backgag,.backg,.rset>
+	global	<ifunc,$ispec,.errst,chkcc>
+	global	<.backcount,ccflag>
+	global	<.ccont,.lambda,.local,bindl>
+
+	func	apply,<fn,args,alist>,<t>,5
+
+	mov	alist(r5),r0		;bind on entry
+	calli	fixbnd
+
+
+	mov	args(r5),r0		;get r1 = arg
+	calli	chkcc
+	bcs	applf1
+appl81:	cmp	r0,.nil		;start apply logic, check arg list
+	beq	apply7		;no list
+	bit	#1,(r0)+	;see if end
+	bne	applyl		;yes - not list
+	mov	(r0),r0		;get cdr
+	br	appl81		;and go for next
+applyl:	error	6.,<arguments not list - apply>
+	br	applf1		;failure
+
+apply7:	mov	fn(r5),r0	;get function
+applyp:	calli	chkcc
+	bcs	applf1		;found - this is in a loop
+	bit	#1,(r0)		;check atomic
+	jeq	apply1		;no - list
+
+	cmpb	1(r0),#h.expr	;atom, see if expression
+	bne	apply2		;no
+	mov	2(r0),r0	;expression, get value
+	br	applyp		;try again
+
+apply2:	cmpb	1(r0),#h.subr	;check if subroutine
+	bne	apply3		;no
+	mov	2(r0),r0	;get value cell
+	mov	(r0)+,r1	;r1 has address of routine
+	mov	(r0),r2		;r2 has number of args
+	mov	args(r5),r3	;now get the arg list
+	clr	r4		;clear arg count
+	mov	sp,r0		;remember for stack clean
+apply4:	cmp	r3,.nil		;end of list ?
+	beq	apply5		;yes
+	push	(r3)+		;no, push car
+	inc	r4		;count it
+	mov	(r3),r3		;and fetch cdr
+	br	apply4		;go for next
+
+apply5:	cmp	r4,r2		;see if real & desired args agree
+	bne	appls1		;no, fail
+	mov	r1,-(sp)	;push address
+	calli	.call
+	br	applx1		;conditional return
+
+appls1:	mov	r0,sp		;clean stack
+	br	applyc		;print error and fail
+apply3:	cmpb	1(r0),#h.lexpr	;check for lexpr
+	bne	apply6		;no
+	mov	2(r0),r0	; value
+	call	node,<args(r5),.nil>	;make arg list into list arg
+	save	args(r5)
+	br	applyp
+
+apply6:	cmpb	1(r0),#h.lsubr		;lsubr?
+	bne	appl10			;no
+	push	args(r5)		;list of args
+	mov	2(r0),-(sp)		;address
+	calli	.call
+applx1:	jmp	applyx			;conditional return
+
+appl10:	cmpb	1(r0),#h.symb		;check for symbpolic atom
+	beq	appl11			;yes
+	error	7.,<illegal function - apply>
+applf1:	jmp	applyf			;failure
+applyc:	error	9.,<bad arg count - apply>
+	br	applf1
+
+
+appl11:	tst	@2(r0)			;symbolic, see if value
+	beq	1$
+	mov	@2(r0),r0
+	br	applyp
+1$:	calli	cadrck
+	bcs	appl20			;no, unbound variable
+	mov	args(r5),r1		;check # of args
+	bit	#1,(r1)			;see if none
+	bne	applyc			;wrong number of args
+	cmp	2(r1),.nil		;see if more than one
+	bne	applyc			;wrong number of args
+	clr	-(sp)			;interpret it, flag
+	mov	2(r0),r0		;get value/name cell
+	mov	2(r0),r0		;point to name string
+	mov	#3,r1			;past first 'c'
+
+appl13:	cmp	r1,#4			;get the next byte
+	bne	appl14			;where-ever it be
+	cmp	(r0),.nil
+	beq	appl15
+	mov	(r0),r0
+	mov	#2,r1
+appl14:	cmp	r1,#3
+	bne	1$
+	cmp	(r0),#1
+	beq	appl15
+1$:	mov	r0,-(sp)
+	add	r1,(sp)			;offset
+	inc	r1			;bump it
+	movb	@(sp)+,r2		;character into r2
+	mov	r2,-(sp)		;push on stack
+	br	appl13			;back for next
+appl15:	tst	(sp)+			;get rid of the 'r'
+	mov	@args(r5),r0		;now fetch the args
+
+appl16:	mov	(sp)+,r1		;get a byte
+	beq	appl17
+	bit	#1,(r0)			;see if atomic
+	beq	appl18			;o.k.
+	tst	(sp)+			;clean up stack
+	bne	.-2
+	error	11.,<c...r of atom>
+applf2:	jmp	applyf			;failure
+appl18:	cmp	r1,#'a			;car
+	bne	appl19			;cdr
+	mov	(r0),r0			;car
+	br	appl16
+appl19:	mov	2(r0),r0		;cdr
+	br	appl16
+appl17:	push	r0			;the result
+
+applx2:	jmp	applyx			;condtional
+appl20:	error	8.,<unknown function - apply>
+	br	applf2
+
+applyg:	error	10.,<bad list structure>
+	br	applf2
+
+apply1:	mov	(r0)+,r1		;car in r1
+	mov	(r0)+,r0		;cdr in r0
+	cmp	r1,.label		;if label
+	bne	appl21
+	bit	#1,(r0)			;bind(ncons(cadr(fn),cddr(fn))
+	bne	applyg
+	mov	(r0)+,r2		;rval := apply(caddr(fn),args,current
+	mov	(r0),r3			;	bind);
+	bit	#1,(r3)
+	bne	applyg
+	call	node,<r2,.nil>		;unbind();
+	save	r2			;break;
+	clr	r4
+	calli	bind
+	bcs	applf2
+	call	$$apply,<(r3),args(r5)>
+appl52:	bcs	appl31
+	save	t(r5)
+	calli	unbind
+	push	t(r5)
+	br	applys
+appl31:	calli	unbind
+	br	applf2
+
+appl21:	cmp	r1,.lambda		;if car = lambda
+	bne	appl22			; bind(cadr(fn),args)
+	bit	#1,(r0)			;rval := eval(caddr(fn),current bind);
+	bne	applyg			;unbind();
+	mov	(r0)+,r2		;break;
+	mov	args(r5),r3
+	mov	(r0),r0
+	bit	#1,(r0)
+	bne	applyg
+	cmp	@0(r0),.local
+	bne	2$
+	mov	(r0)+,r4
+	mov	(r0),r0
+	bit	#1,(r0)
+	bne	applyg
+	mov	2(r4),r4
+	br	3$
+
+2$:	clr	r4
+3$:	calli	bind
+	bcs	applf2
+1$:	call	$$eval,<(r0)+>
+	bcs	appl31
+	mov	(r0),r0
+	bit	#1,(r0)
+	bne	appl52
+	save
+	br	1$
+
+appl22:	cmp	r1,.funarg		;if funarg then
+	bne	appl23			;rval := apply(cadr(fn),args,cddr(fn));
+	bit	#1,(r0)
+	bne	applyg
+	call	apply,<(r0)+,args(r5),(r0)>
+	br	applyx
+
+appl23:	call	$$eval,<fn(r5)>
+	bcs	applyf			;rval := apply(eval(fn,cur. bind),
+	call	$$apply,<args(r5)>	;	args, current bind);
+
+applyx:	bcs	applyf			;conditional
+	
+applys:	save	t(r5)			;save
+	calli	chkcc
+	bcs	applyf		;found, turns to failure
+	mov	alist(r5),r0	;now unfix
+	calli	unfix
+	return	t(r5)		;success return
+
+applyf:	calli	chkscc
+	tst	.backcount	;then normal stuff
+	beq	1$
+	cmp	.errst,.nil
+	bne	1$
+	calli	ochan	#1
+	calli	newlin
+	text	12.,<*apply: function =>
+	call	prin,<fn(r5)>
+	calli	newlin
+	text	13.,<*apply: arguments = >
+	call	prin,<args(r5)>
+	calli	newlin
+	dec	.backcount	;keep track
+1$:	cmp	.rset,.nil	;special mode?
+	beq	2$
+	call	debug		;allow new eval loop
+
+2$:	mov	alist(r5),r0	;now unbind variables
+	calli	unfix
+	freturn			;and fail
+
+
+
+
+
+
+	func	clist,<l>,,1
+	mov	l(r5),r0	;just make sure argument is list
+1$:	cmp	r0,.nil
+	bne	2$
+	return	l(r5)
+2$:	bit	#1,(r0)+
+	beq	3$
+	error	14.,<argument not list>
+	freturn
+3$:	mov	(r0),r0
+	br	1$
+
+
+	func	evlist,<l>,,2
+	call	clist,<l(r5)>	;evaluate a list of arguments
+	bcs	3$
+	save	r0
+	push	.nil
+	mov	sp,r1
+1$:	cmp	r0,.nil
+	bne	2$
+3$:	creturn
+2$:	call	$$eval,<(r0)+>
+	bcs	3$
+	call	gnode
+	tst	(sp)+
+	mov	(sp),2(r1)
+	mov	(sp)+,r1
+	tst	(sp)+
+	mov	(sp)+,(r1)
+	mov	(r0),r0
+	br	1$
+
+
+	func	$$eval,<x>,,1
+	push	x(r5)			;eval in current context
+	mov	bindl+2,r0
+	call	isave
+	call	eval
+	creturn
+
+	func	$$apply,<x,y>,,1
+	push	x(r5)			;apply in current context
+	push	y(r5)
+	mov	bindl+2,r0
+	call	isave
+	call	apply
+	creturn
+
+cadrck:	mov	r0,-(sp)		;check the pname of an
+	calli	sin	2(r0)
+	calli	getc
+	bcs	1$
+	cmpb	r0,#'c
+	bne	1$
+2$:	calli	getc
+	cmpb	r0,#'a
+	beq	2$
+	cmpb	r0,#'d
+	beq	2$
+	cmpb	r0,#'r
+	bne	1$
+	calli	getc
+	bcc	1$
+	clc
+	mov	(sp)+,r0
+	reti
+1$:	mov	(sp)+,r0
+	sec
+	reti
+
+
+
+
+	func	debug,,,1
+	calli	ochan	#1
+	calli	newlin
+	text	15.,<debug mode ...>
+	calli	ichan	#0
+	mov	.nil,.ccont
+1$:	call	lform
+	bcs	1$
+	call	$$eval
+	bcs	1$
+	calli	ochan	#1
+	call	prin
+	calli	newlin
+	cmp	.ccont,.nil
+	beq	1$
+	mov	.nil,.ccont
+	freturn
+
+
+
+	entry	chkcc		;check for ^c or ^p pending
+				;sets cc zero if not, non-zero if
+				;prints message too
+	tst	ccflag		;check flag
+	beq	1$
+	bmi	2$
+	error	16.,<INTERRUPT>
+3$:	clr	ccflag		;reset it
+	sec			;set non-zero
+1$:	reti
+2$:	calli	chkrst
+	error	17.,<QUIT>
+	clr	.backcount	;fix up after call to .error
+	br	3$
+chkrst:	mov	#$ispec,ifunc	;reset initialization
+	mov	#5,.backg	;to virginal condition
+	mov	.nil,.rset	;don't *rset
+	mov	.nil,.errst	;don't catch it!
+	reti
+
+
+chkscc:	tst	ccflag		;look for ^c/^p but no message
+	beq	1$
+	bpl	2$
+	calli	chkrst
+	clr	.backcount	;in case in middle of error rep.
+2$:	clr	ccflag		;scratch it
+1$:	reti
+
+
+	entry	bind
+
+	mov	(sp)+,bindr
+	mov	r0,bindr0
+	mov	r1,bindr1
+	mov	r4,bindr4
+
+	mov	r2,r0
+	clr	r1
+
+1$:	cmp	r0,.nil
+	beq	2$
+	bit	#1,(r0)
+	jne	20$
+
+3$:	mov	(r0)+,r4
+	bitb	#1,(r4)+
+	jeq	21$
+	cmpb	(r4)+,#h.symb
+	jne	21$
+	mov	(r0),r0
+	inc	r1
+	br	1$
+
+2$:	mov	r1,bindc
+	tst	r3
+	beq	6$
+	mov	r3,r0
+14$:	cmp	r0,.nil
+	beq	8$
+	bit	#1,(r0)+
+	bne	22$
+	mov	(r0),r0
+	dec	r1
+	br	14$
+8$:	tst	r1
+	bne	23$
+
+6$:	mov	r2,r0
+	mov	r3,r1
+
+9$:	cmp	r0,.nil
+	beq	41$
+	mov	(r0)+,r4
+	mov	@2(r4),-(sp)
+	tst	r1
+	beq	12$
+	mov	(r1)+,@2(r4)
+	mov	(r1),r1
+11$:	mov	r4,-(sp)
+	mov	(r0),r0
+	br	9$
+
+12$:	clr	@2(r4)
+	br	11$
+
+41$:	mov	bindr4,r4
+	beq	10$
+	clr	r1
+	mov	.nil,r3
+
+42$:	cmp	r4,.nil
+	beq	43$
+	mov	(r4)+,r0
+	bit	#1,(r0)
+	beq	21$		;was beq	44$
+	cmpb	1(r0),#h.symb
+	bne	21$
+	mov	@2(r0),-(sp)
+	clr	@2(r0)
+	mov	r0,-(sp)
+; 	br	45$
+; 
+; 44$:	mov	(r0),r2
+; 	bit	#1,(r2)
+; 	beq	21$
+; 	cmpb	1(r2),#h.symb
+; 	bne	21$
+; 	mov	@2(r2),-(sp)
+; 	clr	@2(r2)
+; 	mov	r2,-(sp)
+; 
+; 	call	node,<r0,r3>
+; 	save	r3
+
+45$:	inc	r1
+	mov	(r4),r4
+	br	42$
+
+43$:	add	r1,bindc
+10$:	mov	bindc,-(sp)
+	asl	(sp)
+	asl	(sp)
+	add	#sysbnd,(sp)
+	mov	sp,bindl+2
+	clc
+; 	tst	r4
+	br	31$		; was beq	31$
+
+; 51$:	cmp	r3,.nil
+; 	beq	31$
+; 	mov	(r3)+,r0
+; 	mov	(r3),r3
+; 	mov	(r0)+,r2
+; 	mov	(r0),r0
+; 	bit	#1,(r0)
+; 	bne	22$
+; 	call	$$eval,<(r0)>
+; 	bcs	31$
+; 	save	@2(r2)
+; 	br	51$
+
+20$:	error	18.,<locals not a list>
+	br	31$
+21$:	error	19.,<local not symbolic atom>
+	br	31$
+22$:	error	20.,<values not list>
+	br	31$
+23$:	error	21.,<different numbers>
+
+31$:	mov	bindr0,r0
+	mov	bindr1,r1
+	jmp	@bindr
+
+.loseg
+bindr0:	.blkw
+bindr1:	.blkw
+bindr4: .blkw
+bindc:	.blkw
+bindr:	.blkw
+
+bindl:	t.int,	0
+
+.hiseg
+
+
+
+	entry	unbind
+
+	mov	(sp)+,r2
+	movb	(sp)+,r0
+	asr	r0
+	asr	r0
+	beq	bndfix
+3$:	mov	(sp)+,r1
+	mov	(sp)+,@2(r1)
+	sob	r0,3$
+	br	bndfix
+
+fixbnd:	mov	2(r0),r0
+	cmp	r0,bindl+2
+	bne	1$
+	reti
+
+1$:	mov	sp,r2
+	tst	(r2)+
+2$:	cmp	r2,r0
+	beq	3$
+	cmpb	1(r2),#syslnk/400
+	bne	4$
+	mov	2(r2),r2
+	br	2$
+4$:	cmpb	1(r2),#sysbnd/400
+	bne	5$
+	movb	(r2),r3
+	asr	r3
+	asr	r3
+	beq	5$
+	tst	(r2)+
+6$:	mov	(r2)+,r4
+	mov	@2(r4),r1
+	mov	(r2),@2(r4)
+	mov	r1,(r2)+
+	sob	r3,6$
+	br	2$
+5$:	movb	(r2),r3
+	add	r3,r2
+	br	2$-2
+3$:	mov	(sp)+,r1
+	mov	r0,-(sp)
+	mov	#syslnk+2,-(sp)
+	mov	sp,bindl+2
+	jmp	(r1)
+
+
+unfix:	mov	2(r0),r0
+	cmp	r0,bindl+2
+	bne	1$
+	reti
+1$:	mov	(sp)+,(sp)
+	mov	(sp)+,(sp)
+	mov	sp,r1
+	clr	-(sp)
+	tst	(r1)+
+
+2$:	cmp	r1,r0
+	beq	3$
+	cmpb	1(r1),#syslnk/400
+	bne	4$
+	mov	2(r1),r1
+	br	2$
+4$:	cmpb	1(r1),#sysbnd/400
+	bne	5$
+	mov	r1,-(sp)
+5$:	movb	(r1),r2
+	add	r2,r1
+	br	2$-2
+3$:	mov	(sp)+,r0
+	beq	6$
+	movb	(r0),r1
+	beq	3$
+	add	r1,r0
+	asr	r1
+	asr	r1
+	tst	(r0)+
+7$:	mov	-(r0),r2
+	mov	-(r0),r3
+	mov	@2(r3),2(r0)
+	mov	r2,@2(r3)
+	sob	r1,7$
+	br	3$
+
+6$:	mov	(sp)+,r2
+
+bndfix:	mov	sp,r0
+2$:	cmpb	1(r0),#syslnk/400
+	beq	1$
+	cmpb	1(r0),#sysbnd/400
+	beq	1$
+	movb	(r0),r1
+	add	r1,r0
+	tst	(r0)+
+	br	2$
+
+1$:	mov	r0,bindl+2
+	jmp	(r2)
+
+
+
+
+	func	eval,<form,alist>,<t>,5
+
+	mov	alist(r5),r0		;bind on entry
+	calli	fixbnd
+	calli	chkcc
+	bcs	evalf
+	mov	form(r5),r0
+
+
+	bit	#1,(r0)		;check atomic
+	beq	eval1		;no
+	cmpb	1(r0),#h.symb	;yes - symbolic?
+	bne	eval2		;no
+	mov	@2(r0),r0	;yes - get value
+	beq	evalu		;no value - undefined
+eval2:	push	r0		;return its value
+evals1:	jmp	evals		;success return
+evalu:	error	22.,<unbound variable>
+	br	evalf
+eval1:	mov	(r0)+,r1	;non-atomic form
+	mov	(r0),r2		;r1 = car, r2 = cdr
+evalq:	bit	#1,(r1)		;car atomic
+	beq	eval3		;no
+
+	cmp	r1,.funarg	;yes - is it funarg
+	bne	eval5		;no
+	bit	#1,(r2)		;yes - cdr atomic
+
+	beq	eval6		;no - o.k.
+	error	23.,<bad list>
+	br	evalf
+eval6:	call	eval,<(r2)+,(r2)>	;evaluate in context
+	br	evalx
+eval5:	movb	1(r1),r3		;not funarg
+	add	#eval4,r3	;type offset
+	jmp	@(r3)+		;dispatch
+.loseg
+eval4:	esymb			;symbolic
+	esymb2			;integer
+	esymb2			;real
+	esymb2			;string
+	eexpr			;expr
+	efexpr			;fexpr
+	elexpr			;lexpr
+	enexpr			;nexpr
+	esexpr			;sexpr
+	emacro			;macrp
+	esubr			;subr
+	efsubr			;fsubr
+	elsubr			;lsubr
+	ensubr			;nsubr
+	essubr			;ssubr
+.hiseg
+
+eval3:	push	r1		;car not atomic
+	call	evlist,<r2>	;evlis cdr
+	bcs	evalff		;scratch pushed car
+	call	$$apply		;else apply
+evalx:	bcs	evalf
+evals:	save	t(r5)		;success
+	calli	chkcc
+	bcs	evalf
+	mov	alist(r5),r0	;unbind
+	calli	unfix
+	return	t(r5)		;return value
+evalf:	calli	chkscc
+	tst	.backcount		;then standard recovery
+	beq	1$
+	cmp	.errst,.nil
+	bne	1$
+	calli	ochan	#1
+	calli	newlin
+	text	24.,<*eval: form =>
+	call	prin,<form(r5)>
+	calli	newlin
+	dec	.backcount
+1$:	cmp	.rset,.nil		;stop to examine?
+	beq	2$
+	call	debug
+2$:	mov	alist(r5),r0		;unbind for
+	calli	unfix
+	freturn
+
+evalff:	save				;clean stack
+	br	evalf			;freturn
+
+esymb:	mov	@2(r1),r0	;get value
+	beq	esymb1			;get value or none
+	mov	r0,r1		;save value in r1
+	calli	chkcc
+	bcs	evalf
+	jmp	evalq
+esymb1:	mov	r1,r0		;point r0 to atom head
+	calli	cadrck
+	bcs	esymb2		;no value
+	push	r0		;save
+	call	evlist,<r2>	;eval args
+	bcs	evalff		;remember to trash
+	call	$$apply		;else apply
+	br	evalx		;conditional
+esymb2:	error	25.,<unknown function>
+	br	evalf		;failure
+
+eexpr:	push	2(r1)		;expression
+	call	evlist,<r2>	;rval := apply(fn,evlis(args),c.b.);
+	bcs	evalff		;be sure to discard other arg
+	call	$$apply
+	br	evalxz
+
+esubr:	call	evlist,<r2>	;subr
+esubr5:	bcs	evalf		;rval := call(fn,args)
+	save	r2
+	mov	sp,r3
+	clr	r4		;spread the args
+	mov	2(r1),r1
+esubr1:	cmp	r2,.nil
+	beq	esubr2
+	push	(r2)+
+	mov	(r2),r2
+	inc	r4
+	br	esubr1
+esubr2:	cmp	r4,2(r1)
+	beq	esubr3
+	mov	r3,sp
+esubr4:	error	26.,<arg count error>
+evalfz:	jmp	evalf
+esubr3:	mov	(r1),-(sp)
+	calli	.call
+evalxz:	jmp	evalx
+
+elexpr:	push	2(r1)		;lexpr
+	call	evlist,<r2>	;rval :=apply(fn,ncons(evlis(args)),c.b.)
+evalrz:	bcs	evalff		;other arg
+	call	node,<.nil>
+	call	$$apply
+	br	evalxz
+
+elsubr:	call	evlist,<r2>	;lsubr
+	bcs	evalfz		;rval := call(fn,ncons(evlis(args)));
+	mov	2(r1),-(sp)
+	calli	.call
+	br	evalxz
+
+efexpr:	push	2(r1)		;fexpr
+	call	clist,<r2>	;rval := apply(fn,args,c.b.)
+	bcs	evalrz		;other arg.
+	call	$$apply
+	br	evalxz
+
+efsubr:	call	clist,<r2>	;fsubr
+	br	esubr5
+
+enexpr:	push	2(r1)		;nexpr
+	call	clist,<r2>	;rval := apply(fn,ncons(args),c.b.)
+	bcs	evalrz		;other arg
+	call	node,<.nil>
+	call	$$apply
+	br	evalfy		;conditional return
+
+ensubr:	call	clist,<r2>	;nsubr
+	bcs	evalfz		;rval := call(fn,ncons(args))
+	mov	2(r1),-(sp)
+	calli	.call
+	br	evalfy		;conditional return
+
+esexpr:	push	2(r1)		;sexpr
+	call	clist,<r2>	;rval := call(fn,list(args,current b.))
+	bcs	evalrz
+	mov	bindl+2,r0
+	call	isave
+	call	node,<.nil>
+	call	node
+	call	$$apply
+	br	evalfy		;conditional return
+
+essubr:	call	clist,<r2>	;ssubr
+	bcs	evalfy		;rval := call(fn,list(args,c.b.))
+	mov	bindl+2,r0
+	call	isave
+	mov	2(r1),-(sp)
+	calli	.call
+evalfy:	jmp	evalxz		;conditional return
+
+
+emacro:	push	2(r1)		;macro
+	call	node,<form(r5),.nil>
+	call	$$apply		;rval := eval(apply(fn,ncons(form),c.b.),c.b.)
+	bcs	evalfy
+	call	$$eval
+	br	evalfy
+
+
+	.end

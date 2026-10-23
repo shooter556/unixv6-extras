@@ -1,0 +1,25 @@
+echoall
+as -o atan.o atan.s
+as -o crypt.o crypt.s
+as -o dpadd.o dpadd.s
+as -o ecvt.o ecvt.s
+as -o exp.o exp.s
+as -o floor.o floor.s
+as -o fmod.o fmod.s
+as -o fp.o fp?.s
+: as -o fp.o fakfp.s
+as -o gamma.o gamma.s
+as -o get.o get.s
+as -o ldiv.o ldiv.s
+as -o log.o log.s
+as -o mesg.o mesg.s
+as -o pow.o pow.s
+as -o put.o put.s
+as -o rand.o rand.s
+as -o savr5.o savr5.s
+as -o sin.o sin.s
+as -o sqrt.o sqrt.s
+as -o switch.o switch.s
+as -o ttyn.o ttyn.s
+ar r /lib/liba.a *.o
+rm *.o

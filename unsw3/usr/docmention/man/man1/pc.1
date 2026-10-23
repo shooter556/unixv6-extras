@@ -1,0 +1,146 @@
+.th PC I 4/1/77
+.sh NAME
+pc \*- Pascal compiler (generating interpreter code)
+.sh SYNOPSIS
+.bd pc
+[
+\fB\*-b\fRn\fBlmpstuwz\fR
+] file
+.sh DESCRIPTION
+This document is a quick reference to
+.it pc
+usage.
+The full reference to the implementation is the UNIX Pascal
+``Report Appendix.''
+For an introduction and more explanation see the UNIX Pascal
+``User Manual.''
+.s3
+.it Pc
+compiles the program in \fIfile\fR leaving interpreter code
+in the file \fIobj\fR to be interpreted by
+.it "pcx (I)."
+The argument \fIfile\fR must end with `.p' to indicate that it is
+a Pascal source program.
+.s3
+The following flags are interpreted by 
+.it pc.
+The options affected by these flags on the command line can also
+be controlled in comments within the program text.  See the ``User Manual''
+and the ``Report Appendix'' for details.
+.s3
+.lp +6 5
+\fB\*-b\fRn	\fIN\fR is a single digit and
+specifies the buffering for the file \fIoutput\fR.
+By default this option has the value 1 which causes \fIoutput\fR to be
+line buffered.  When given the value 0, \fIoutput\fR is
+unbuffered, and with value 2 or greater \fIoutput\fR is block buffered.
+See the ``User Manual'' and the ``Report Appendix'' for details.
+.s3
+.lp +6 5
+\fB\*-l\fR	Causes the compiler to generate a listing on the standard
+output.  The default is off.
+.s3
+.lp +6 5
+\fB\*-m\fR	Allows execution profiling with 
+.it "pxp (I)"
+by generating statement counters.
+See the ``PXP User Manual'' for details.
+The default is off.
+.s3
+.lp +6 5
+\fB\*-p\fR	Causes generation of
+a control backtrace on error.
+Prevents infinite loops by enforcing a statement count limit.
+The default is on.
+.s3
+.lp +6 5
+\fB\*-s\fR	Causes the compiler to accept standard Pascal only.  The
+default is off.
+.s3
+.lp +6 5
+\fB\*-t\fR	Forces generation of additional runtime tests to check all
+assignments
+to variables of subrange type and subrange value parameters
+to insure that the value lies in the
+specified range.
+Forces generation of code for \fIassert\fR statements,
+which are otherwise treated as comments. 
+The default is on.
+.s3
+.lp +6 5
+\fB\*-u\fR	Causes the compiler to restrict the number of relevant
+characters in each source line to 72.  The default is off.
+.s3
+.lp +6 5
+\fB\*-w\fR	Causes some warning diagnostics to be suppressed.  See the
+section on ``DIAGNOSTICS'' below for a list of the warnings in this class.
+The default is off.
+.s3
+.lp +6 5
+\fB\*-z\fR	Is a synonym for the \fB\*-m\fR option.
+.i0
+.dt
+.sh "FILES"
+/lib/pcstrngs	contains the text of the error messages
+.br
+obj		receives the interpreter code
+.sh "SEE ALSO"
+UNIX Pascal ``User Manual,'' ``Report Appendix,'' and ``PXP User Manual,''
+pcx (I),
+pxp (I),
+pcc (I),
+pxref (I)
+.sh "DIAGNOSTICS"
+Syntactic error messages are interspersed in the text with
+a ``---^---'' flag indicating the relevant place.
+If the listing is not enabled, then a listing of each line with a syntactic
+error message is forced.
+Parsing is currently done by a modified
+.it "yacc (I)"
+LALR parser and syntactic error recovery is not good.
+Syntactic error messages should therefore be taken with a grain of salt.
+.s3
+Semantic error messages include a relevant line number and
+are currently given
+at the end of \fIunits\fR in the program,
+where \fIunits\fR 
+correspond to major chunks of the program
+such as a \fIprocedure\fR body or \fIvar\fR declaration part.
+Semantic error messages are intended to be self-explanatory.
+Reference to a Pascal report may prove helpful.
+.s3
+The first character of each message indicates its class - `w' for non-fatal
+warnings, `s' for non-standard Pascal constructs, and `E' for fatal errors.
+Some warnings are \fIsuppressible\fR and 
+do not necessarily reflect errors in the source
+program, but indicate that while the program is correct Pascal,
+it somehow seems dubiously correct.
+Warnings in this class include variables which
+are defined and never used, variables which are referenced without ever
+being assigned to and comments within comments.
+.sh "AUTHORS"
+Charles Haley, William Joy, and Ken Thompson
+.sh BUGS
+The statement ``\fIif [ ] = [ ] then\fR'' evokes a strange diagnostic.
+.s3
+Syntactic error recovery is very flakey.
+.s3
+The semantics of \fIpacked\fR are not implemented.
+.s3
+No detection of assignment to variables bound because they control
+\fIwith\fR's.
+.s3
+Formal parameters which
+are \fIprocedure\fR or \fIfunction\fR are not supported.
+.s3
+The procedures \fInew\fR and \fIdispose\fR with more
+than one argument are not supported.
+The extra arguments are completely ignored, and all records have the size
+of the largest variant.
+.s3
+The functions
+.it column,
+.it line,
+and
+.it pageline
+are unimplemented.

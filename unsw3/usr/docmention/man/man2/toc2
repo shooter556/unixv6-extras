@@ -1,0 +1,45 @@
+break, brk, sbrk \*- change core allocation
+chdir \*- change working directory
+chmod \*- change mode of file
+chown \*- change owner and group of a file
+close  \*-  close a file
+creat  \*-  create a new file
+csw \*- read console switches
+dup \*- duplicate an open file descriptor
+exec, execl, execv  \*-  execute a file
+exit \*- terminate process
+fork  \*-  spawn new process
+fstat  \*-  get status of open file
+getgid  \*-  get group identifications
+getpid  \*-  get process identification
+getuid  \*-  get user identifications
+gprocs \*- get system process information
+gtty  \*-  get typewriter status
+indir \*- indirect system call
+kill  \*-  send signal to a process
+link \*- link to a file
+mknod \*- make a directory or a special file
+mount \*- mount file system
+nice \*- set program priority
+open \*- open for reading or writing
+pipe \*- create an interprocess channel
+profil \*- execution time profile
+ptrace  \*-  process trace
+read \*- read from file
+seek \*- move read/write pointer
+setgid \*- set process group ID
+setuid \*- set process user ID
+sfork \*-  spawn new process immune from terminal interrupts and quits
+signal \*- catch or ignore signals
+sleep \*- stop execution for interval
+stat \*- get file status
+stime \*- set time
+stty \*- set mode of typewriter
+sync \*- update super-block
+time \*- get date and time
+times \*- get process times
+tlimit \*- set process time limit
+umount \*- dismount file system
+unlink \*- remove directory entry
+wait \*- wait for process to terminate
+write \*- write on a file

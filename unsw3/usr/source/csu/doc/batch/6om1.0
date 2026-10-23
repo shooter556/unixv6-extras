@@ -1,0 +1,135 @@
+.bp 1
+.ar
+.ll 96
+.ds
+.he 'UNIX BATCH SYSTEM GUIDE.'V3.0 - Level 6.5'Page   %'
+.m2 5
+.ig
+.ul 1
+..
+1. INTRODUCTION
+
+.ti 3
+UNIX, written at Bell Laboratories, is an operating system
+for use on the PDP 11/40, 11/45 and 11/70 computers.
+.ti 3
+Historically, the Dept. of Computing Science became interested
+in UNIX for a number of reasons.
+
+.in 7
+.ti 3
+1) It provided a more flexible base system
+than other proprietary software available on which to build other
+systems.
+.ti 3
+2) It is a true time-sharing task swapping system
+designed to support a number of interactive terminals.
+.ti 3
+3) It possessed an interesting array of software:
+.in 5
+	* text manipulation and type-setting programs
+	* A host of languages
+	* compiler compilers
+	* a BCPL-like system language producing efficient code
+	* an extremely fast assembler
+	* a fascinating array of games including chess
+	* graphics programs
+.ti 3
+4) It made possible the use of a large amount of software developed
+elsewhere under UNIX, notably from universities in the U.S.A.
+where UNIX occupies an increasingly prominent position.
+.ti 3
+5) It is a good vehicle for teaching a course on operating
+systems.
+.ti 3
+6) Expansion to accomodate many peripheral device types (notably
+graphics devices) is a simple procedure.
+.in 0
+.ti 3
+Within the School of Electrical Engineering, the batch station
+PDP 11/40 provided a machine to run UNIX
+so long as its functioning as a batch station was not hindered.
+.ti 3
+Towards this end some members of the Dept. of Computing
+Science wrote a batch system to run under UNIX.
+To them the batch systems then in use at other batch stations
+left much to be desired, requiring
+an operator to be present constantly and 
+having a generally poor level of automation.
+A higher level of operatorless automation should
+have been possible on a PDP 11/40 and far more efficient use
+of the available CYBER line could be made using disc based
+input and output spooling.
+.ti 3
+The result of their work was the first UNIX Batch System
+which had a number of features not present in other systems
+at the time it was written.
+	* Faster card reading speeds due to spooling of card decks
+	* Faster printing from the print spool area
+	* More efficient printing method (less shuffles more skips)
+	* Fewer meaningless messages on the console
+	* Maintenance of a complete set of batch station statistics
+	* Availability of information on CYBER line errors
+	* No operator required for normal running
+	* Elimination of operator prompting commands (done by software)
+
+.ti 3
+This system has now been running at various batch stations at UNSW since
+June 1975 and
+has proved to be a stable
+and efficient system.
+.ti 3
+Early in 1976 a new release of UNIX was obtained from Bell Labs.
+Level 6 was needless to say full of "new you beaut features" and,
+as with Level 5, the people in the Dept of Computing Science
+could not restrain their enthusiasm.
+.ti 3
+However enthusiasm was now tempered with experience and hindsight.
+with a clearer idea of the most "fantasmagorical" way to do things
+coding began on a new UNIX Batch System.
+.ti 3
+Chief GURU officiating at the birth of Level 6
+at UNSW is Ian Johnstone (late of AAEC, now of AGSM, know as "thong")
+and the bulk of the credit for additions and alterations must go to him,
+although guidance, often physical, was donated by
+many other enthusiasts to produce the system now being distributed to you.
+.ti 3
+No system is complete without adequate documentation and this manual
+tries to go some of the way towards this completion.
+.ti 3
+UNIX provided the text editing and manipulation programs
+used to prepare the manual in particular the "ROFF" program
+to run off a formatted, justified, headed and paginated manual from
+text entered in any fashion using simple embedded commands.
+.ti 3
+We believe Level 6 will prove easier to use, faster from the users point of view
+and a generally more friendly system.
+.ti 3
+We can only hope that this manual is all
+it was intended to be and hope it is of use to you.
+
+
+
+
+
+
+
+.ti 70
+THE GURUs-VI  (DCS)
+
+
+
+
+P.S.
+
+.ti 3
+The Batch system has now been taken over by the Computing Services
+Unit (CSU) and is fully supported by them.
+Many bugs and deficiencies in the original system were corrected, and extensions
+added, mostly by Dave Horsfall.
+These extensions are described in appendix B.
+
+.ti 70
+DAVE H. (CSU)
+
+.nx 6om2.0

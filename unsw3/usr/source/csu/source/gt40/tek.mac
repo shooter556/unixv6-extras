@@ -1,0 +1,1408 @@
+	.title	tektronix 4015 simulator
+	.ident	/x02/
+;
+;
+; author:
+;	john beale		1975
+;
+; modifications:
+;	craig mcgregor		1976
+;
+;
+; description:
+;
+;	gt40 simulator for the tektronix 4010 series terminals.
+;		simulates some of the characteristics of the
+;	tektronix 4015 terminal.  some of the differences are:
+;			there is only one type font (no apl), and only
+;		one type size.  there is only one column of output.
+;		this means that the screen will take 32. lines of
+;		72. characters each.  the terminal does not transmit
+;		a "break" character to the computer when the page
+;		becomes full.
+;			the number of lines on the screen is limited
+;		by the size of the memory available.  the simulator
+;		uses "short vectors" and "near points" to reduce the
+;		amount of memory consumed.  it is not necessary to
+;		rebuild the simulator if the size of memory changes
+;		as the simulator simply uses as much memory as is
+;		available.
+;			the plotting options in the simulator include
+;		points, but do not include incremental plot mode.
+;		there has been no attempt to implement any variety of
+;		hard copy save of the screen image.
+;		output.  also when the page full condition is found
+;		no break is transmitted to the computer.
+;
+	.page
+;
+; operation:
+;	as there is no special key on the gt40 keyboard labelled
+;	'page', we have used the 'home' key (bottom left-hand
+;	corner) to do a screen clear and terminal reset.  this
+;	does mean that some of the plotting functions may not
+;	be executed in local mode as the 'home' key uses the
+;	'gs' code.
+;	to enable all sorts of transmission options we have
+;	used the switch register on the front of the cpu
+;	to control operation of the terminal.
+;	the unsw convention is:-
+;	 bit 0 turned on - local mode.  no information is
+;		transmitted to the host computer and nothing
+;		received from the host is displayed.  however,
+;		keyboard entries are echoed on the screen.
+;	 bit 1 turned on - half duplex. all keyboard entries
+;		are echoed on the screen when typed.
+;	 bit 2 turned on - upper case.  keyboard characters
+;		are mapped into the upper case range.
+;
+	.page
+	.sbttl	flow chart of simulator operation
+; flow chart.
+;
+;
+;
+;
+;  keybd:  !
+;	   !
+;	   v
+;     -----------
+;    /		 \	     +---------------+
+;   <	  esc?    >--------> !  set esc flg  !
+;    \		 /           +---------------+
+;     -----------
+;          !
+;          v
+;     -----------
+;    /           \
+;   <	  gs?	  >
+;    \           /
+;     -----------
+;          !
+;          !
+;          v
+;	slightly incomplete.......
+	.page
+	.sbttl	local symbols and macros
+;	.enabl	abs
+;	.dsabl	gbl
+
+;
+; warning:
+;	r0 is used globally (including isr's) as the
+;	display file pointer.  so be warned.
+;
+
+;
+; character symbols
+;
+
+eot=	004	;eot
+enq=	005	;enq
+bel=	007	;bell
+bs=	010	;bs
+ht=	011	;tab
+lf=	012	;lf
+vt=	013	;vt
+ff=	014	;ff
+cr=	015	;cr
+can=	030	;can
+sub=	032	;sub
+esc=	033	;escape
+fs=	034	;fs
+gs=	035	;gs
+us=	037	;us
+space=	040	;space
+
+;
+; gt40 display screen size data
+;
+
+xincr=	14.	;character size
+yincr=	24.
+homex=	0	;bottom left-hand of top left-hand character
+homey=	1400-20.
+
+;
+; tektronix modes
+;
+modch=	0	;4015:	char. mode
+modpt=	1	;	point mode
+modln=	2	;	initial line mode
+modln0=	3	;	1st. point of line mode
+modlnx=	4	;	later points. of line mode
+
+;
+; simulator modes
+;
+qqchr=	0	;gt40:	char. mode
+qqpnt=	1	;	point mode
+qqpnt0=	2	;	near point mode
+qqlin=	3	;	line mode
+qqlin0=	4	;	near line mode
+
+;
+; switch register bits.
+;
+
+local=	000001	;local mode
+half=	000002	;half duplex
+ucase=	000004	;half ascii
+
+;
+; macros in system library
+;
+
+	.mcall	gtsym$,	.inh,	.enb
+
+;
+; define all the gt40 symbols
+;
+	.list	me		;want to get the symbols on the listing
+	gtsym$
+	.nlist	me
+	.page
+	.sbttl	interrupt vectors
+
+;.=	0
+z = .
+	jmp	@#start
+
+;
+; make sure that bad interrupts are trapped.
+;
+	.rept	63.
+	.word	.+2
+	halt
+	.endm
+
+;.=	4
+. =	z+4
+	.word	nomem,br0	;bus timeout
+
+;.=	kvec
+. =	z+kvec
+	.word	kbdgo,br5	;keyboard interrupt
+
+;.=	xvec
+. =	z+xvec
+	.word	sndr,br5	;host transmit interrupt
+
+;.=	rvec
+. =	z+rvec
+	.word	rcvr,br5	;host receive interrupt
+
+;.=	gtstpv
+. =	z+gtstpv
+	.word	stpisr,br6	;display stop interrupt
+
+;.=	gtlpnv
+. =	z+gtlpnv
+	.word	lpenir,br6	;light pen "hit" interrupt
+
+;.=	gtshov
+. =	z+gtshov
+	.word	stpisr,br6	;another bus timeout
+
+;
+; setup the stack
+;
+
+;.=	600
+. =	z+600
+
+stack=	.
+	.page
+	.sbttl	initialisation code and main program loop
+	.nlist	meb
+
+;
+; initialisation section
+;
+
+start:	mov	#stack,sp	;nice to know where the stack is
+	mov	#br7,@#ps	;mask out interrupts until ready
+	mov	#rcvbuf,rcvado	;set up the receive circular
+	mov	#rcvbuf,rcvadi	;buffer pointers.
+	mov	#-1,rcvcnt
+	mov	#sndbuf,sndado	;and the transmit circular
+	mov	#sndbuf,sndadi	;buffer pointers.
+	mov	#0,sndcnt
+	jsr	pc,clear	;initialise display file (clear screen)
+
+	mov	#101,@#rcsr	;start up receiver
+	mov	#101,@#kcsr	;and keyboard
+	mov	#100,@#xcsr	;and transmitter
+	mov	#dlist,dpntr	;and finally the display queue
+	mov	#dfile0,@#dpc	;and display itself
+	clr	@#ps		;we're off!!
+
+;
+; run-time task
+;
+
+sleep:	wait
+	br	sleep
+
+;
+; we may have been kicked here by an input character
+;
+
+loop:	movb	@rcvado,r5	;get the char
+	inc	rcvado		;line up next char
+	cmp	#<rcvbuf+rcvlng>,rcvado ;end of circular buffer?
+	bhi	10$		;no.
+	mov	#rcvbuf,rcvado	;yes. back to beginning
+10$:	jsr	pc,disply	;display our precious char
+	dec	rcvcnt		;more?
+	bpl	loop		;yes.
+	br	sleep		;no. go back to sleep
+	.page
+	.sbttl	interrupt routines
+;
+;
+;****************************************************************
+;*								*
+;*		keyboard interrupt handler			*
+;*								*
+;****************************************************************
+;
+;
+kbdgo:	mov	r5,-(sp)
+	mov	@#kbuf,r5	;get char.
+	bic	#^c<177>,r5	;7 bits.
+	cmp	#gs,r5		;home and clear screen?
+	bne	10$
+;
+	jsr	pc,clear	;yes
+	br	60$
+;
+10$:	tst	ginflg		;gin mode at moment?
+	beq	20$		;no
+;
+	mov	penx,cursx	;yes. update cursor
+	mov	peny,cursy
+	jsr	pc,sendxy	;send char and coords.
+	clr	ginflg		;escape from gin mode
+	br	60$
+;
+20$:	bit	#ucase,@#swr	;upper case only?
+	beq	30$		;no. skip translation
+	cmp	#<'a!040>,r5	;test for lower case char.
+	bgt	30$		;not even an alphabetic
+	cmp	#<'z!040>,r5
+	blt	30$		;not alpha
+	bic	#040,r5		;convert to upper case char.
+30$:	bit	#<local!half>,@#swr ;local/half duplex?
+	beq	40$		;no
+	jsr	pc,rcvque	;yes. send the char to the display
+	bit	#local,@#swr	;local?
+	bne	60$		;yes. don't send to host
+40$:	jsr	pc,sndque
+60$:	mov	(sp)+,r5
+	rti
+;
+;
+;****************************************************************
+;*								*
+;*		interrupt handler for transmitting		*
+;*				from				*
+;*			gt40 to host computer			*
+;*								*
+;****************************************************************
+;
+;
+sndr:	dec	sndcnt		;anymore to send?
+	bmi	10$		;last char. buffer now empty
+	movb	@sndado,@#xbuf	;send it.
+	inc	sndado		;next
+	cmp	#<sndbuf+sndlng>,sndado ;wrap-around?
+	bhi	10$		;don't worry
+	mov	#sndbuf,sndado	;yes. reset pointer
+10$:	rti
+;
+;
+;****************************************************************
+;*								*
+;*		interrupt handler for receiving			*
+;*				from				*
+;*			host computer				*
+;*								*
+;****************************************************************
+;
+;
+rcvr:	mov	r5,-(sp)
+	movb	@#rbuf,r5	;input char
+	bit	#local,@#swr	;local mode?
+	bne	10$		;yes. swallow everything
+	jsr	pc,rcvque	;queue it.
+10$:	mov	(sp)+,r5
+	rti
+;
+;
+;****************************************************************
+;*								*
+;*		display file overflow tester			*
+;*								*
+;****************************************************************
+;
+; bus error interrupt:
+;	supposedly only get a bus error if the display file
+;	overflowed available memory.  however, it may be that
+;	the stack was reduced too much.  so be careful.
+;
+nomem:
+	.if	df	debug
+	cmp	#400,sp		;is it a stack error or a bus error?
+	blo	10$		;bus error.
+	halt			;is recovery possible?
+	br	60$		;
+	.endc
+10$:	bic	#000777,r0	;take down display file pointer.
+	mov	#dstop,-2(r0)	;repair display file
+	jsr	pc,dofull	;mark as full
+60$:	rti
+	.page
+	.sbttl	queueing subroutines
+;
+;
+;****************************************************************
+;*								*
+;*		queues output buffer for transmitting		*
+;*			from gt40 to host computer		*
+;*								*
+;****************************************************************
+;
+; input:
+;	r5 - character to to queued
+; output:
+;	none
+; registers affected:
+;	none
+;
+sndque:	cmp	#<sndlng-1>,sndcnt ;buffer full?
+	bgt	10$		;no.
+;
+	inc	@#dsr		;yes. ring bell!!
+	.if	df	debug
+	halt
+	.endc
+	br	60$
+;
+10$:	inc	sndcnt		;test empty?
+	bne	20$		;no.
+	movb	r5,@#xbuf	;yes. self-start
+	br	60$		;that's all.
+20$:	movb	r5,@sndadi	;buffer it.
+	inc	sndadi		;ready ptr. for next
+	cmp	#<sndbuf+sndlng>,sndadi ;wrap-around?
+	bhi	60$		;no.
+	mov	#sndbuf,sndadi	;yes. reset pointer
+60$:	rts	pc
+;
+;
+;****************************************************************
+;*								*
+;*		queues input for gt40 from host computer	*
+;*								*
+;****************************************************************
+;
+;	here we may do funny things with the stack.  this is used
+;	to restart the main program when it may have gone to sleep.
+;	to do this we assume that if the system was sleeping, then
+;	the top of the stack will contain contain an interrupt call
+;	pointing back to the sleeper.  what we do here is steer it
+;	to the main program on the last rti of this interrupt nest.
+;
+; input:
+;	r5 - character to queued
+; output:
+;	none
+; registers affected:
+;	r5 - stripped
+;
+rcvque:	bic	#^c<177>,r5	;clean.
+	beq	60$		;don't bother saving nulls.
+	cmp	#<rcvlng-1>,rcvcnt ;buffer full?
+	bgt	10$		;no. don't worry
+;
+	inc	@#dsr		;yes. ring bell!!
+	.if	df	debug
+	halt
+	.endc
+	br	60$
+;
+10$:	movb	r5,@rcvadi	;save it
+	inc	rcvadi		;next
+	cmp	#<rcvbuf+rcvlng>,rcvadi ;
+	bhi	20$		;wrap-around?
+	mov	#rcvbuf,rcvadi	;yes. reset pointer
+20$:	inc	rcvcnt		;notify of 1 more.
+	bne	60$		;only 1 in buffer?
+;
+;********************************
+;
+	mov	#loop,stack-4	;fix auto-start return
+;
+;********************************
+;
+	.if	df	debug
+	cmp	rcvcnt,maxcnt	;find out the maximum size of
+	ble	60$		;buffer required.
+	mov	rcvcnt,maxcnt	;save the big one.
+	.endc
+60$:	rts	pc
+	.page
+	.sbttl	utility subroutines
+	.sbttl	 "sendxy" - send status of terminal to host
+;
+;
+;****************************************************************
+;*								*
+;*		send x-y coordinates of cursor to host		*
+;*								*
+;****************************************************************
+;
+;	if the terminal is not in local mode we send a status char
+;	to the host followed by the current cursor position.
+;
+; input:
+;	r5 - character to be sent to host
+;		may be either keyboard char or status byte.
+; output:
+;	none
+; registers affected:
+;	r5
+;
+sendxy:	bit	#local,@#swr	;if local mode, don't send anything
+	bne	60$		;to the host computer
+	jsr	pc,sndque	;send either the keyboard char or the
+				;terminal status byte to the host
+	mov	cursx,r5	;xhi
+	asr	r5		;
+	asr	r5		;move
+	asr	r5		; into
+	asr	r5		;  position
+	asr	r5		;
+	bic	#^c<37>,r5	;strip rubbish
+	bis	#100,r5		;extra bit!!
+	jsr	pc,sndque	;transmit it.
+	mov	cursx,r5	;xlo
+	bic	#^c<37>,r5	;strip rubbish
+	bis	#100,r5		;extra bit!!
+	jsr	pc,sndque	;transmit it.
+	mov	cursy,r5	;yhi
+	asr	r5		;
+	asr	r5		;move
+	asr	r5		; into
+	asr	r5		;  position
+	asr	r5		;
+	bic	#^c<37>,r5	;strip rubbish
+	bis	#100,r5		;extra bit!!
+	jsr	pc,sndque	;transmit it.
+	mov	cursy,r5	;ylo
+	bic	#^c<37>,r5	;strip rubbish
+	bis	#100,r5		;extra bit!!
+	jsr	pc,sndque	;transmit it.
+	mov	#cr,r5		;terminator
+				; may be either :- cr, eot?
+	jsr	pc,sndque	;
+60$:	rts	pc
+	.page
+	.sbttl	 "dofull" - set page full condition
+;
+;
+;****************************************************************
+;*								*
+;*		set page-full condition				*
+;*								*
+;****************************************************************
+;
+;	jamms terminal.  flashing page full line comes on at
+;	bottom of screen and continues to flash until the "home"
+;	key has been pressed.  terminal is essentially locked
+;	up whilst in this condition.  this way so not to corrupt
+;	a page of text when people are trying to read it.
+;
+dofull:	mov	#dflful,dlist+2	;disconnect possible cursors
+	clr	ginflg		;graphics input stop right now
+	clr	bypflg
+	mov	#1,fulflg	;full up
+	rts	pc
+	.sbttl	 "clear"  - clear screen and reset terminal
+;
+;
+;****************************************************************
+;*								*
+;*		clear screen (and flags)			*
+;*								*
+;****************************************************************
+;
+;	clears the display screen and resets all of the flags
+;
+; input:
+;	none
+; output:
+;	none
+; registers affected:
+;	r0 - display file updated
+;
+clear:	clr	bypflg		;clear bypass condition
+	clr	lastfl		;clear coord flag
+	mov	#line0,lintyp	;initialise to solid line
+	mov	#line0,oldtyp	;init. line type (dashed etc.)
+	clr	escflg
+	clr	fulflg		;no longer full
+	mov	#modch,modtek	;initially character mode
+	mov	#qqpnt,modgt	;but point mode at this end
+	mov	#dfile,r0	;initialise display file
+	mov	#dstop,(r0)+
+	mov	#dflchr,dlist+2	;character cursor
+	clr	ginflg		;no gin mode (or cross-hairs)
+	mov	#homex,cursx	;initialise cursor position
+	mov	#homey,cursy	;
+	mov	#homex,oldx
+	mov	#homey,oldy
+	rts	pc
+	.page
+	.sbttl	 "movtst" - test for cursor movement
+;
+;
+;****************************************************************
+;*								*
+;*		cursor movement test				*
+;*								*
+;****************************************************************
+;
+;	test the cursor to see if it has moved since
+;	the most recent addition to the display file.
+;
+; input:
+;	cursors only. no registers
+; output:
+;	cc-c - clear if cursor not moved since last display
+; registers affected:
+;	none
+;
+movtst:	cmp	cursx,oldx	;does current position match?
+	bne	10$		;no.
+	cmp	cursy,oldy	;what about the y's?
+	bne	10$		;no.
+	clc
+	br	60$		;exit
+10$:	sec
+60$:	rts	pc
+
+	.sbttl	 "movdo"  - adjust for cursor movement
+;
+;
+;****************************************************************
+;*								*
+;*		adjust for cursor movement			*
+;*								*
+;****************************************************************
+;
+;	make the display file match the cursor position
+;
+; input:
+;	cursors only
+; output:
+;	none
+; registers affected:
+;	r1,r2,r3,r4
+;
+movdo:	jsr	pc,nearmd	;can we use the near addressing mode?
+	bcc	30$		;yes.
+	cmp	#qqlin,modgt	;no. line mode at moment?
+	beq	20$		;yes.
+	cmp	#qqpnt,modgt	;already point mode?
+				;note: point mode is the default
+	beq	10$		;yes.
+	mov	#dstop,(r0)+	;no. must set it to point mode
+	mov	#point,-4(r0)	;
+	mov	#qqpnt,modgt	;
+10$:	mov	cursy,(r0)+	;load coordinates
+	mov	#dstop,(r0)+
+	mov	cursx,-6(r0)
+	br	50$		;
+20$:	jsr	pc,farmod	;eval. addressing vals.
+	mov	r1,(r0)+	;y.
+	mov	#dstop,(r0)+	;
+	mov	r2,-6(r0)	;x.
+	br	60$
+;
+; near point/vector mode.
+;
+30$:	cmp	#qqlin0,modgt	;already one or the other?
+	beq	40$		;yes.
+	cmp	#qqpnt0,modgt	;
+	beq	40$		;yes.
+	mov	#dstop,(r0)+	;no. make into
+	mov	#shortv,-4(r0)	;near vector
+	mov	#qqlin0,modgt	;
+40$:	mov	#dstop,(r0)+	;now lay the address.
+	mov	r1,-4(r0)	;
+50$:	mov	cursx,oldx	;update current position
+	mov	cursy,oldy	;
+60$:	rts	pc
+
+	.sbttl	 "nearmd" - calculate addressing data for near modes
+;
+;****************************************************************
+;*								*
+;*		calculate short addressing modes		*
+;*								*
+;****************************************************************
+;
+;	calculate the addressing data to go in near-mode plotting
+;	instructions if possible.
+;
+; input:
+;	cursors only
+; output:
+;	cc-c clear if short addressing mode possible
+;	r1 - resultant display file word (if cc-c clear)
+; registers affected:
+;	r1,r2,r3,r4
+;
+nearmd:	clr	r2		;first clear sign.
+;
+; y coordinate first
+;
+	mov	cursy,r1	;
+	sub	oldy,r1		;change sign?
+	bpl	10$		;no.
+	neg	r1		;yes.
+	mov	#misvy,r2	;
+10$:	clr	r4		;clear sign
+;
+; then x coordinate
+;
+	mov	cursx,r3	;
+	sub	oldx,r3		;change sign?
+	bpl	20$		;no.
+	neg	r3		;yes.
+	mov	#misvy,r4	;
+;
+; now test for size of values (may be too big!)
+;
+20$:	cmp	#maxsy,r1	;y size?
+	blt	50$		;too big!
+	cmp	#maxsy,r3	;x size?
+	blt	50$		;too big!
+;
+; size o.k.
+;  warning:	zero lengths may cause trouble!
+;		but i won't test for them here.
+;
+	bis	r2,r1		;y coord + sign
+	bis	r4,r3		;x coord + sign
+;
+; must adjust posn of x coordinate in word
+;
+	swab	r3
+	asr	r3		;equiv to - <ash  #7.,r3>
+	bis	r3,r1		;join x & y pieces.
+	clc
+	br	60$		;all done
+50$:	sec
+60$:	rts	pc
+
+	.sbttl	 "farmod" - calcalate long relative addressing mode data
+;
+;
+;****************************************************************
+;*								*
+;*		calculate long relative addressing		*
+;*								*
+;****************************************************************
+;
+;	calculate the addressing data used in long-mode instructions.
+;	it is probable that tests will already have been done for
+;	the more compact near-modes.
+;
+; input:
+;	cursors only
+; output:
+;	r1 - y addressing word
+;	r2 - x addressing word
+; registers affected:
+;	r1,r2
+;
+farmod:	mov	cursy,r1	;do y first.
+	sub	oldy,r1		;change sign?
+	bpl	10$		;no.
+	neg	r1		;yes.
+	bis	#minusy,r1	;
+10$:	mov	cursx,r2	;now for x.
+	sub	oldx,r2		;change sign?
+	bpl	20$		;no.
+	neg	r2		;yes.
+	bis	#minusx,r2	;
+20$:	mov	cursx,oldx	;update current posn.
+	mov	cursy,oldy	;
+	rts	pc
+	.page
+	.page
+	.sbttl	main display analyser
+;
+;
+;****************************************************************
+;*								*
+;*		main display analyser				*
+;*								*
+;****************************************************************
+;
+;	re-entrant part of the main program.  processes the
+;	input characters and produces the display.
+;
+; input:
+;	r5 - input char
+; output:
+;	display?
+; registers affected:
+;	all
+;
+disply:	tst	fulflg		;page full?
+	bne	disext		;yes. can't do a thing until cleared
+10$:	tst	bypflg		;bypass?
+	beq	30$		;no. go on
+	cmp	#040,r5		;control char?
+	ble	disext		;only control chars may clear bypass
+;
+; see if we have a char which is capable of clearing the
+; bypass condition.
+;
+	mov	#byplst,r2	;list of magic chars
+	mov	#byplng,r1	;size of list
+20$:	cmpb	(r2)+,r5	;char. in list?
+	beq	25$		;yes.
+	dec	r1		;no. more left?
+	bne	20$		;yes.
+	br	disext		;no.  still locked
+25$:	clr	bypflg		;got a char which clears bypass
+;
+; sort out terminal control/display modes
+;
+30$:	tst	escflg		;part of escape sequence?
+	beq	35$		;no.
+	jmp	escape		;yes.
+35$:	cmp	#040,r5		;control char.?
+	ble	40$		;no.
+	jmp	contrl		;yes.
+40$:	cmp	#modch,modtek	;plot mode or character mode?
+	beq	charac		;character mode
+	jmp	plot		;plot mode
+
+disext:	rts	pc
+	.page
+	.sbttl	character display control
+;
+;
+;****************************************************************
+;*								*
+;*		printing character processor			*
+;*								*
+;****************************************************************
+;
+;
+charac:	jsr	pc,movtst	;was cursor moved since last time?
+	bcc	10$		;no.
+	jsr	pc,movdo	;yes. fix it
+10$:	add	#xincr,cursx	;move on 1 place
+	cmp	#<maxx-xincr>,cursx ;at end of line?
+	bge	chrdmp		;no.
+;
+; strange process used now to generate a new line.
+;	it sure better be re-entrant like the ads. say
+;
+	jsr	pc,chrdmp	;transmit this char
+	mov	#cr,r5		;then a <cr>
+	jsr	pc,disply
+	mov	#lf,r5		;and a <lf>
+	jmp	disply
+
+chrdmp:	cmp	#qqchr,modgt	;mode correct?
+	bne	10$		;no.
+	tst	bytflg		;yes. but is an odd or an even?
+	bne	20$		;even. last was odd
+	inc	bytflg		;this one is going to be odd
+	movb	r5,-3(r0)	;put it in the hole
+	br	30$		;and finish up
+10$:	mov	#dstop,(r0)+	;no. make so.
+	mov	#char,-4(r0)	;
+	mov	#qqchr,modgt
+20$:	clr	bytflg		;odd next time
+	mov	#dstop,(r0)+	;
+	mov	r5,-4(r0)	;put in char.
+30$:	mov	cursx,oldx	;update old position
+	mov	cursy,oldy
+	br	disext
+	.page
+	.sbttl	special control characters
+;
+;
+;****************************************************************
+;*								*
+;*		control functions processor			*
+;*								*
+;****************************************************************
+;
+;
+contrl:	cmp	#esc,r5		;esc?
+	beq	xesc		;yes
+	cmp	#gs,r5		;gs?
+	beq	xgs		;yes
+	cmp	#fs,r5		;fs?
+	beq	xfs		;yes
+	cmp	#bel,r5		;bell?
+	beq	xbell		;yes
+	cmp	#lf,r5		;lf?
+	beq	xlf		;yes
+	cmp	#ht,r5		;ht?
+	beq	xht		;yes
+	cmp	#bs,r5		;bs?
+	beq	xbs		;yes
+	cmp	#vt,r5		;vt?
+	beq	xvt		;yes
+	cmp	#cr,r5		;cr?
+	bne	10$		;no
+	jmp	xcr		;yes
+10$:	cmp	#us,r5		;us?
+	bne	20$		;no
+	jmp	xus		;yes
+20$:	br	disext		; not a special control character
+
+
+;
+; escape code.
+;
+xesc:	inc	escflg		;set.
+	jmp	disext
+;
+; gs code.
+;
+xgs:	mov	#modln,modtek	;go to plot mode
+	br	xfs1		;
+;
+; fs code.
+;
+xfs:	mov	#modpt,modtek	;go to dot mode
+xfs1:	clr	lastfl		;
+	clr	dlist+2		;wipe out the cursor
+	jmp	disext
+;
+; bell code.
+;
+xbell:	inc	@#dsr		;ring gt40 bell
+	cmp	#modln,modtek	;initial vector mode?
+	bne	10$		;no.
+	mov	oldx,cursx	;yes. reset plot cursor
+	mov	oldy,cursy	;
+	inc	modtek		;change mode to "modln0"
+				;because we now have the first
+				;point of the line
+10$:	jmp	disext
+;
+; line-feed code.
+;
+xlf:	mov	#modch,modtek	;back to character mode
+	mov	#dflchr,dlist+2	;display char. cursor
+	cmp	#yincr,cursy	;at bottom of page?
+	bgt	sigful		;yes. kill
+	jsr	pc,movtst	;was cursor moved?
+	bcc	10$		;no.
+	sub	#yincr,cursy	;yes. dummy move
+	jmp	disext
+10$:	sub	#yincr,cursy	;set cursor down one line
+	jmp	chrdmp		;jump to character routine to
+				;display character
+;
+; horizontal tab code.
+;
+xht:	mov	#modch,modtek	;character mode
+	mov	#dflchr,dlist+2	;with appropriate cursor
+	mov	#space,r5	
+	jmp	charac		;send one space
+;
+; backspace code.
+;
+xbs:	mov	#modch,modtek	;character mode
+	mov	#dflchr,dlist+2	;and cursor
+	cmp	#xincr,cursx	;back against margin already?
+	bgt	10$		;yes. ignore
+	jsr	pc,movtst	;was cursor moved?
+	bcc	20$		;no. ok
+	sub	#xincr,cursx	;adjust
+10$:	jmp	disext
+20$:	sub	#xincr,cursx	;move cursor position back 1 space
+	jmp	chrdmp
+;
+; vertical tab code.
+;
+xvt:	mov	#modch,modtek	;set mode
+	mov	#dflchr,dlist+2	;display char. cursor
+	cmp	#<maxy-<2*yincr>>,cursy ;top of screen?
+	blt	10$		;yes. ignore
+	add	#yincr,cursy	;adjust
+10$:	jmp	disext		;at top of page so ignore character
+;
+; carriage return code.
+;
+xcr:	tst	ginflg		;test if in gin mode
+	bne	sigful		;yes. klunk!!
+	mov	#modch,modtek	;set character mode
+	mov	#dflchr,dlist+2	;and cursor
+	jsr	pc,movtst	;cursor moved?
+	bcc	10$		;no. ok
+	clr	cursx		;fix it
+	jmp	disext
+10$:	clr	cursx		;tell where to go
+	jmp	chrdmp		;send cr.
+;
+; us code.
+;
+xus:	mov	#modch,modtek	;set mode
+	mov	#dflchr,dlist+2	;and cursor
+	jmp	disext
+
+;
+; page full exit
+;	essentially shuts down the terminal until it is
+;	manually reset (home key).
+;
+sigful:	jsr	pc,dofull	;mark page full
+	jmp	disext
+	.page
+	.sbttl	escape sequence processor
+;
+;
+;****************************************************************
+;*								*
+;*		escape sequence processor			*
+;*								*
+;****************************************************************
+;
+;
+escape:	clr	escflg		;
+	cmp	#040,r5		;control char?
+	ble	esc0		;no.
+	cmp	#ff,r5		;ff?
+	beq	escff		;yes
+	cmp	#sub,r5		;sub?
+	beq	escsub		;yes
+	cmp	#enq,r5		;enq?
+	beq	escenq		;yes
+	cmp	#can,r5		;can?
+	beq	esccan		;yes.
+	jmp	disext		;nothing.
+;
+; escape,ff	- page clear and home beam
+;
+escff:	jsr	pc,clear	;ff -> clear screen
+	jmp	disext
+;
+; escape,sub	- enter graphics input mode.
+;
+escsub:	mov	#dfilgr,ginflg	;sub -> gin mode (set up cross-hairs)
+	br	esccan		;set bypass
+;
+; escape,enq	- send current coordinates of beam.
+;
+escenq:	.inh			;;;don't want the keyboard to interrupt
+				;;;the transmitted sequence
+	mov	#111,r5		;;;imaginary status byte
+	jsr	pc,sendxy	;;;send status byte and cursor position
+	.enb			;;;
+	br	esccan		;
+;
+; escape,can	- set bypass condition
+;
+esccan:	inc	bypflg		;set bypass.
+	jmp	disext		;
+
+;
+; escape,nnn	- set line type.
+;
+esc0:	cmp	#140,r5		;lower case range?
+	bgt	60$		;no.
+	bic	#^c<7>,r5	;bottom 3 bits.
+	asl	r5		;word displ.
+	mov	lines(r5),r5	;map 4015 line type into gt40 commands
+	beq	60$		;there wasn't one. must be undefined
+	mov	r5,lintyp	;keep it, it's good
+	jmp	disext		;
+
+60$:	jmp	disext
+	.page
+	.sbttl	plot mode processor
+;
+;
+;****************************************************************
+;*                                                              *
+;*		plot mode processor				*
+;*                                                              *
+;****************************************************************
+;
+;
+plot:	cmp	#100,r5		;hi x,y?
+	ble	20$		;no.
+	bic	#^c<37>,r5	;yes. strip rubbish
+	asl	r5		;mult *<040>
+	asl	r5		;
+	asl	r5		;
+	asl	r5		;
+	asl	r5		;
+	tst	lastfl		;test for xhi or yhi coord.
+	beq	10$		;yhi
+	mov	r5,xhi
+	jmp	disext
+10$:	cmp	#maxy,r5	;too big?
+	bge	15$		;no. ok
+	mov	#maxy,r5	;adjust
+	inc	@#dsr		;y axis overflow
+15$:	mov	r5,yhi		;get yhi
+	jmp	disext
+
+20$:	cmp	#140,r5		;lo x?
+	bgt	30$		;no.
+	bic	#^c<37>,r5	;strip
+	mov	r5,ylo
+	mov	#1,lastfl
+	jmp	disext
+
+30$:	bic	#^c<37>,r5	;strip
+	mov	r5,xlo		;get xlo
+	mov	xhi,r1		;calculate new x coord.
+	bis	r5,r1		;join x pieces
+	mov	yhi,r2		;calculate new y coord.
+	bis	ylo,r2		;join y pieces
+	cmp	#modln0,modtek	;just doing 2nd. point?
+	beq	vectr1		;yes.
+	mov	r1,cursx	;keep x & y
+	mov	r2,cursy	;
+;
+;	now test modtek
+;
+	mov	modtek,r5	;sort out
+	asl	r5		;
+	jmp	50$(r5)		;
+50$:	halt			;character mode?
+	br	dots		;point
+	br	vector		;line pt 1.
+	halt			;line pt 2. already separated
+	br	vectr2		;line norm
+	.page
+	.sbttl	plot - point mode
+;
+; point mode.
+;
+;	modtek = modpt
+;
+dots:	jsr	pc,nearmd	;test and calculate possible
+				;near-point control words.
+	bcc	20$		;o.k. can use near-mode.
+	cmp	#qqpnt,modgt	;already in correct mode?
+	beq	10$		;yes.
+	mov	#dstop,(r0)+	;no.
+	mov	#point,-4(r0)	;set to far point mode
+	mov	#qqpnt,modgt	;make into point mode
+10$:	mov	cursy,(r0)+	;
+	mov	#dstop,(r0)+	;
+	mov	cursx,-6(r0)	;
+	bis	#intx,-6(r0)	;and finally intensify the point
+	br	60$		;
+;
+; o.k. use near-point mode
+;
+20$:	tst	r1		;zero length displacement?
+	beq	60$		;yes. skip it. assume that it is
+				;overlaying a point already there.
+	cmp	#qqpnt0,modgt	;already in near-point mode??
+	beq	30$		;yes.
+	mov	#dstop,(r0)+	;no. make so
+	mov	#relatv,-4(r0)	;set to near-point mode
+	mov	#qqpnt0,modgt	;
+30$:	mov	#dstop,(r0)+	;load instr.
+	bis	#intx,r1	;intensify
+	mov	r1,-4(r0)	;
+60$:	br	plotxt		;
+	.page
+	.sbttl	plot - line mode
+;
+; line mode.
+;
+;	modtek = modln
+;
+vector:	inc	modtek		;update type to "modln0".
+	br	plotxx
+;
+;	modtek = modln0
+;
+vectr1:	inc	modtek		;adjust mode to "modlnx".
+				;? should mode be adjusted before or
+				;after the point mode test?
+; now see if this is a way of doing a point.
+	cmp	cursx,r1	;this match?
+	bne	10$		;
+	cmp	cursy,r2	;this too?
+	beq	dots		;same posn -> point
+				; make into point mode
+10$:	mov	r2,-(sp)	;save the registers.
+	mov	r1,-(sp)	;
+	jsr	pc,movtst	;what about the original
+	bcc	20$		;o.k.
+	jsr	pc,movdo	;no good. fix it
+20$:	mov	(sp)+,cursx	;new cursor
+	mov	(sp)+,cursy	;and fall thru
+;
+;	modtek = modlnx
+;
+vectr2:	jsr	pc,nearmd	;try short vec. first
+	bcs	30$		;no good.
+	tst	r1		;zero length?
+	beq	plotxx		;yes. skip it.
+	mov	#shortv,r5	;ready for mode set.
+	cmp	lintyp,oldtyp	;necessary to change line type?
+	beq	10$		;no. try next test
+	mov	lintyp,oldtyp	;yes. do so
+	bis	lintyp,r5	;
+	br	20$		;
+10$:	cmp	#qqlin0,modgt	;need to set near-vec mode?
+	beq	25$		;no. already o.k.
+20$:	mov	#qqlin0,modgt	;
+	mov	#dstop,(r0)+	;
+	mov	r5,-4(r0)	;set new mode
+25$:	mov	#dstop,(r0)+	;do actual work now
+	bis	#intx,r1	;
+	mov	r1,-4(r0)	;
+	br	plotxt		;
+;
+; can't use near-vector mode.
+;
+30$:	jsr	pc,farmod	;calc for long vec.
+	mov	#longv,r5	;ready for mode change
+	cmp	lintyp,oldtyp	;necessary to change line type?
+	beq	35$		;no. try next test.
+	mov	lintyp,oldtyp	;yes. do so
+	bis	lintyp,r5	;
+	br	40$		;
+35$:	cmp	#qqlin,modgt	;need to set long vec mode?
+	beq	45$		;no. already o.k.
+40$:	mov	#qqlin,modgt	;
+	mov	#dstop,(r0)+	;set new mode
+	mov	r5,-4(r0)	;
+45$:	mov	r1,(r0)+	;do actual work now.
+	mov	#dstop,(r0)+	;
+	bis	#intx,r2	;
+	mov	r2,-6(r0)	;
+	br	plotxx		;
+;
+plotxt:	mov	cursx,oldx	;update
+	mov	cursy,oldy
+plotxx:	clr	lastfl
+	jmp	disext
+	.page
+	.sbttl	display interrupt routines
+;
+;
+;****************************************************************
+;*								*
+;*		light pen interrupt handler			*
+;*								*
+;****************************************************************
+;
+;
+lpenir:	mov	r5,-(sp)	;save for light-pen analy.
+	mov	@#gtx,r5	;-x-
+	bic	#^c<maxx>,r5	;chop off rubbish
+	mov	r5,penx		;save x
+	mov	@#gty,r5	;-y-
+	bic	#^c<maxx>,r5	;chop off rubbish
+	mov	r5,peny		;save y
+	inc	@#dpc		;restart
+	mov	(sp)+,r5
+	rti
+;
+;
+;****************************************************************
+;*								*
+;*		stop interrupt handler				*
+;*								*
+;****************************************************************
+;
+;
+;stpisr:	add	#2,dpntr	;next display item
+;	tst	@dpntr		;null item?
+;	bne	20$		;
+;	mov	#dlist,dpntr	;back to bottom
+;20$:	mov	@dpntr,@#dpc
+;	rti
+stpisr:	mov	r5,-(sp)	;save all used registers
+	mov	r4,-(sp)	;
+	mov	dpntr,r5	;pointer past last dfile
+10$:	cmp	#dliste,r5	;did it go out end of list?
+	bhi	20$		;no
+	mov	#dlist,r5	;yes. reset
+20$:	mov	(r5)+,r4	;get dfile pointer
+	beq	10$		;none there
+	mov	r4,@#dpc	;start it up
+	mov	r5,dpntr	;keep this pointer to it.
+	mov	(sp)+,r4	;restore used registers
+	mov	(sp)+,r5	;
+	rti			;
+;
+;
+dpntr:	.word	0		;pointer to current item in dlist
+;
+;
+dlist:	.word	dfile0		;main display file
+				;this must remain or the "dstop" isr
+				;may go into an infinite loop
+	.word	dflchr		;cursor display file. may be:
+				;	1. null for plot mode
+				;	2. 'box' - character prompt
+				;	3. page-full signal
+ginflg:	.word	0		;graphics input cursor display file:
+				;	1. null for not gin mode
+				;	2. cross-hairs - graphics in
+dliste=	.
+	.page
+	.sbttl	cursor display files
+;
+; character mode cursor
+;	blinking 'box' at position where character will go
+;
+dflchr:	.word	point
+cursx=	.			;simulators idea of where cursor
+cursy=	.+2			;is on gt40 screen
+	gtpnt$	0,0		;blinking cursor position
+	.word	<char!int3!blkon>
+	.word	<177>		;'box'!
+	.word	dstop
+
+;
+; graphics input cursor
+;	cross-hairs that move about the gt40 screen in
+;	sympathy with the movement of the light-pen.
+;	the only part of the entire display that is
+;	light pen sensitive.  this is due to two reasons:
+;	 1.	it is much easier to position the cursor
+;		if it is the only light sensitive thing
+;		on the screen.  if not, the cursor shows
+;		a tendency to latch onto nearby objects.
+;	 2.	there would seem to be a deficiency in
+;		the gt40 hardware in that light sensitive
+;		points (both near and far) when touched by
+;		the light pen have a nasty habit of jamming
+;		the bus.
+;
+dfilgr:	.word	<point!int5!blkoff!lpon> ;cross-hairs.
+peny=	.+2
+	gtpnt$	homex,homey	;load y
+	.word	<longv!line0>
+	gtvec$	maxx,0,int	;horizontal line
+	.word	point
+penx=	.
+	gtpnt$	0,0		;load x
+	.word	longv
+	gtvec$	0,maxy,int	;vertical line
+	.word	dstop
+
+;
+; page full signal
+;	a blinking dotted line at the bottom of the display
+;
+dflful:	.word	point		;page-full
+	gtpnt$	homex,0		;bottom
+	.word	<longv!int4!blkon!line1>
+	gtvec$	maxx,0,int	;blinking-dotted-line!
+	.word	dstop
+	.page
+	.sbttl	variables, data lists and buffers
+;
+; list of tektronix line types.
+;
+lines:	.word	line0		;solid line
+	.word	line1		;dotted
+	.word	line2		;dot-dash
+	.word	line3		;short dash
+	.word	line3		;long dash
+	.word	0		;undefined
+	.word	0		;undefined
+	.word	0		;undefined
+
+;
+; list of characters that may clear bypass condition
+;
+byplst:	.byte	ff
+	.byte	bel
+	.byte	bs
+	.byte	cr
+	.byte	ht
+	.byte	lf
+	.byte	us
+	.byte	vt
+byplng=	.-byplst
+	.even
+;
+escflg:	.word	0		;last char was <esc> (in escape sequence)
+bypflg:	.word	0		;bypass condition (terminal half-locked)
+fulflg:	.word 	0		;screen full (terminal locked)
+lastfl:	.word	0		;last coord was x/y?
+bytflg:	.word	0		;next char. on odd/even addr.?
+modtek:	.word	0		;4015 mode
+modgt:	.word	0		;gt40 mode
+;
+oldx:	.word	0		;cursor positions
+oldy:	.word	0
+;
+xhi:	.word	0		;segments of total coordinate
+xlo:	.word	0		;used to build the address
+yhi:	.word	0
+ylo:	.word	0
+;
+; line-type flags (dotted,dashed etc.)
+;
+lintyp:	.word	0
+oldtyp:	.word	0
+;
+; buffer control pointers and counts
+;
+sndcnt:	.word	0		;transmit buffer control
+sndadi:	.word	0
+sndado:	.word	0
+;
+rcvcnt:	.word	0		;display processor input buffer control
+rcvadi:	.word	0		;includes local echo
+rcvado:	.word	0
+	.if	df	debug
+maxcnt:	.word	0		;maximum no. of chars in the buffer
+	.endc
+;
+; buffers
+;
+sndbuf:	.blkb	10.	;this num. is necessary because "sendxy" 
+			;itself sends out 5 chars.
+sndlng=	.-sndbuf
+;
+;
+rcvbuf:	.blkb	50.
+rcvlng=	.-rcvbuf
+	.even
+	.page
+	.sbttl	variable display file - must be at very end of program
+;
+; this is the main display file
+;	it expands as far as needed (and possible) for all of the
+;	display file data received from the host computer.
+;	it must be above the rest of the simulator in memory
+;	as it is capable of expanding to the end of available
+;	memory.
+;
+dfile0:	.word	<statsa!lpdark!ital0!sync>
+	.word	<point!int4!lpoff!blkoff!line0>
+	gtpnt$	homex,homey
+dfile:	.word	dstop
+
+	.end	start

@@ -1,0 +1,1 @@
+nroff -TLA $2 ../tmac.anual $1

@@ -1,0 +1,17 @@
+                 Directions for m6800 assembler
+
+
+Files "mas1[1-7].c" are pass 1 (header "mas1h.c")
+Files "mas2[1-7].c" are pass 2 (header "mas2h.c")
+
+Pass  1  currently  expects  pass  2  binary  to  be  located  in
+"/lib/mas2" but can be changed easily (see mas11.c).
+
+"run" is a shell file for  compilation  -  but  it  does  not  at
+present  attempt  to optimize pass 2 since the version of the op-
+timizer we possess introduces bad code here!
+
+"doc/refmanual.n" is a reference  manual  for  the  assembler  in
+'nroff' format - needs macro file "doc/tmac.m".
+
+"doc/mas.1" is trivial - also needs "tmac.m".

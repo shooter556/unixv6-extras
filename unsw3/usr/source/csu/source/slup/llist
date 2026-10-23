@@ -1,0 +1,4 @@
+slup a -xcv -pv
+pr -w136 x.? ^ lpr -i"slup a -xlv"
+slup a -xcv -pav
+pr -w136 x.? ^ lpr -i"slup a -xlav"

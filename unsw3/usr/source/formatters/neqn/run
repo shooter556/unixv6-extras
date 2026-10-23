@@ -1,0 +1,8 @@
+echoall
+yacc -o ne.g
+cc -n -s -O -o neqn ne*.c -ly
+rm *.o y.tab.c
+rm -f /usr/bin/neqn
+mv neqn /usr/bin/neqn
+chmod 111 /usr/bin/neqn
+chown root /usr/bin/neqn

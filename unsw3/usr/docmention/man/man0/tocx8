@@ -1,0 +1,31 @@
+ac(VIII) login accounting
+bcheck(VIII) read all blocks on a file system
+boot procedures(VIII) UNIX startup
+chgrp(VIII) change group
+chown(VIII) change owner
+clri(VIII) clear i-node
+crash(VIII) what to do when the system crashes
+cron(VIII) clock daemon
+dcheck(VIII) file system directory consistency check
+df(VIII) disk free
+dpd(VIII) data phone daemon
+dump(VIII) incremental file system dump
+getty(VIII) set typewriter mode
+glob(VIII) generate command arguments
+icheck(VIII) file system storage consistency check
+init(VIII) process control initialization
+ipatch(VIII) first aid for sick file systems
+lpd(VIII) line printer daemon
+mkfs(VIII) construct a file system
+mknod(VIII) build special file
+mod(VIII) modify documentation database
+mount(VIII) mount file system
+ncheck(VIII) generate names from i-numbers
+restor(VIII) incremental file system restore
+sa(VIII) Shell accounting
+slp(VIII) set printer characteristics
+su(VIII) become privileged user
+sync(VIII) update the super block
+umount(VIII) dismount file system
+update(VIII) periodically update the super block
+wall(VIII) write to all users

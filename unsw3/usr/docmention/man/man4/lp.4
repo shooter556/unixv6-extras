@@ -1,0 +1,77 @@
+.th LP IV 5/27/74
+.sh NAME
+lp \*- line printer
+.sh DESCRIPTION
+.it Lp
+provides the interface to any of the standard
+DEC line printers.
+When it is opened or closed, a suitable number
+of page ejects is generated.
+Bytes written are printed.
+.s3
+An internal parameter within the driver determines
+whether or not the device is treated as having
+a 96- or 64-character set.
+In half-ASCII mode, 
+certain characters are escaped according to
+the following table:
+.s3
+.if t .ig
+.lp +10 5
+{	(-
+.lp +10 5
+}	)-
+.lp +10 5
+\*g	\*a-
+.lp +10 5
+|	!-
+.lp +10 5
+~	^-
+..
+.if n .ig
+.lp +10 5
+{	\o"(\*-"
+.lp +10 5
+}	\o")\*-"
+.lp +10 5
+\*g	\o"\*a\*-"
+.lp +10 5
+|	\o"!\*-"
+.lp +10 5
+~	\o"^\*-"
+..
+.i0
+.s3
+No case conversion of alphabetics is performed.
+.s3
+Writing a 377 byte or a 376 byte will cause the driver to generate
+a series of blanks or zeroes respectively, according to the following
+byte count.
+Writing a 375 byte will cause the page length to be set to 32767
+(i.e. infinity).
+.s3
+KRONOS
+.it eor
+(end of record - ctl/r) and
+.it eof
+(end of file - ctl/f) characters cause a form feed.
+.s3
+The driver correctly interprets
+carriage returns, backspaces, tabs, and form feeds.
+A series of newlines or formfeeds on the first line of a page
+is ignored.
+The driver will cause a skip to the page boundary on receipt of a
+"vertical tab" character (013).
+Lines longer than 136 characters are truncated.
+.s3
+These parameters (some of many) may be set using
+.it slp
+(I).
+.sh FILES
+/dev/lp
+.sh "SEE ALSO"
+lpr (I), slp (I)
+.sh BUGS
+Not very bright about an escape character being the last byte
+transmitted.
+Does get itself into a funny state sometimes.

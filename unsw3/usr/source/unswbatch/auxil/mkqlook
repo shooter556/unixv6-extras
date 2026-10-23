@@ -1,0 +1,4 @@
+echoall
+as -o conv.o conv.s
+cc -O -o -s qlook.c conv.o
+rm -f conv.o qlook.o

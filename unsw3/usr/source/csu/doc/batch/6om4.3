@@ -1,0 +1,548 @@
+.in 0
+.nf
+.bp
+.ss
+*********   **********  *********    ********   *********   **********               ********   **          **
+**********  **********  **********  **********  **********  **********              **********  **          **
+**      **  **          **      **  **      **  **      **      **                  **      **  **          **
+**      **  **          **      **  **      **  **      **      **                  **      **  **          **
+**********  ******      **********  **      **  **********      **                  **      **  **          **
+*********   ******      *********   **      **  *********       **                  **********  **          **
+**   **     **          **          **      **  **   **         **                  **********  **          **
+**    **    **          **          **      **  **    **        **                  **      **  **          **
+**     **   **********  **          **********  **     **       **                  **      **  **********  **********
+**      **  **********  **           ********   **      **      **                  **      **  **********  **********
+
+
+**********  **      **  *       **  *       **  **********  **********   ********
+**********  **      **  **      **  **      **  **********  **********  **********
+**          **      **  ***     **  ***     **      **      **          **       *
+**          **      **  ****    **  ****    **      **      **          **
+******      **      **  ** **   **  ** **   **      **      ******      *********
+******      **      **  **  **  **  **  **  **      **      ******       *********
+**          **      **  **   ** **  **   ** **      **      **                  **
+**          **      **  **    ****  **    ****      **      **          *       **     ***         ***         ***
+**          **********  **     ***  **     ***  **********  **********  **********    *****       *****       *****
+**           ********   **      **  **      **  **********  **********   ********      ***         ***         ***
+.ds
+.fi
+.sp 4
+.in 7
+.ig
+.ul 1
+..
+4.3.4 Trouble
+
+.ti 10
+In this section you will find our current most up to date list
+of error messages from the Batch System software.
+The summary gives a breakdown of all known messages for each of the
+listed commands.
+.ti 10
+A short explanation is given for all but the most
+trivial or repetitious messages.
+
+
+.bp
+.ss
+.nf
+BATCH -------------------------
+
+.ni 10
+.n2 1
+batch: already active
+batch: working directory unattainable
+batch: can't access batch directory
+batch: checkpoint error
+batch: 'process' exec failed
+batch: can't exec monitor
+batch: .checkpoint can't open
+batch: /dev/cyb.jobsu can't open
+batch: /dev/cyb.jobsd can't open
+batch: /dev/cyb.cmdsd can't open
+batch: /dev/cr.batch can't open
+batch: .rawstatistics can't open
+batch: encoded-filename can't remove
+.sp 2
+.n2 1
+batch is already running, and you can't start it twice.
+batch cannot chdir to /spool/batch/.work. call a guru.
+batch can't read the directory once it is there. call a guru.
+batch tried to do a checkpoint but could'nt. call a guru.
+in starting the rest of the system part of it (process) refused to start. call a guru.
+in trying to start the overseeing process - trouble. call a guru.
+batch wants to open the checkpoint file but can't. call a guru.
+batch wants to talk to the cyber but can't. call a guru.
+batch wants to listen to the cyber but can't. call a guru.
+batch wants to listen to the cyber but can't. call a guru.
+batch wants to listen to the card reader but can't. has someone else got it?
+batch wants to use the stats file but can't. call a guru.
+batch wants to clean up after a warm start - no can do.
+.n2 0
+
+CANCEL ------------------------
+
+.n2 1
+cancel: Not allowed
+cancel: batch not active
+cancel: usage: cancel [cr] [lp] [macro] [ftn] [shell]
+cancel: can't exec 'prstop'
+cancel: no macro process
+cancel: no ftn process
+cancel: no shell process
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+batch must be active for this to work.
+it even tells you how to use it !
+"cancel lp" works via "prstop". call a guru.
+you tried to cancel a local macro job, but there wasn't one.
+as for macro
+as for macro
+.n2 0
+
+COUNT -------------------------
+
+.n2 1
+count: nlist failed
+count: can't open memory
+.sp 2
+.n2 1
+couldn't access /unix.  call a guru.
+couldn't access /dev/kmem.  call a guru.
+.n2 0
+
+CRD ---------------------------
+
+.n2 1
+crd: file create error
+.sp 2
+.n2 1
+crd wishes to spool a job but can't get a file to put it in. call a guru.
+.n2 0
+
+DISABLE -----------------------
+
+.n2 1
+disable: Not allowed
+disable: batch not active
+disable: usage: disable [all] [cyber] [submit] [local] [macro] [ftn] [shell]
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+batch must be active.
+how to use it.
+.n2 0
+
+DQ ----------------------------
+
+.n2 1
+dq: checkpoint file ??
+.sp 2
+.n2 1
+dq wants to look at the checkpoint file but can't. call a guru.
+.n2 0
+
+ENABLE ------------------------
+
+.n2 1
+enable: Not allowed
+enable: batch not active
+enable: usage: .....
+.sp 2
+.n2 1
+as for "disable"
+as for "disable"
+as for "disable"
+.n2 0
+
+ENCL --------------------------
+
+.n2 1
+encl: Not allowed
+encl: batch not active
+encl: usage: en?? limit (where ?? is tl, cl, jl, rl, sl)
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+obvious.
+how to use it.
+.n2 0
+
+ENJL --------------------------
+
+		as for "encl"
+
+ENRL --------------------------
+
+		as for "encl"
+
+ENSL --------------------------
+
+		as for "encl"
+
+ENTL --------------------------
+
+		as for "encl"
+
+FTN ---------------------------
+
+.n2 1
+ftn: /bin/fortran can't exec
+ftn: /bin/link can't exec
+ftn: can't exec output of link
+.sp 2
+.n2 1
+fortran compiler has disappeared.  call a guru.
+fortran linker has likewise.  call a guru.
+the linked program won't run.  call a guru.
+.n2 0
+
+JTD ---------------------------
+
+.n2 1
+jtd: file open error
+.sp 2
+.n2 1
+jtd wishes to send a spooled file to the cyber but can't. call a guru.
+.n2 0
+
+LIST --------------------------
+
+.n2 1
+list: no program file
+list: no data file
+.sp 2
+.n2 1
+a work file has disappeared.  call a guru.
+ditto.
+.n2 0
+
+LOGON -------------------------
+
+.n2 1
+logon: can't open log file
+logon: can't read log file
+logon: can't open cyber line
+.sp 2
+.n2 1
+can't open the file ".eilog" containing the login sequence.  call a guru.
+can't read same file.  call a guru.
+can't talk to the cyber for some odd reason.  call a guru.
+.n2 0
+
+MAC ---------------------------
+
+.n2 1
+mac: /bin/macro can't exec
+mac: /bin/linkr can't exec
+mac: can't exec output of linkr
+mac: .sdump can't exec
+.sp 2
+.n2 1
+mac can't find the macro assembler. who stole it? call a guru.
+mac can't find the linkr. who stole it? call a guru.
+mac wants to run your job but the linkr output does not. call a guru.
+mac can't even get a dump of the failure. call a guru.
+.n2 0
+
+PURGE -------------------------
+
+.n2 1
+Purge: Not allowed
+purge: usage: purge Q [-] [[-n] job] ...
+purge: queue must be [acflmps]
+purge: can't access directory
+purge: can't open ckp file
+purge: can't read ckp file
+purge: queue empty
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+how to use it.
+incorrect queue type given.
+batch directory unattainable.  call a guru.
+checkpoint file unobtainable.  call a guru.
+checkpoint file unreadable.  call a guru.
+you can't purge a queue if it's already empty ???
+.n2 0
+
+QLOOK -------------------------
+
+.n2 1
+qlook: file open error
+.sp 2
+.n2 1
+qlook can't open the checkpoint file.  call a guru.
+.n2 0
+
+SPL ---------------------------
+
+.n2 1
+spl: file create error
+spl: format error ?
+spl: job xxxxxxx/zzz requeued to alternate print queue
+Spl: Job xxxxxxx/zzz returned as '$cccccc'
+Spl: job xxxxxxx/zzz cannot be returned; will print instead
+.sp 2
+.n2 1
+spl can't open a file to spool into. call a guru.
+spl can't understand the sequence of data from the cyber.
+a job appeared which exceeded the "enrl" limit and got sent back.
+just an informative message about a job submitted with the '-' flag.
+spl can't return a job someone wanted to intercept.  it will be printed instead.  call a guru.
+.n2 0
+
+STATUS ------------------------
+
+.n2 1
+status: ckp open error
+status: ckp read error
+.sp 2
+.n2 1
+checkpoint file unopenable.  call a guru.
+checkpoint file unreadable.  call a guru.
+.n2 0
+
+STOP --------------------------
+
+.n2 1
+Stop: Not allowed
+stop: batch not active
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+obvious.
+.n2 0
+
+SUBMIT ------------------------
+
+.n2 1
+submit: illegal job card
+submit: usage: submit [-] file
+submit: unknown batch function
+submit: file create error
+submit: can't access batch directory
+submit: checkpoint file open error
+submit: too many lines in job
+submit: batch not active
+submit: not allowed
+submit: lines exceed 80 characters
+submit: xxxxxx: file not found
+submit: xxxxxxx: empty file
+.sp 2
+.n2 1
+submit checks jobcards. this one is rs.
+submit even tells you how to use it.
+submit did not recognise the batch function requested.  mis-spelling ?
+submit could not get a work file.  call a guru.
+submit could not "chdir" to batch directory.  call a guru.
+checkpoint file unopenable.  call a guru.
+there is a limit on the number of lines in a cyber submit job (ensl command).
+batch must be active before submit will work.
+the powers that be have disabled the submit command.  complain to them.
+one or more of the lines is > 80 characters.  the line numbers are given.
+submit could not find the given file.
+the file given had nothing in it ???
+.n2 0
+
+A -----------------------------
+
+.n2 1
+a: Not allowed
+a: local running
+a: can't open ckp file
+a: batch not active
+a: message too long
+a: arg count
+a: last command not yet sent - retrying in five seconds
+.sp 2
+.n2 1
+Can't use command from terminal other than one from which batch was started from.
+you can't talk to cyber if "local" is running !!!
+the checkpoint file is not around ?  call a guru.
+batch must be active to talk to cyber !!!
+commands are limited to a total of 20 characters, including delimiters.
+certain commands expect a certain number of args.
+if this keeps appearing, call a guru.
+.n2 0
+
+B -----------------------------
+
+		as for the a command !!
+
+C -----------------------------
+
+		as for the a command !!
+
+D -----------------------------
+
+		as for the a command !!
+
+E -----------------------------
+
+		as for the a command !!
+
+F -----------------------------
+
+		as for the a command !!
+
+G -----------------------------
+
+		as for the a command !!
+
+I -----------------------------
+
+		as for the a command !!
+
+L -----------------------------
+
+		as for the a command !!
+
+M -----------------------------
+
+		as for the a command !!
+
+N -----------------------------
+
+		as for the a command !!
+
+O ---------------------------
+
+		as for the a command !!
+
+P ---------------------------
+
+		as for the a command !!
+
+Q ---------------------------
+
+		as for the a command !!
+
+R -----------------------------
+
+		as for the a command !!
+
+S -----------------------------
+
+		as for the a command !!
+
+U -----------------------------
+
+		as for the a command !!
+
+TEXT1 -------------------------
+
+.n2 1
+encoded-file: unlink: error
+checkpoint: seek/write error
+batch hung on 'qput' - kill processes directly; don't use 'stop'
+batch hung on 'qget' - kill processes directly; don't use 'stop'
+.sp 2
+.n2 1
+the unlink routine used by all processes can't. call a guru.
+the checkpoint routine used by all processes is in error. call a guru.
+batch has its knickers in a knot.  if you can't understand the message, call a guru.
+ditto.
+.n2 0
+
+.ni 0
+.ds
+.fi
+
+
+
+.ti 10
+Please note any messages not included above so that we may include
+them in the next version of the manual.
+.ti 10
+There are very few messages that appear in normal operation
+so do not treat a message you do not know or ask for lightly.
+.ti 10
+LOOK IT UP !!!
+
+.ti 10
+In a later edition of the manual we shall
+tell you what to do if any of the peripherals
+decide to stop working.
+
+.ig
+.ul 1
+..
+4.3.5 What To Do When You Are Bored
+
+.ti 10
+read your UNIX manual.
+.ti 10
+play some UNIX games like quiz.
+.ti 10
+delicately and nondestructively explore UNIX.
+
+.ti 20
+BE IMPRESSED !!!!
+
+.in 0
+.ig
+.ul 1
+..
+4.4 SYSTEM CLOSE DOWN
+
+.ti 3
+there is a right way to close down any software system.
+.ti 3
+here is the right way to close down your batch station
+and UNIX.
+
+ 1) If you MUST logoff from the CYBER now,
+	then go to step 2
+	else you may now do one of two things depending on whether
+	you want to go home now or later.
+
+	a) To go home now go to step 2
+	b) To go home later
+		* Stop reading cards.
+		* Allow all jobs to go to the CYBER and return.
+		* Allow all local jobs to run.
+		* Allow all jobs to print.
+	The system is now empty.
+
+ 2) Enter "B"
+
+ 3) Wait a reasonable length of time for
+	"KRONOS 2.1.2 LEVEL 439."
+
+ 4) Enter STOP and wait for
+	"** batch has completed"
+
+ 5) Do you wish to backup ? (ref section 5.1)
+
+ 6) Paranoids may now use ICHECK and/or DCHECK on there discs.
+	If they are not OK you may continue to close
+	down but call a guru as soon as possible (appendix G).
+
+ 7) Enter "CLOSEDOWN" and wait for the "finished" message.
+
+ 8) Go to power down (section 4.5).
+
+.ig
+.ul 1
+..
+4.5 POWER DOWN
+
+.ti 3
+you are late for your bus !!!
+.ti 3
+so do the following.
+
+ 1) Insert the 11/40 key in the lock
+ 2) Turn the key to the POWER position
+ 3) Press and release the WRITE PROTECT switch on all running discs
+ 4) Put ENABLE/HALT switch to HALT
+ 5) Put RUN/LOAD switches on all disc drives to LOAD
+ 6) Power off all peripherals
+ 7) Wait for the disc drives to allow you to open their doors
+ 8) Remove discs to safe keeping
+ 9) Remove the key to safe keeping
+ 10) DO NOT power off. Go home.
+
+.nx 6om5.0

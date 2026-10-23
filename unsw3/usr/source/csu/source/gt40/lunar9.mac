@@ -1,0 +1,61 @@
+start:	reset
+	reset
+	reset
+	reset
+	reset
+	mov	#memlim-2,sp	;initialize stack
+	clr	@#ps
+	mov	#$1034,@#memvec
+	clr	@#memvec+2
+	tst	@#xcsr
+	clr	@#xbuf
+	jsr	pc,@#xmitwt
+	mov	#<203>,@#xbuf	;^c
+	jsr	pc,@#xmitwt
+	mov	#<203>,@#xbuf	;^c
+	jsr	pc,@#xmitwt
+	mov	#<'K>,@#xbuf	;k
+	jsr	pc,@#xmitwt
+	mov	#<'/>,@#xbuf	;/
+	jsr	pc,@#xmitwt
+	mov	#<'F>,@#xbuf	;f
+	jsr	pc,@#xmitwt
+	mov	#<cr>,@#xbuf	;<cr>
+	jsr	pc,@#xmitwt
+	br	$1035
+$1034:	cmp	(sp)+,(sp)+	;clean up stack
+$1035:	mov	#100,@#lks
+	mov	#$1036,@#dpc
+	pause	30.
+xmitwt:	tstb	@#xcsr
+	bpl	xmitwt
+	rts	pc
+$1036:	.word	point!int3!lpoff!blkoff
+	gtpnt$	0,650.
+	.word	statsa!lplite!ital0
+	.word	char
+	.ascii	/                G  R  E  E  T  I  N  G  S/<cr><lf>
+	.ascii	/                -  -  -  -  -  -  -  -  -/<cr><lf><lf><lf>
+	.ascii	/     BECAUSE OF CHANGES IN THE NATIONAL POLICY, THE LUNAR/<cr><lf>
+	.ascii	/EXPLORATORY PROGRAM IS ONCE AGAIN FUNCTIONING, AND YOU HAVE/<cr><lf>
+	.ascii	/BEEN CHOSEN AS THE PILOT IN COMMAND OF THE LUNAR MODULE./<cr><lf>
+	.ascii	/     YOU MISSION IS TO LAND ON /
+	.even
+	.word	char!blkon
+	.word	statsa!lplite!ital1
+	.ascii	/Mare Assabet,/
+	.even
+	.word	char!blkoff
+	.word	statsa!lplite!ital0
+	.ascii	/ A BARREN AND/<cr><lf>
+	.ascii	/HARSH WASTELAND BELIEVED INCAPABLE OF SUPPORTING ANY KNOWN FORM OF LIFE./<cr><lf>
+	.ascii	<cr><lf>
+	.ascii	/     UNFORTUNATELY, THE SPACE AGENCY CHOSE TO USE AN INFERIOR/<cr><lf>
+	.ascii	/BRAND OF MINICOMPUTER IN THE LUNAR LANDER, AND IT HAS/<cr><lf>
+	.ascii	/JUST DIED ON YOU. YOU MUST NOW LAND UNDER MANUAL CONTROL./<cr><lf>
+	.ascii	<cr><lf>
+	.ascii	/          *****  GOOD LUCK  *****/
+	.even
+	.word	djmp,	$1036
+
+	.end	start

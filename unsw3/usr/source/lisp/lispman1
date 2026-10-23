@@ -1,0 +1,594 @@
+.sp 25
+.ce
+Lisp-11 Manual
+.sp 3
+.ce
+J. N. Rottman
+.sp 3
+.ce 2
+Princeton University
+September 1975
+.bp
+.nr % 1 -1
+.nr t 6
+.nr b -7
+.de hd
+'sp \\nt
+.ns
+..
+.de fo
+'sp 2
+'bp
+..
+.de pp
+.if e .tl 'Lisp-11'-%-''
+.if o .tl ''-%-'Lisp-11'
+..
+.de pg
+.sp
+.ne 2
+.ti 5
+..
+.wh 0 hd
+.wh -7 fo
+.wh -5 pp
+.ce
+	Contents
+
+.nf
+1. Introduction					2
+
+2. Atoms and lists				3
+   a. Symbolic
+   b. Numeric
+   c. String
+   d. Functional
+   e. Lists and s-expressions
+
+3. Evaluation					7
+   a. lambda______ and label_____
+   b. Function types
+   c. Contexts and binding
+   d. A description of eval____ and apply_____
+   e. Associated functions
+
+4. Conditional expressions			21
+
+5. Predicates					22
+
+6. List functions				25
+   a. Building
+   b. Fragmenting
+   c. Modifying
+   d. Transforming
+   e. Mapping
+   f. Searching
+   g. Defining
+
+7. Numeric functions				32
+   a. Arithmetic
+   b. Logical
+
+8. Program features				36
+
+9. String functions				37
+
+10. Input/output				39
+
+11. Error and garbage control			43
+
+12. Future enhancements				46
+
+13. System distribution				47
+
+14. Function index				48
+.bp
+
+.fi
+.ad
+.tl ''Introduction''
+
+
+	lisp-11_______ is a modification and implementation of
+LISP 1.6, described in the Stanford________ Lisp____ 1.6___ Manual______, SAILON 28.2 .
+
+	The fundamental unit of storage in lisp-11 is the free____ cell____ -
+a four byte entity in memory.  There is no distinction between free storage
+and full-word space;  both are implemented in free cells.  Binary program
+space, a compiler,  and arrays are not yet implemented.
+
+	lisp-11 is designed to be used under the UNIX time-sharing system.
+Command input is from the standard input channel,  and default output is
+to the standard output channel.  The line editing facilities are those
+provided by the operating system,  and a line is not passed to the lisp
+system until the new-line character is typed.
+
+	The UNIX quit____ and interrupt_________ signals have a special meaning under
+lisp.  The quit signal forces a return to the default initialization
+function,  and back-tracing and error catching, if enabled, are disabled.
+The interrupt signal results in a special error condition being raised
+in the interpreter,  and the subsequent application of the standard
+error processing. (chapter 11)
+.bp
+.tl ''Atoms and lists''
+.sp 3
+	The atom____ is the fundamental datum in lisp. In lisp-11 the
+concept of an atom has been considerably extended over that in lisp 1.6
+or lisp 1.5.  Like lisp 1.6, lisp-11 has atoms of symbolic________ and numeric_______
+types.  These are augmented with string______ and functional__________ atoms.
+
+	The evaluation function - the heart of lisp - is defined to be the
+identity on all non-symbolic atoms.   Symbolic atoms are distinguished in that they
+may possess a value_____.  Upon evaluation they yield this value; if they do not have
+a value, it is erroneous to evaluate them.
+
+	Symbolic atoms are identified by their print _____ names_____,
+and by an abuse of language they will frequently be equated with this name.  All symbolic
+names input with the same print name are synonymous; however, facility is provided 
+for generating symbolic atoms which differ from other atoms with the same name.
+
+	A very informal syntax of the language lisp-11 accepts follows:
+
+
+Any character may be ignored_______ on input by preceeding it by
+the ignore______ character._________  Initially , this is a back-slash (\\),
+but this may be changed by calling setch_____.  This is usually used to
+hide line-feeds occuring in inconvenient places.
+
+Any character may be protected_________ by proceeding it with the protect_______
+character_________ - initially, a slash(/). This may also be changed by setch_____.
+Protected characters lose all special meaning. Usually, this
+is used to hide perverse symbols in print names.  On common
+non-delimiters, protection has no effect - "/a/b" is
+equivalent to "ab".
+
+
+A delimiter is any one of the set
+.br
+	{(, ), [, ], <, >, ", ', space, tab, line-feed }
+
+Tab, space, and line-feed (a.k.a. new-line) are equivalent.
+
+A print_____ name____ may be any string of non-delimiters.
+If the print name is syntactically acceptable
+as a number,  but is not intended to be one,
+it must be partially protected, or entered using 
+the $$-artifact.___________ A print name may have between 1 and 32,000 characters.
+
+$$-artifact___________ - any non-empty string of characters of the form:
+.br
+.sp 1
+.ce
+$$?string?
+.sp 1
+will result in string______ being regarded as the print name of a symbolic atom.
+Here '?' is any character not appearing in "string".  In this way peculiar print names
+may be generated.
+
+The null character (ascii 0) is strictly forbidden on input.
+
+Some examples of print names:
+	a		FOO-whiz
+	$$$why not?$	$$#$36.2#
+	a/</>/\		/a/b
+
+Some illegal print names:
+	23		- this will be interpreted
+			- as an integer.
+	ss>s		- a delimiter is embedded.
+
+
+A lisp string______ is any string of non-null characters (in the colloquial sense)
+contained between two double quotes. Inside a string, the double quote
+character is represented by two contiguous double quotes ("")
+
+Some examples of strings:
+	""		- a null string
+	"string"	- a dull string
+	""""""""	- a string with three double
+			  quotes in it.
+
+A lisp integer_______ is any non-null optionally signed string of digits.
+They are interpreted in the current radix (base 8 or base 10, only).
+As in all fixed-point arithmetic operations,  their value is taken
+modulo 2**16.
+
+Some integers:
+	374
+	+1
+	-28
+
+Notes:
+	"-" and "+" are not___ legal numbers.
+	In octal, 8 is interpreted as 10(8) and 9 as 11(8).
+
+A lisp real____ number______ is just like a fortran real number, except that
+no space may seperate the exponent from the "e". (And the "e" must be
+present before an exponent field!)
+
+Some lisp systems may be generated without floating-point atoms.
+These systems will not recognize floating point numbers as numerics.
+
+A real number:
+	23.56e-21
+
+
+A list____ is an atom, or a list dotted______ with a list.
+They may look like:
+	atom, or
+	( list1 ... listn), n>_ 0; or
+	(list1 ... list(n-1)  . listn) , n >_ 2.
+
+There are some convenient abbreviations:
+	"<" and ">" are super_____-parens______. The left angle
+bracket functions just like a left paren.  The right
+angle bracket matches all outstanding  square brackets
+and parens necessary to match the closest unmatched angle bracket.
+An unmatched right angle bracket is syntactically incorrect.
+
+	'list is shorthand for (quote list)
+
+
+Here are some lists:
+	<(a (b c>
+	'(a b c)
+	(a b . c)
+	(a b c)
+	()
+	nil
+	abrownstripedfrog
+
+In many error messages, the word list____ is used to be mean a
+list not consisting of just a single atom.
+	Even worse, in many places list____ is used to mean
+a special list in which the cd..dr'st element is nil___.
+
+Function________ atoms_____:
+
+Function follows form here, so just the syntax follows:
+
+	[f-type list]	,	f-type may be expr____, fexpr_____, lexpr_____,
+						nexpr_____, sexpr_____, or
+						macro._____
+
+	[f-type n1 n2]		f-type may be subr____, or fsubr_____
+				n1 and n2 are integers. 	
+				n1 is the address,  and
+				n2 the number of args.
+
+	[f-type n1]		f-type may be lsubr_____, nsubr_____, ssubr_____
+				n1 is an integer address.
+
+some examples:
+
+[expr (lambda () (print (gensym)))]
+
+[subr 123450 3]
+
+[nsubr 11024]
+
+Some notes on input:
+	After an input error, all input is consumed until
+a bell (control/G) is eaten. Then input resumes.
+	An end-of-file on channel 0 (standard input)
+causes an exit from lisp.
+
+
+	Lisp-11 output is much simpler. Basically, lisp
+outputs items as it would like to read them. 
+
+	Files may have an associated line length (see fmode_____)
+In this case, lisp tries to break output items on delimiter boundaries within
+10 spaces of the margin. If this is not possible, it outputs a
+protected line-feed in the middle of the item.
+
+	There is a mode, setable by setsl_____, that determines
+whether lisp will protect peculiar characters in print-names.
+Normally, this is off.
+
+.bp
+.tl ''Evaluation''
+.sp 3
+	The heart of the lisp system is a function 
+which defines the evaluation__________ of a list.  The description
+of this function  lurks in this section.
+
+	The top level of lisp-11 is equivalent to
+repeated evaluation of:
+	(lambda () (print (*eval (read)) ))
+
+a. lambda______
+
+syntax: (lambda arg-list body)
+
+	A lambda expression indicates the binding _______ of a set of values (the
+arguments to the expression) to the atoms in the argument list.  After this binding
+the body of the lambda expression is evaluated.  
+
+	There must be a 1-1 correspondence of values to arguments. Binding
+entails saving the old values of the atoms comprising the arg-list, and
+setting their new value to the corresponding value in the argument-value
+list.  For more detail or explanation, see Weissman's Lisp____ Primer______, or
+McCarthy's Lisp____ 1.5___ Programmer's____________ Manual.______
+
+	Following evaluation,  the variables are unbound_______ - restored
+to their previous values.
+
+examples:
+
+(lambda () 1)
+.in 16
+- this lambda expression of no arguments always evaluates to the
+constant 1.
+.in 0
+.sp 1
+(lambda (x y) (times x x y y))
+.in 16
+- this lambda expression of 2 arguments evaluates to the product of the
+squares of its arguments.
+.in 0
+
+
+  label_____
+
+syntax:	(label id lambda-expression)
+
+	label_____ binds the symbolic atom id__ to the lambda-expression,
+which it then evaluates.  After the evaluation id__ is unbound.
+	label_____ makes it possible to construct recursive functions with
+temporary names.
+
+.bp
+example:
+	The following defines an expression which reverses the
+elements of a list.
+
+(de reverse (list)
+	((label reverse1
+		(lambda (list m)
+			(cond ((atom list) m)
+				(t (reverse1
+					(cdr list)
+					(cons
+						(car list)
+						 m
+					)
+				)   )
+			)
+		)
+	))
+.br
+)
+
+b. Functional types
+
+	The different functional types,  personified by the different types of
+functional atoms,  specify different ways of associating the arguments
+to a function with the lambda expression in the function.
+
+	These different ways are briefly described here.
+
+.in 8
+1) expr____ - The expr____ is the most basic type of lisp function.  The arguments to
+an expr are evaluated, and then bound 1-1 to the variables in the lambda-list.
+This type of function is universally available in lisp implementations.
+(If they deserve to be called lisp!)
+	de__ is commonly used to define expr's    .
+
+example:
+.in 16
+at the top level,
+
+([expr (lambda (x) (times x x))] 3)
+
+yields 9.
+
+
+.in 8
+2) fexpr_____ - an fexpr_____ specifies that its arguments are to be bound, unevaluated,
+1-1 to the variables in its lambda-list.
+
+example:
+.in 16
+at the top level,
+
+([fexpr (lambda (x y)(cons x y))]  a b)
+
+yields (a . b)
+
+.in 8
+
+3) lexpr_____ - A lexpr_____ passes a list of its evaluated arguments to be bound to the
+one variable in its lambda-list. (List in the sense of the cd..dr'st element
+being nil___)
+
+4) nexpr_____ - A nexpr_____ passes a list of its unevaluated arguments to be bound to the
+one variable in its lambda-list.
+
+
+example:
+.in 16
+
+([lexpr (lambda (x) x)] 'a 'b)
+
+yields (a b)
+
+
+([nexpr (lambda (x) x)] 'a 'b)
+
+yields ((quote a) (quote b))
+
+
+.in 8
+5) sexpr_____ - A sexpr_____  passes two argument values to be bound to its two variables.  The first is a
+list of its unevaluated arguments.  The second value is a
+context_______ integer_______,  describing the context at the time the sexpr was called.  
+The significance of this integer will be discussed in section (c).
+
+
+
+6) macro_____ - A macro passes their actual call as their one argument to be bound.
+The lambda expression is then evaluated,  and usually results is some expanded
+form.  Finally,  this expanded form is again evaluated.
+
+example:
+.in 16
+
+Using macros,  we can define a function conscons,  which 'cons' together
+an arbitrary number of arguments:
+
+(dm conscons (L)
+	(cond 
+		((null (cddr L)) (cadr L))
+		(t (list
+			'cons
+			(cadr L)
+			(cons
+				'conscons
+				(cddr L)
+			)
+		)  )
+	)
+.br
+)
+
+
+Another way to do this is to define a function expand:
+
+(de expand (L FN)
+	(cond
+		((null (cdr L))(car L))
+		(t (list
+			FN
+			(car L)
+			(expand
+				(cdr L)
+				FN
+			)
+		)  )
+	)
+.br
+)
+
+and then define conscons as:
+
+(dm conscons (L)
+	(expand
+		(cdr L)
+		'cons
+	)
+.br
+)
+
+
+.in 8
+
+7) A subr____ is a compiled expr____.
+
+
+8) A fsubr_____ is a compiled fexpr_____.
+
+
+9) A lsubr_____ is a compiled lexpr_____.
+
+
+10) A nsubr_____ is a compiled nexpr._____
+
+
+11) A ssubr_____ is a compiled sexpr_____.
+.bp
+c. Contexts and bindings
+
+
+	The set of all variables and their associated values at a given
+time is called the context_______ at that time.  It is sometimes necessary
+to evaluate an expression in a context other than the present one,
+particularly for functional arguments with free variables.
+
+
+	The functions eval____ and apply_____ accept an optional second or
+third argument,  respectively,  which indicates the context in which they are to
+operate.  The argument is a context_______ integer_______,  and completely
+describes the context of the system at some previous time.  
+
+
+	For functional arguments, function________ is synonymous with
+quote._____  *function_________  should be used when it is necessary to invoke the
+functional argument in its original context. (Extra overhead is associated with this.)
+*function_________ generates a list of the form (funarg______ fn . bind) where bind is a context
+integer.  Later,  when this form is evaluated,  the evaluation will automatically
+be done in the context active when *function_________ was called.
+
+	Associated with a context is the idea of a visible frame.
+It is only valid to evaluate an expression in a previous context if that context is visible_______;
+this is, if it existed at some previous higher level of function call which
+has not yet exited.  For example, the following usage is incorrect:
+
+
+
+	(de screw-the-system ()
+		(prog (a)
+			(setq a (*function 37))
+		)
+	)
+
+
+	(screw-the-system)
+	(eval a)
+
+.bp
+	The second argument to a sexpr_____ (or ssubr_____) is also such a
+context integer.  The use of this argument is illustrated in the following function:
+
+.in 8
+(ds exchange (L S)
+	(prog (Z)
+		(setq Z (eval(car L) S))
+		(apply 'set (list
+			(car L)
+			(eval (cadr L) S))
+		       S
+		)
+		(apply 'set (list
+			(cadr L)
+			Z)
+		       S
+		)
+	)
+.br
+)
+
+if initially L = (a b c d) and M = (1 2 3 4),
+.br
+	(exchange L M)
+.br
+
+would result in:
+.br
+
+L = (1 2 3 4), and M = (a b c d).
+
+Without contexts in the calls to eval____ and apply_____,  quite
+a different result would occur.
+
+.bp
+
+d. A description of eval____ and apply_____
+
+	This description is only for pedagogical purposes.
+In the actual coding,  transfers may be made where recursion is indicated.
+Furthermore,  no information is given on the processing of errors, or the
+detection of interrupt and quit signals in these functions.
+
+	The function call____ may be regarded as having two arguments.
+The first is an integer related to the address of the function code,  or a list of two integers
+which respectively are the address and argument count,  for a machine
+language subroutine.
+Bind____ is a function of two arguments,  the first of which is a list of variables to be bound, and the
+second a list of values to which they are to be bound.  Unbind______ is the inverse of bind____.
+
+	Fix bind___ ____ is a function of one argument, a context integer.  It adjusts the
+current context to correspond to that represented by the integer,  and then returns a context integer for the
+current context. Unfix_____ bind____ is the inverse of fix___ bind____.
+
+.bp

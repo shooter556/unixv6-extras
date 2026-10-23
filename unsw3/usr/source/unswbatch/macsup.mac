@@ -1,0 +1,541 @@
+	.nlist	ttm,bex
+	.title	monitor				
+	.sbttl	declarations
+	.psect	monitr lcl,rel
+	; macro getc,putc,tracing,exit routines
+	; copyright  Chris Maltby 1976.
+	sysex$ =  1
+	read$  =  3
+	write$ =  4
+	tlimit$ = 39.
+	times$ = 43.
+	signl$ = 48.
+	;
+	abort = iot
+	tab = 11
+	nl = 12
+	;
+	;
+	jmp	@#exit
+start$:	.word	407				; magic word for dumper
+error$:	.word	377
+	;
+	;
+	;
+initl$:				; set up for tracing etc
+	trap	signl$
+	.word	5,trap$
+	clr	r0
+	mov	#170000,-(sp)
+	clr	-(sp)
+	rti
+	.page
+	.sbttl	p u t c		- print a character
+putc::
+	tst	tracon
+	beq	putc$
+	; Turn off tracing here
+	bpt
+bpt1$:
+	br	ptc1$
+putc$:
+	mov	@sp,-(sp)
+	mov	#170000,2(sp)
+ptc1$:
+	asl	r0
+	cmp	#100,r0
+	bgt	1$
+	cmp	#376,r0
+	bgt	9$
+1$:	cmp	#20,r0
+	bgt	8$
+	cmp	#34,r0
+	bmi	8$
+	jmp	@2$-20(r0)
+2$:	.word	3$,7$,5$,8$,4$,6$
+3$:	dec 	linln$
+	bpl	10$
+	br	6$
+4$:	add	#100,nlins$
+	bic	#77,nlins$
+5$:	inc	nlins$
+6$:	clr	linln$
+	br	10$
+7$:	add	#10,linln$
+	bic	#7,linln$
+	br	10$
+8$:	mov	#176,r0
+	;
+9$:	inc	linln$
+10$:	asr	r0
+	cmp	linln$,#140.
+	bpl	linov$
+	cmp	nlins$,#600.
+	bpl	pagov$
+	movb	r0,@nchar$
+	inc	nchar$
+	inc	nchar$+2
+	bit	#1000,nchar$+2
+	beq	11$
+	jsr	pc,flush$
+11$:
+	rti
+pagov$:
+	jsr	pc,flush$
+	movb	#1,error$
+	abort
+	;
+nlins$:	.word	0
+	;
+linov$:
+	jsr	pc,flush$
+	movb	#2,error$
+	abort
+	;
+linln$:	.word	0
+obuff$:	.blkb	1000
+	.page
+flush$:
+	mov	#obuff$,nchar$
+	mov	r0,-(sp)
+	mov	#1,r0
+	trap	write$			; sys	write
+nchar$:	.word	obuff$
+	.word	0
+	clr	nchar$+2
+	mov	(sp)+,r0
+	rts	pc
+	.page
+	.sbttl	g e t c		- read a character
+	;
+	;
+getc::
+	; Turn off tracing here
+	tst	tracon
+	beq	gtc1$
+	bpt
+bpt2$:
+	bic	#1,2(sp)		; clear c bit
+	br	gtc2$
+gtc1$:	mov	(sp),-(sp)
+	mov	#170000,2(sp)
+gtc2$:
+	tst	5$
+	beq	4$
+	;
+	; EOF... abort
+	;
+	jsr	pc,flush$
+	movb	#3,error$
+	abort
+	;
+	;
+4$:	tst	7$+2
+	bne	1$
+	mov	#6$,7$
+	mov	#1000,7$+2
+	clr	r0
+	trap	read$			; sys	read
+7$:	.word	6$
+	.word	0
+	mov	r0,7$+2
+	blos	2$			; branch on C or Z
+1$:	movb	@7$,r0
+	inc	7$
+	dec	7$+2
+	rti
+2$:
+	inc	5$			; set eof flag..
+	inc	2(sp)			; set c bit
+	clr	r0
+	rti
+	;
+	;
+5$:	.word	0
+6$:	.blkb	1000
+	.page
+	.sbttl	r d u m p	- print users registers
+rdump::
+	; Turn off tracing here
+	bpt
+bpt3$:
+	mov	#6,-(sp)
+	add	sp,@sp
+	mov	r5,-(sp)
+	mov	r4,-(sp)
+	mov	r3,-(sp)
+	mov	r2,-(sp)
+	mov	r1,-(sp)
+	mov	r0,-(sp)
+	mov	sp,r5
+	mov	#10,r4
+	mov	#putc$,r3
+	mov	linln$,-(sp)
+	beq	4$
+	mov	#nl,r0
+	jsr	pc,@r3
+4$:
+	mov	#'0,-(sp)
+	mov	#tab,r0
+	jsr	pc,@r3
+1$:
+	mov	#162,r0
+	jsr	pc,@r3
+	mov	@sp,r0
+	jsr	pc,@r3
+	inc	@sp
+	mov	#75,r0
+	jsr	pc,@r3
+	mov	(r5)+,r1
+	jsr	pc,decod$
+	mov	#' ,r0
+	jsr	pc,@r3
+	sob	r4,1$
+	mov	@r5,r1
+	mov	#160,r0
+	jsr	pc,@r3
+	mov	#163,r0
+	jsr	pc,@r3
+	mov	#75,r0
+	jsr	pc,@r3
+	jsr	pc,decod$
+	mov	#nl,r0
+	jsr	pc,@r3
+	tst	(sp)+
+	mov	(sp)+,r4
+	beq	3$
+2$:
+	mov	#' ,r0
+	jsr	pc,@r3
+	sob	r4,2$
+3$:
+	mov	(sp)+,r0
+	mov	(sp)+,r1
+	mov	(sp)+,r2
+	mov	(sp)+,r3
+	mov	(sp)+,r4
+	mov	(sp)+,r5
+	tst	(sp)+
+	rti
+	.page
+	.sbttl			- string and number printing routines
+pstrg$:
+	movb	(r5)+,r0
+	beq	1$
+	jsr	pc,@r3
+	br	pstrg$
+1$:
+	inc	r5
+	bic	#1,r5
+	rts	r5
+	;
+	;
+	;
+decod$:
+	mov	#'0,r0
+	asl	r1
+	adc	r0
+	jsr	pc,@r3
+	mov	#5,r2
+1$:
+	clr	r0
+	ashc	#3,r0
+	add	#'0,r0
+	jsr	pc,@r3
+	sob	r2,1$
+	rts	pc
+	.page
+	.sbttl	f d u m p	- full print of memory
+fdump::
+	bpt
+bpt4$:
+	mov	sp,3$
+	jsr	r5,dump$
+3$:	.word	0,start$
+	rti
+	;
+	.sbttl	d u m p		- print a section of users memory
+	;
+dump$:
+	mov	#170000,-(sp)
+	br	bpt5$
+dump::
+	bpt
+bpt5$:
+	mov	r5,-(sp)
+	mov	r4,-(sp)
+	mov	r3,-(sp)
+	mov	r2,-(sp)
+	mov	r1,-(sp)
+	mov	r0,-(sp)
+	mov	(r5)+,r4
+	mov	@r5,r5
+	bic	#37,r4			; round down
+	add	#40,r5			;
+	bic	#37,r5			; round up
+	mov	#putc$,r3
+	mov	linln$,-(sp)
+4$:
+	mov	#nl,r0
+	jsr	pc,@r3
+	mov	r4,r1
+	jsr	pc,decod$
+	mov	#tab,r0
+	jsr	pc,@r3
+	jsr	pc,@r3
+1$:
+	mov	(r4)+,r1
+	jsr	pc,decod$
+	mov	#' ,r0
+	jsr	pc,@r3
+	bit	#37,r4
+	bne	1$
+	cmp	r4,r5
+	blt	4$
+	mov	#nl,r0
+	jsr	pc,@r3
+	mov	(sp)+,r1
+	beq	3$
+	mov	#' ,r0
+2$:	jsr	pc,@r3
+	sob	r1,2$
+3$:	mov	(sp)+,r0
+	mov	(sp)+,r1
+	mov	(sp)+,r2
+	mov	(sp)+,r3
+	mov	(sp)+,r4
+	mov	2(sp),r5
+	mov	(sp)+,@sp
+	add	#4,@sp
+	rti
+	.page
+	.sbttl	l t r a c e	- trace changes to a user location
+ltrace::
+	bpt
+bpt6$:
+	mov	r4,-(sp)
+	mov	r3,-(sp)
+	mov	r2,-(sp)
+	mov	r1,-(sp)
+	mov	r0,-(sp)
+	mov	#putc$,r3
+	mov	linln$,-(sp)
+	beq	1$
+	mov	#nl,r0
+	jsr	pc,@r3
+1$:
+	mov	(r5)+,r4
+	bit	#1,r4
+	bne	20$
+	cmp	r4,#start$
+	blo	2$
+	cmp	r4,sp
+	blo	20$
+2$:
+	mov	r4,locat$
+	mov	@r4,oval$
+	incb	tracon
+	jsr	r5,pstrg$
+	.asciz	/start tracing location /
+	.even
+	mov	r4,r1
+	jsr	pc,decod$
+	jsr	r5,pstrg$
+	.asciz	/ at pc = /
+	.even
+	mov	r5,r1
+	sub	#6,r1
+	jsr	pc,decod$
+	jsr	r5,pstrg$
+	.asciz	/, value is /
+	.even
+	mov	@r4,r1
+	jsr	pc,decod$
+	bis	#20,16(sp)		; set T bit
+	br	30$
+20$:
+	bic	#377,tracon
+	bne	3$
+	bic	#20,16(sp)		; clear T bit
+3$:
+	jsr	r5,pstrg$
+	.asciz	/location tracing off at pc = /
+	.even
+	mov	r5,r1
+	sub	#6,r1
+	jsr	pc,decod$
+30$:
+	mov	#nl,r0
+	jsr	pc,@r3
+	mov	(sp)+,r1
+	beq	5$
+	mov	#' ,r0
+4$:
+	jsr	pc,@r3
+	sob	r1,4$
+5$:
+	mov	(sp)+,r0
+	mov	(sp)+,r1
+	mov	(sp)+,r2
+	mov	(sp)+,r3
+	mov	(sp)+,r4
+	mov	@sp,-(sp)
+	mov	r5,2(sp)
+	mov	(sp)+,r5
+	rti
+locat$:	.word	0
+oval$:	.word	0
+	.page
+	.sbttl	p t o n		- start program flow tracing
+pton::
+	bpt
+bpt7$:
+	mov	r3,-(sp)
+	mov	r2,-(sp)
+	mov	r1,-(sp)
+	mov	r0,-(sp)
+	mov	#putc$,r3
+	incb	tracon+1
+	mov	linln$,-(sp)
+	beq	1$
+	mov	#nl,r0
+	jsr	pc,@r3
+1$:
+	jsr	r5,pstrg$
+	.asciz	/program tracing on at  pc = /
+	.even
+	mov	12(sp),r1
+	mov	r1,lstad$
+	mov	@r1,lstin$
+	sub	#4,r1
+	jsr	pc,decod$
+	mov	#nl,r0
+	jsr	pc,@r3
+	mov	(sp)+,r1
+	beq	3$
+	mov	#' ,r0
+2$:
+	jsr	pc,@r3
+	sob	r1,2$
+3$:
+	mov	(sp)+,r0
+	mov	(sp)+,r1
+	mov	(sp)+,r2
+	mov	(sp)+,r3
+	bis	#20,2(sp)
+	rtt
+	;
+	;
+	;
+	;
+	;
+	.sbttl	p t o f f	- switch off program tracing
+ptoff::
+	bpt
+bpt8$:
+	mov	r3,-(sp)
+	mov	r2,-(sp)
+	mov	r1,-(sp)
+	mov	r0,-(sp)
+	bic	#177400,tracon
+	bne	1$
+	bic	#20,12(sp)
+1$:
+	mov	#putc$,r3
+	mov	linln$,-(sp)
+	beq	2$
+	mov	#nl,r0
+	jsr	pc,@r3
+2$:
+	jsr	r5,pstrg$
+	.asciz	/program tracing off at pc = /
+	.even
+	mov	12(sp),r1
+	sub	#4,r1
+	jsr	pc,decod$
+	mov	#nl,r0
+	jsr	pc,@r3
+	mov	(sp)+,r1
+	beq	4$
+	mov	#' ,r0
+3$:
+	jsr	pc,@r3
+	sob	r1,3$
+4$:
+	mov	(sp)+,r0
+	mov	(sp)+,r1
+	mov	(sp)+,r2
+	mov	(sp)+,r3
+	rti
+lstin$:	.word	0	; Last instruction executed
+lstad$:	.word	0	; Last address executed
+	.page
+	;
+trap$:
+	mov	r5,-(sp)
+	mov	r4,-(sp)
+	mov	4(sp),r4
+	mov	#2$,r5
+1$:	cmp	(r5)+,r4
+	bne	3$
+	mov	10(sp),r4		; exchange pc,ps on stack of caller
+	mov	6(sp),10(sp)
+	mov	r4,6(sp)
+	mov	(sp)+,r4
+	mov	(sp)+,r5
+	rts	pc
+2$:	.word	bpt1$, bpt2$, bpt3$, bpt4$, bpt5$, bpt6$, bpt7$, bpt8$, bpt9$, 0
+3$:	tst	@r5
+	bne	1$
+	mov	(sp)+,r4
+	mov	(sp)+,r5
+	rtt
+tracon:	.word	0
+	.page
+	.sbttl	e x i t		- flush buffer and exit
+exit::
+	tst	tracon
+	beq	ext1$
+	; Turn off tracing here
+	bpt
+bpt9$:
+	tst	(sp)+
+ext1$:
+	trap	times$
+	.word	tbuf$
+	mov	tbuf$,r0
+	mov	tbuf$+2,r1
+	add	tbuf$+6,r1
+	adc	r0
+	add	tbuf$+4,r0
+	div	#50.,r0
+	asl	r1
+	mov	r1,r3
+	clr	r2
+	div	#10.,r2
+	add	#'0,r3
+	add	#'0,r2
+	movb	r3,10$+7
+	movb	r2,10$+6
+	mov	r0,r1
+	clr	r0
+	div	#10.,r0
+	beq	1$
+	add	#'0,r0
+	movb	r0,10$+3
+1$:
+	add	#'0,r1
+	movb	r1,10$+4
+	mov	#putc$,r3
+	jsr	r5,pstrg$
+10$:	.asciz	<nl><nl><tab>/ x.xx Sec execution time./<nl>
+	jsr	pc,flush$
+	clr	error$
+	trap	sysex$			; sys	exit
+tbuf$:	.blkw	10
+	;
+	;
+	;
+	;
+end$:	.word	407			; magic word for dumper
+	.end	initl$

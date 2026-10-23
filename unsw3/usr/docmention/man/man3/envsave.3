@@ -1,0 +1,113 @@
+.th ENVSAVE III 3/3/76
+.sh NAME
+envsave, envrest \*- execute non-local goto
+.sh SYNOPSIS
+.ft B
+envsave(&envir);
+.br
+int envir;
+.br
+	.
+.br
+	.
+.br
+	.
+.br
+envrest(&envir);
+.ft R
+.sh DESCRIPTION
+Envsave saves an "environment pointer" in its argument,
+.bd envir.
+A subsequent
+.bd envrest
+with the same argument restores the environment
+that existed immediately AFTER the
+.bd envsave
+call.
+.bd Envsave
+returns a
+value of 1; while a
+.bd envrest
+appears to return from the corresponding
+.bd envsave
+except that the returned value is 0.
+.s3
+The routine that called
+.bd envsave
+must still be active (i.e., must
+not have returned) when
+.bd envrest
+is called.
+.s3
+.bd Envsave
+must be called with exactly one argument.
+.s3
+.bd Envsave
+and
+.bd envrest
+are very similar in effect to
+.bd setexit
+(III) and
+.bd reset
+(III), in that they provide a means of resuming execution
+in a previously established environment and aborting a chain of
+procedure calls.
+The major differences are:
+.s3
+.lp +6 5
+(1)	\fIEnvsave\fR and
+\fIenvrest\fR permit saving more than one environment.
+.s3
+.lp +6 5
+(2)	The returned values of
+.bd envsave
+and
+.bd envrest
+are different, so the
+return from
+.bd envsave
+that saves the environment can be
+distinguished from subsequent
+\fIenvrest\fRs.
+.s3
+.lp +6 5
+(3)	There may be more than one
+.bd envrest
+call for one
+.bd envsave,
+since
+the
+.bd envrest
+restores the environment that existed AFTER,
+rather than before, the
+.bd envsave
+call.
+.s3
+Example:
+.s3
+	int saveloc;
+.br
+	if (envsave(&saveloc))
+.br
+	{/* code to be executed on return from envsave */
+.br
+		...
+.br
+	}
+.br
+	else
+.br
+	{/* code to be executed on return from envrest */
+.br
+		...
+.br
+	}
+.i0
+.dt
+.sh "SEE ALSO"
+reset (III)
+.sh AUTHOR
+Steve Zucker
+.br
+Keith Davis
+.sh BUGS

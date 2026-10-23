@@ -1,0 +1,468 @@
+	.title	sysio
+	.ident	/v001/
+
+.hiseg
+
+; lisp i/o routines
+
+;these routines are the monitor independent i/o functions
+;and are interfaced with the module monio.mac
+
+	global	<.nil,.quote,.expr,.subr,.symb,oblist,.t>
+	global	<chkcc>
+	global	<.oblist,.slmode>
+
+
+;lform does all the real work for read
+
+	func	lform,<>,<>,4
+
+	calli	rnonul
+	bcs	lfeof
+	cmpb	r0,#''
+	bne	1$
+	calli	getc
+	push	.quote
+	call	lform
+	bcs	lfret
+	call	node,<.nil>
+	call	node
+	br	lfret
+
+1$:	cmpb	r0,#'(
+	beq	2$
+	cmpb	r0,#'<
+	bne	lff3
+2$:	mov	r0,r1
+	calli	getc
+	calli	rnonul
+	bcs	lfeof
+	cmpb	r0,#'>
+	beq	4$
+	cmpb	r0,#')
+	bne	5$
+6$:	calli	getc
+7$:	return	.nil
+4$:	cmpb	r1,#'<
+	beq	6$
+	br	7$
+
+5$:	call	lform
+	bcs	lfret
+	calli	rnonul
+	bcs	lfeof
+	cmpb	r0,#'.
+	bne	lff9
+	calli	peek2
+	bcs	lfeof
+	mov	#slist,r2
+
+10$:	tstb	(r2)
+	beq	lff9
+	cmpb	(r2)+,r0
+	bne	10$
+	calli	getc
+	calli	rnonul
+	bcs	lfeof
+	call	lform
+	bcs	lfret
+	call	node
+	calli	rnonul
+	bcs	lfeof
+	cmpb	r0,#'>
+	beq	lff11
+	cmpb	r0,#')
+	bne	lfsyn
+
+lff12:	calli	getc
+
+lfsret:	clc
+lfret:	creturn
+
+lfart:	error	27.,<end of file in $$-artifact - read>
+	br	lfret
+
+lfsyn:	error	4.,<input syntax - read>
+lfprg:	calli	cbuff
+	sec
+	br	lfret
+
+lfeof:	calli	chkcc
+	bcs	lfret
+	error	5.,<end of file on input - read>
+	br	lfprg
+
+lfstr:	error	28.,<end of file in string - read>
+	br	lfprg
+
+lff11:	cmp	r1,#'<
+	beq	lff12
+	br	lfret
+
+lff9:	mov	r1,r0
+	callc	ibuff
+	call	lform
+	bcs	lfret
+	call	node
+	br	lfret
+
+lff3:	cmpb	r0,#'$
+	bne	14$
+	calli	peek2
+	bcs	14$
+	cmpb	r0,#'$
+	bne	14$
+	calli	getc
+	calli	getc
+	calli	getc
+	bcs	lfart
+	mov	r0,r1
+	call	cstring
+28$:	calli	getc
+	bcs	lfart
+	cmpb	r0,r1
+	beq	22$
+	callc	putc
+	br	28$
+
+14$:	calli	peekc
+	cmpb	r0,#'"
+	bne	15$
+	calli	getc
+	call	cstring
+
+16$:	calli	getc
+	bcs	lfstr
+	cmpb	r0,#'"
+	bne	17$
+	calli	peekc
+	bcs	lfsret
+	cmpb	r0,#'"
+	bne	lfsret
+	calli	getc
+
+17$:	callc	putc
+	br	16$
+
+15$:	cmpb	r0,#'[
+	beq	lfsat
+	call	cstring
+
+18$:	calli	peekc
+	bcs	22$
+	cmpb	r0,igc
+	bne	25$
+	calli	getc
+	calli	peekc
+	bcs	lfsyn
+	br	20$
+25$:	mov	#slist,r1
+
+21$:	tstb	(r1)
+	beq	20$
+	cmpb	(r1)+,r0
+	bne	21$
+
+22$:	mov	2(sp),r3
+	cmp	2(r3),.nil
+	beq	lfsyn
+	call	s.to.n,<2(sp)>
+	bcc	29$
+
+23$:	call	.intrn
+29$:	return
+
+20$:	calli	getc
+	callc	putc
+	br	18$
+	.dsabl	lsb
+
+lfsat:	calli	getc
+	call	lform
+	bcs	15$
+	save	r0
+	bit	#1,(r0)
+	beq	1$
+	mov	#.expr,r1
+
+3$:	cmp	r0,(r1)+
+	beq	2$
+	cmp	r1,#.subr
+	blo	3$
+	br	1$
+
+2$:	sub	#.symb+2,r1
+	call	gnode
+	call	lform
+	bcs	15$
+	save	r2
+	calli	rnonul
+	bcs	10$
+	cmpb	r0,#']
+	bne	1$
+	calli	getc
+	mov	2(sp),r0
+	movb	#1,(r0)+
+	movb	r1,(r0)+
+	mov	r2,(r0)
+15$:	creturn
+
+1$:	error	106.,<Illegal special atom - read>
+	jmp	lfprg
+
+10$:	error	107.,<End of file in special atom - read>
+	br	15$
+
+
+	func	prin,<list>,<>,2
+
+				;print the given list
+
+	bit	#1,@list(r5)	;test if atom
+	beq	1$		;no
+	call	patom,<list(r5)>
+	freturn
+
+1$:	callc	putc	#'(		;it's a list, so open-paren
+	mov	list(r5),r0	;pointer to list
+2$:	call	prin,<(r0)>	;print car of list
+	cmp	2(r0),.nil	;see if list notation will do
+	beq	6$
+
+3$:	bit	#1,@2(r0)	;see if cdr is atomic
+	beq	4$		;no
+	push	2(r0)
+	callc	putc	<#' >
+	callc	putc	#'.
+	callc	putc	<#' >
+	call	patom
+6$:	callc	putc	#')
+	freturn
+
+4$:	mov	r0,r1
+	callc	putc	<#' >
+	mov	2(r1),r0	;pick up cdr
+	br	2$		;try again
+
+
+	func	patom,<atom>,<>,4
+
+	mov	atom(r5),r0
+	movb	1(r0),r1	;get atom type
+	cmp	r1,#h.expr
+	bge	1$
+	clr	r3			;first char flag
+	add	r1,pc
+
+	br	symb
+	br	integ
+	br	real
+	br	string
+
+1$:	mov	r0,r2
+	callc	putc	#'[
+	call	prin,<.symb(r1)>
+	callc	putc	<#' >
+	cmp	r1,#h.macro
+	bgt	2$
+	push	2(r2)
+	br	5$
+2$:	cmp	r1,#h.lsubr
+	bge	3$
+	mov	2(r2),r2
+	mov	(r2)+,r0
+	call	isave
+	call	prin
+	callc	putc	<#' >
+4$:	mov	(r2),r0
+	call	isave
+5$:	call	prin
+	callc	putc	#']
+	br	integ2
+3$:	tst	(r2)+
+	br	4$
+
+symb:	mov	2(r0),r0	;get link to val/pname cell
+	mov	2(r0),r1	;link to pname (may not be null)
+	clr	r2		;signal no double quote
+	calli	pstr
+	br	integ2
+
+integ:
+real:
+	call	n.to.s,<r0>
+integ2:	freturn
+
+string:	mov	2(r0),r1	;link or nil
+	mov	#1,r2		;signal double quote
+	callc	putc	#'"
+	calli	pstr
+	callc	putc	#'"
+	br	integ2		;return argument
+
+pstr:	cmp	r1,.nil		;check for end
+	beq	2$
+	movb	2(r1),r0
+	calli	pstr1
+	cmp	(r1),#1
+	beq	2$
+	movb	3(r1),r0
+	calli	pstr1
+	mov	(r1),r1		;chain through list
+	br	pstr
+2$:	reti		;all done
+pstr1:	mov	#sysreg+4,-(sp)	;protect stack
+	tst	r2		;string or atom
+	bne	1$		;string
+
+	tst	r3		;yes - first char?
+	bne	3$		;no
+	inc	r3		;set not first
+	cmpb	r0,#'.		;must protect .
+	beq	4$
+	cmpb	r0,#'0		;and digits
+	blo	3$
+	cmpb	r0,#'9
+	blos	4$		;protect
+
+3$:	mov	#slist,r2	;get list of specials
+	
+5$:	tstb	(r2)
+	beq	6$
+	cmpb	r0,(r2)+
+	bne	5$
+4$:	mov	r0,r2
+	callc	putc	igc
+	mov	r2,r0
+6$:	callc	putc
+	clr	r2		;restore flag
+7$:	tst	(sp)+		;pop shield
+	reti		;and return
+
+1$:	cmpb	r0,#'"		;is it a double quote?
+	bne	8$		;no
+	callc	putc			;output it
+8$:	callc	putc			;for quotes, put 2
+	br	7$		;then leave
+
+
+
+	func	outstr,<s>,<>,2
+
+	mov	s(r5),r0
+	mov	2(r0),r1
+2$:	cmp	r1,.nil
+	beq	3$
+	callc	putc	2(r1)
+	cmp	(r1),#1
+	beq	3$
+	callc	putc	3(r1)
+	mov	(r1),r1
+	br	2$
+3$:	freturn
+
+
+	func	.intrn,<strin>,<>,4
+
+				;called with string pname
+
+	mov	strin(r5),r0
+	mov	2(r0),r0	;get pname
+
+	mov	oblist,r2
+	mov	#oblist-2,r3
+
+
+oloop:	cmp	r2,.nil
+	beq	append
+	mov	(r2),r1
+	mov	2(r1),r1
+	mov	2(r1),r1
+	calli	scompr
+	beq	found
+	blt	append
+	mov	r2,r3
+	mov	2(r2),r2
+	br	oloop
+found:	return	(r2)
+append:	call	gnode
+	tst	(sp)+
+	mov	(sp),2(r3)
+	mov	(sp)+,r1
+	mov	r2,2(r1)
+	call	gnode
+	tst	(sp)+
+	mov	(sp),(r1)
+	mov	(sp)+,r1
+	mov	r1,r2
+	call	gnode
+	mov	#t.symb,(r1)+
+	tst	(sp)+
+	mov	(sp),(r1)
+	mov	(sp)+,r1
+	clr	(r1)+
+	mov	r0,(r1)
+	mov	.oblist,r0
+	beq	.+10
+	mov	oblist,@2(r0)
+	return	r2
+
+	entry	scompr
+	mov	r0,-(sp)
+	mov	r1,-(sp)
+1$:	cmp	r0,r1
+	beq	s.eq
+	cmp	r0,.nil
+	beq	s.lt
+	cmp	r1,.nil
+	beq	s.gt
+
+	cmpb	2(r0),2(r1)
+	bgt	s.gt
+	blt	s.lt
+	cmp	(r0),#1
+	bne	2$
+	cmp	(r1),#1
+	beq	s.eq
+	br	s.lt
+2$:	cmp	(r1),#1
+	beq	s.gt
+	cmpb	3(r0),3(r1)
+	bgt	s.gt
+	blt	s.lt
+	mov	(r0),r0
+	mov	(r1),r1
+	br	1$
+
+s.eq:	mov	(sp)+,r1
+	mov	(sp),r0
+	clr	(sp)+		;set c.c. to equal
+	reti
+
+s.gt:	mov	(sp)+,r1
+	mov	(sp)+,r0
+	tst	#1		;cond codes to >
+	reti
+
+s.lt:	mov	(sp)+,r1
+	mov	(sp)+,r0
+	tst	#-1		;codes to <
+	reti
+
+
+.loseg
+slist:
+	.byte	'(
+	.byte	')
+	.byte	' 
+	.byte	'	
+	.byte	'<
+	.byte	'>
+	.byte	'[
+	.byte	']
+	.byte	''
+	.byte	'"
+	.byte	12
+	.byte	0
+	.even
+	.end

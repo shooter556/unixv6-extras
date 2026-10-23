@@ -1,0 +1,9 @@
+echoall
+cc -O -o pwconvdb pwconv.c lib/*.o -lP
+e - pwconv.c
+g/DEBUG/d
+w pwconvndb.c
+q
+cc -O -o pwconv pwconvndb.c lib/*.o -lP
+rm *.o
+: done

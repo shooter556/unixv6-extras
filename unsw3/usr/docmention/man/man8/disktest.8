@@ -1,0 +1,59 @@
+.th DISKTEST VIII
+.dt
+.sh NAME
+disktest - direct access device diagnostic
+
+.sh SYNOPSIS
+disktest special-file
+
+.sh DISCRIPTION
+Disktest allows any direct access device (and some sequential devices)
+to be tested while UNIX is still available to other users.  Care should
+be taken to make the device which is to be tested unavailable to other
+system users.  The single required argument is the name of the device which
+is to be tested (ie. /dev/rk1).
+
+Disktest recognizes the following single character commands some of which
+may be followed by numeric arguments which are assumed to be octal
+if they begin with a zero and decimal otherwise.
+
+Command	Argument	Default		Meaning
+
+  l		  1			  0			Low block number to test
+
+  h		  1			  1024		High block number to test
+
+  n		  0			  1			Number of blocks per transfer
+
+  p		  1 or 2	  0			Pattern flag
+									0  default patterns
+									1  block number is pattern
+									2  next argument is pattern
+
+  o		  1			  1			Output flag
+									0  output on errors only
+									1  extended output
+
+  d		  0			  -			Display test parameters
+
+  t		  1			  1			Test repetition factor
+
+  g		  0			  -			Execute write, read, compare test
+
+  c		  0			  -			Execute a read, compare test
+
+  r		  0			  -			Execute a read test
+
+  w		  0			  -			Execute a write test
+
+  q		  0			  -			Quit - return to the shell
+
+  s		  1			  0			Sequential access
+									0  sequential test
+									1  random test
+
+An interrupt (rubout) signal to disktest causes it to print the
+current test number, block number, and pattern number.  A quit
+signal causes disktest to abort the current test and await a new command.
+Bits transferred per error are reported on rubout and at the end of
+each test.

@@ -1,0 +1,60 @@
+*= programs written specifically for, or heavily modified for, AUSAM.
+
+absout.c	turns DEC absolute loader format into an a.out file
+ac.h		new accounting program					*
+ac1.c									*
+ac2.c									*
+ac3.c									*
+ac4.c									*
+ar.c		latest - more modes, longer names
+ask.c		asks a question and returns TRUE if answer=yes
+banner.c	full 64 character set
+bye.c		for cretins to turn system off
+cc.c		new control line #else, conditional expressions for #ifdef
+chdir.c		executes chdir for glob
+chk.c		runs icheck,dcheck on known file systems
+chmod.c		chmod.s in C!
+chown.c		chown.s in C -- flag -s saves modify date		*
+clri.s		modified to work on multiple inodes
+cnvtwtmp.c	converts vn6 wtmp file to AUSAM wtmp file for ac	*
+copy.c		ex a distribution tape + some new flags
+coreit.c	prints out core dump summary
+cr.s		reads cards from card reader and strips off trailing blanks
+cron.c		minor fixes
+cstrip.c	removes comments from cc files (e.g. param.h)
+ctofor.c	convert a.out to obj for fortran linker
+date.c									*
+dcheck.c	extra features
+dcopy.c		file system straightener
+df.c		works out file system
+diff1.c		new flag -d for pretty listings
+diff2.s
+disktest.c	general diagnostic for random access device
+dump.c		better
+edrecon.s	reconstructs ed file after crash
+em.c		QMC thing with new features: join command, ...
+enable.c	enable/disable tty lines
+entab.c		converts spaces to tabs where suitable -- and "dtab" vice-versa
+errlog.c	uses /dev/errlog to log system errors on /usr/adm/errlog
+fsize.c		exits true if file exists & size > 0
+fwd.s		forward-space magtape
+getit.c		gets the date from wthin a run-file (e.g. "rc")
+getty-tab40.c	makes table "decays.h" for getty.c			*
+getty.c		incorporates login					*
+glob.c									*
+gripe.c		gets a gripe to /usr/gripes/.mail
+init.c		new							*
+ipatch.c	bugs fixed
+kill.c		(now in shell)
+list.c		an abomination
+lked		yes well um theres no source you see -- shared data loader
+log.c		talks to other systems + full file transfer protocol
+login.c		old
+lpd.c		new (all singing all dancing)				*
+lpr.c		new (likewise)						*
+ls.c									*
+pp.c		prints limits						*
+prstop.s	Abort current lpr output
+run		does everything
+runaus		recompiles all AUSAM programs
+runlk		recompiles all programs that use locking on files

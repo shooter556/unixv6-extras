@@ -1,0 +1,33 @@
+.HE " " "The Australian UNIX Users Group" " "
+.FO "Peter Ivanov"
+.PA
+We have so far achieved three half yearly meetings of the Australian
+UNIX Users Group, two at the University of New South Wales, an a third
+at the Australian Atomic Energy Commission.
+The next meeting will be at the University of Sydney on September 1st, 1978.
+Our host their will be Ian Jackson from the Basser Department
+of Computer Science.
+.PA
+Some points on the agenda are:
+.BP 7 3
+*	Production of, and contributions to, a local newsletter.
+.NP
+*	Discussion of PWB UNIX, recently received at the Australian
+Graduate School of Management.
+.NP
+*	The local user accounting system, and associated Cambridge SHARE
+based sheduler (AUSAM) and experiences with its use during the first half
+of 1978.
+.NP
+*	The continuing story of Wollongong University and their Interdata UNIX.
+.NP
+*	Anything else that takes our fancy.
+.EP
+.PA
+As may be seen from the attached list of Australian users, UNIX
+has come a long way in this country since the first level V system
+was brought to life at UNSW.
+.PA
+However, we are far removed from the Anglo-American UNIX
+mainstream, so should anybody find themselves stranded in Australia
+I feel sure there are many people only too willing to make them feel at home.

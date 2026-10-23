@@ -1,0 +1,32 @@
+DISABLE(I)                      05/15/76                           DISABLE(I)
+
+NAME
+	disable--disallow a terminal to talk to UNIX
+
+
+SYNOPSIS
+	disable [all] [linenumber...]
+
+DESCRIPTION
+	Disable edits the file /etc/ttys to disallow certain terminals from
+	talking to UNIX. It then signals the init process to effect
+	the changes it has specified.
+
+	At least one argument must be specified. Explicit line numbers
+	may be grouped together or be separated by spaces. Thus,
+
+		"disable abcdhz" and
+		"disable a b c dh z" are equivalent.
+
+	The argument "all" disables ttys 9abcdefghijklmnoz (all but the
+	console teletype).
+
+DIAGNOSTICS
+	Disable has an idea of what legal teletypes are; if you specify
+	a strange one, it asks you if you really want to disable that one.
+
+BUGS
+
+AUTHOR
+	J.A. Lowry
+

@@ -1,0 +1,801 @@
+	.title	life - for the gt40
+	.ident	/x0402/
+	.mcall	gtsym$
+	.enabl	ama
+	.nlist	bex
+;
+; Dave Horsfall
+;
+; 1.0	 6 apr 77	preliminary version
+; 1.1	 7 apr		use "funny" bit - see below
+; 2.0	14 apr		toroidal wraparound actually implemented !
+; 2.1	16 apr		block mode implemented for mod/init
+; 3.0	19 apr		keyboard isr re-written
+; 3.1	23 apr		light pen glitch, 'g' also starts running
+; 3.2	 2 may		slight cosmetic changes ...
+; 3.3	 4 jan 78	keyboard isr passes parameters on stack
+; 3.4	 5 jan		add outline mode
+; 4.0	 6 jan		rewrite generation routines
+; 4.1	16 jan		speed up generations
+; 4.2	17 jan		show gen no
+;
+;+
+; This program is designed to run in the GT40 and will be
+; a simulation of Conway's famous "LIFE" program.
+; It is played on a torus "fl" by "fw" in dimension.
+;
+; The display is initialised & modified by means of the
+; light pen or cursor control keys.
+;
+; The display is interrupt driven (clock, keyboard & light pen)
+; and actual routines are table driven.
+;
+; Whole blocks, outline, rows or columns may be filled easily.
+;
+; In this version, the display is continuous and the next
+; generation is derived directly in the display file.
+;
+; The process may be halted, single stepped, modified
+; or re-initialized at will.
+;
+; I make no claims about the efficiency or reliability of
+; this program.  It was written purely as an exercise
+; in GT40 ( & MACRO-11 ) programming.
+;
+; N.B.	I make use of bit #7 (in char mode) which the
+; documentation tells me is supposedly "spare".
+;-
+.page
+	.sbttl	gt40 symbols
+	.list	me
+	gtsym$
+	.nlist	me
+.page
+	.sbttl	macro definitions
+;
+; To make life easier (even though it wasn't meant to be)
+;
+.macro	sob	r,l
+	dec	r
+	bne	l
+.endm
+
+.macro	spl	pri
+	mov	#<pri*40>,ps
+.endm
+
+.macro	shl	r,n		; shift left 'r' n places
+	.rept	n
+	asl	r
+	.endr
+.endm
+
+.macro	entry	char,addr,p1,p2	; make table entry for dispatch
+	.word	char
+	.iif	nb,p2,	.word	p2
+	.iif	 b,p2,	.word	0	; if not given
+	.iif	nb,p1,	.word	p1
+	.iif	 b,p1,	.word	0
+	.word	addr
+.endm
+.page
+	.sbttl	symbolic definitions
+stack=	500
+fl=	32.			; length of field (remember torus)
+fw=	32.			; width of field
+fl2=	5			; power of 2
+fw2=	5
+flmask=	^c<37>			; fudging a modulus
+fwmask=	^c<37>
+rowsiz=	<fw+1>*2
+tbedge=	<rowsiz*fl>
+rdf=	r1
+ri=	r2
+rj=	r3
+i=	r4
+j=	r5
+cl=	10			; cursor left
+cr=	30			;   "    right
+cu=	32			;   "    up
+cd=	13			;   "    down
+home=	35			;   "    home
+tics=	10			; clock tics between each display
+ienabl=	100			; interrupt enable
+lp=	40			; light pen "on" bit
+alive=	200			; cell will be alive
+initsw=	1			; we are initialising
+gosw=	2			; finished initialising
+blksw=	4			; block mode
+outsw=	10			; outline mode
+specsw=	blksw!outsw		; total
+xinc=	14.
+yinc=	24.			; box size
+xstart=	0
+ystart=	1400-yinc		; start of field - top left
+xcen=	fw/2*xinc*2		; nominal centre of display
+ycen=	fl/2*yinc
+statx=	1620
+staty=	ystart			; status field starts here
+sbstx=	statx			; substatus
+sbsty=	staty-yinc
+disx=	statx			; neighbour display
+disy=	4*yinc
+genx=	statx
+geny=	staty-<3*yinc>
+blank=	"  			; dead cell
+fill=	" +			; also dead (can be pointed to)
+alv=	" O			; live cell
+alvb=	'O			; live byte
+cursor=	400*177+40		; cursor = rubout + blank
+.page
+	.sbttl	low core
+zero=	.			; kludge kludge kludge
+	jmp	main
+;
+; Initialize low core to 'halts'
+;
+	.rept	63.
+	.word	.+2
+	halt
+	.endm
+;	.list	meb
+;
+; Define some trap vectors
+;
+.= zero+24			; power fail
+	.word	pfint,br7
+
+.= zero+kvec			; keyboard
+	.word	klint,br6
+
+.= zero+lkv			; line clock
+	.word	lkint,br6
+
+.= zero+gtlpnv			; light pen hit
+	.word	lpint,br6
+.page
+	.sbttl	data storage
+.= zero+stack
+status:	.word	initsw		; status of display
+buf:	.word	0		; keyboard buffer
+tocs:	.word	tics		; display delay counter
+cell:	.word	0		; cell under consideration
+ct:	.word	0		; temp copies
+xt:	.word	0
+yt:	.word	0
+penxt:	.word	0
+penyt:	.word	0
+count:	.word	0		; no. neighbours
+pflag:	.word	0		; power fail status
+oflo:	.word	0		; set when gen counter overflows
+;
+; dispatch table used when init/mod.
+;
+dtab1:	entry	<'A>,actdel,alv	; activate cell
+	entry	<'D>,actdel,fill; delete dell
+	entry	<'G>,go		; start running
+	entry	<'R>,go
+	entry	<'C>,ccen	; cursor centre of screen
+	entry	<'B>,spec,blksw,dfsbbk	; block fill
+	entry	<'O>,spec,outsw,dfsbot	; outline fill
+	entry	<'1>,diag,n2,n8	; neighbour 1
+	entry	<'2>,n2
+	entry	cu,n2
+	entry	<'3>,diag,n2,n4
+	entry	<'4>,n4
+	entry	cr,n4
+	entry	<'5>,diag,n4,n6
+	entry	<'6>,n6
+	entry	cd,n6
+	entry	<'7>,diag,n6,n8
+	entry	<'8>,n8
+	entry	cl,n8
+	entry	home,chome	; cursor home (top left)
+	entry	177,im,dfinit,init	; start again
+	.word	0
+;
+; table used when running
+;
+dtab2:	entry	177,im,dfinit,init	; reinitialise
+	entry	<'R>,stprun,ienabl,dfrun; run
+	entry	<'G>,stprun,ienabl,dfrun
+	entry	<'H>,stprun,0,dfhalt	; halt
+	entry	<'S>,sing	; single step
+	entry	<'M>,im,dfmod,modify	; modify display
+	.word	0
+;
+; offset tables for getting to neighbours
+;
+otab1:	.word	-1, 0, 1, 1, 1, 0,-1,-1,-1, 0
+otab2:	.word	-rowsiz-2,-rowsiz  ,-rowsiz+2, 2
+	.word	 rowsiz+2, rowsiz  , rowsiz-2,-2
+.page
+	.sbttl	pfint - power fail interrupt
+pfint:
+	tst	pflag		; up or down ?
+	bne	10$		; if power up
+	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	r2,-(sp)
+	mov	r3,-(sp)
+	mov	r4,-(sp)
+	mov	r5,-(sp)
+	mov	lks,-(sp)	; save clock status
+	mov	kcsr,-(sp)	; save keyboard status
+	mov	sp,pflag	; save stack pointer
+	halt
+10$:
+	mov	pflag,sp	; restore stack
+	clr	pflag
+	mov	(sp)+,kcsr	; restore keyboard status
+	mov	(sp)+,lks	; restore clock status
+	mov	(sp)+,r5
+	mov	(sp)+,r4
+	mov	(sp)+,r3
+	mov	(sp)+,r2
+	mov	(sp)+,r1
+	mov	(sp)+,r0
+	mov	#dfile1,dpc	; start display
+	rti
+.page
+	.sbttl	klint - keyboard interrupt
+;+
+; The keyboard controls the display by means of certain keys.
+;
+; Each entry in a dispatch table consists of a character
+; followed by two parameters, then the name of the routine.
+;
+; There are two tables: one for initialising/modifying and the other
+; for running.
+;
+;-
+;
+klint:	mov	kbuf,buf	; save char
+	bic	#^c<177>,buf	; clear out garbage
+	cmp	buf,#'a
+	blt	5$
+	cmp	buf,#'z
+	bgt	5$
+	bic	#40,buf		; convert lower case to upper case
+5$:	mov	#dtab1,r0	; usually this table (init/mod)
+	bit	#initsw,status
+	bne	10$
+	mov	#dtab2,r0	; oh well ...
+10$:	tst	(r0)		; last entry ?
+	beq	klend		; yes, ignore it.
+	cmp	buf,(r0)+	; this char ?
+	bne	20$		; no. try next one.
+	mov	(r0)+,-(sp)	; stack parms
+	mov	(r0)+,-(sp)
+	jsr	pc,@(r0)+	; return via rts pc
+	cmp	(sp)+,(sp)+	; reset stack
+	br	klend		; wrap up if necessary
+20$:	add	#6,r0		; next entry
+	br	10$
+
+klend:	rti
+.page
+	.sbttl	keyboard subroutines
+;
+; various routines to handle keyboard commands.
+;
+;
+; reinitialise/modify - params: display status, routine to call
+;
+im:	mov	#xstart,penx	; set cursor
+	mov	#ystart,peny
+	mov	#dfile,cell
+	mov	2(sp),sfile	; display status on stack
+	bis	#initsw,status
+	bis	#lp,dfile2	; enable lp
+	jsr	pc,@4(sp)	; call routine to set up
+	rts	pc
+;
+; start/stop display - params: clock contents, display status
+;
+stprun:	mov	2(sp),lks	; set clock
+	mov	4(sp),sfile	; display status
+	rts	pc
+;
+; single step
+;
+sing:	bit	#ienabl,lks	; ignore if clock running
+	bne	10$
+	jsr	pc,nxtgen
+10$:	rts	pc
+;
+; activate/delete cell(s) - param: char to use
+; special modes taken care of.
+;
+actdel:	bit	#specsw,status
+	beq	10$		; normal
+	mov	penx,-(sp)	; save these
+	mov	peny,-(sp)
+	mov	xt,i		; right half the time
+	cmp	penx,i		; min(penx,xt) -> penx
+	blt	5$		; max -> i
+	mov	i,r0		; oh well ...
+	mov	penx,i
+	mov	r0,penx
+5$:	mov	yt,j
+	cmp	peny,yt		; max(peny,yt) -> peny
+	bgt	6$		; min -> j
+	mov	peny,r0
+	mov	j,peny
+	mov	r0,j
+6$:	jsr	pc,locurs	; top left hand corner of block
+	mov	r0,rdf
+	mov	r0,ct
+	mov	penx,r0
+	mov	peny,rj
+7$:	mov	r0,ri
+
+8$:	bit	#outsw,status
+	beq	9$		; not outline
+	cmp	ri,i
+	beq	9$		; on one border
+	cmp	ri,penx
+	beq	9$
+	cmp	rj,j
+	beq	9$
+	cmp	rj,peny
+	bne	11$
+9$:	mov	6(sp),(rdf)	; mov in approp. char
+11$:	add	#<2*xinc>,ri
+	add	#2,rdf
+	cmp	ri,i		; end of column ?
+	ble	8$		; no
+	add	#rowsiz,ct	; next row offset
+	mov	ct,rdf
+	sub	#yinc,rj
+	cmp	rj,j		; last row ?
+	bge	7$		; no
+	mov	(sp)+,peny
+	mov	(sp)+,penx
+	mov	#dflp,sbfile	; display substatus
+	bic	#specsw,status	; reset flag
+	rts	pc
+10$:	mov	2(sp),@cell	; update cell
+	rts	pc
+;
+; start generating
+;
+go:	bit	#blksw,status
+	bne	25$		; ignore if block
+	bis	#gosw,status
+25$:	rts	pc
+;
+; cursor left
+;
+n8:	tst	penx		; overflow
+	bne	31$		; if ok
+	mov	#<<rowsiz-2>*xinc>,penx
+	add	#<rowsiz-2>,cell
+31$:	sub	#xinc*2,penx	; backspace
+	sub	#2,cell
+	rts	pc
+;
+; cursor right
+;
+n4:	cmp	penx,#<<fw-1>*xinc*2>
+	blt	33$
+	mov	#<-xinc*2>,penx
+	sub	#<rowsiz-2>,cell
+33$:	add	#xinc*2,penx
+	add	#2,cell
+	rts	pc
+;
+; cursor up
+;
+n2:	cmp	peny,#ystart
+	blt	35$
+	mov	#<-yinc>,peny
+	add	#tbedge,cell
+35$:	add	#yinc,peny
+	sub	#rowsiz,cell
+	rts	pc
+;
+; cursor down
+;
+n6:	tst	peny
+	bne	37$
+	mov	#<ystart+yinc>,peny
+	sub	#tbedge,cell
+37$:	sub	#yinc,peny
+	add	#rowsiz,cell
+	rts	pc
+;
+; cursor diagonally - params: two routines above to call
+;
+diag:	jsr	pc,@2(sp)
+	jsr	pc,@4(sp)
+	rts	pc
+;
+; cursor home
+;
+chome:	mov	#xstart,penx
+	mov	#ystart,peny
+	mov	#dfile,cell
+	rts	pc
+;
+; cursor centre
+;
+ccen:	mov	#xcen,penx
+	mov	#ycen,peny
+	jsr	pc,locurs
+	mov	r0,cell
+	rts	pc
+;
+; special mode - params: flag bit, display substatus
+;
+spec:	bit	#specsw,status	; already special ?
+	bne	55$		; yep
+	bis	2(sp),status
+	mov	#cursor,@cell
+	mov	penx,xt
+	mov	peny,yt
+	mov	4(sp),sbfile	; display substatus
+55$:	rts	pc
+.page
+	.sbttl	lkint - line clock interrupt
+;
+; The display is advanced every 'tics' clock ticks.
+;
+lkint:	dec	tocs		; decrement counter
+	bne	10$		; if not due yet
+	jsr	pc,nxtgen	; derive next generation
+	mov	#tics,tocs	; reset counter
+10$:	rti			; and return
+.page
+	.sbttl 	lpint - light pen interrupt
+;
+; Record the co-ords of the light pen, then restart display.
+;
+lpint:	mov	gtx,penx	; x co-ord
+	mov	gty,peny	; y co-ord
+	mov	#1,dpc		; restart display
+	bic	#^c<maxx>,penx	; strip garbage
+	sub	#<2*xinc>,penx	; glitch (DPC -> next word)
+	bic	#^c<maxx>,peny	; strip
+	jsr	pc,locurs	; find cursor
+	mov	r0,cell
+	rti
+.page
+	.sbttl	display subroutines
+;
+; Perform some processing for the display
+;
+;
+; Locate cursor.  Do this iteratively since we can't multiply ...
+;
+; Given "penx", "peny" return the address of the cell in r0.
+;
+locurs:	mov	#dfile,r0	; home
+	mov	#xstart,penxt
+20$:	cmp	penxt,penx	; there ?
+	beq	30$		; yas
+	add	#<xinc*2>,penxt
+	add	#2,r0		; advance
+	br	20$
+30$:	mov	#ystart,penyt
+40$:	cmp	peny,penyt
+	beq	10$
+	sub	#yinc,penyt
+	add	#rowsiz,r0
+	br	40$
+10$:	rts	pc
+;
+; Testn - test neighbour id (on stack) to see if it alive.
+; If so, increment "count".
+;
+testn:	mov	ri,i
+	mov	rj,j
+	tst	ri
+	beq	5$		; on border (needs wraparound processing)
+	cmp	ri,#fw-1
+	beq	5$		; border
+	tst	rj
+	beq	5$		; likewise
+	cmp	rj,#fl-1
+	beq	5$		; the same
+; cell inside border - can access neighbour directly
+	mov	2(sp),r0
+	asl	r0
+	mov	otab2-2(r0),r0	; offset from current address
+	add	rdf,r0		; -> neighbour
+	br	15$
+; border case - wraparound needs to be watched
+5$:	add	#fw,i
+	add	#fl,j
+	mov	2(sp),r0
+	asl	r0
+	add	otab1-2(r0),i
+	add	otab1+2(r0),j
+	bic	#fwmask,i	; i mod fw
+	bic	#flmask,j
+	mov	j,r0		; compute 2*<j*<fw+1>+i>
+	shl	r0,fw2
+	add	i,r0
+	add	j,r0
+	shl	r0,1
+	add	#dfile,r0
+15$:	cmpb	1(r0),#alvb
+	bne	10$
+	inc	count
+10$:	rts	pc
+;
+; incgen - advance generation number on display.
+;	   stop advancing when 999 reached.
+;
+incgen:	tst	oflo
+	bne	40$		; overflowed
+	mov	#dfend,r0
+	incb	-(r0)		; units
+	cmpb	(r0),#'9
+	ble	40$		; no carry
+	movb	#'0,(r0)	; reset
+	incb	-(r0)		; tens
+	cmpb	(r0),#' +1	; zero suppress
+	bne	10$		; was digit
+	movb	#'1,(r0)	; set to '1'
+	br	40$
+10$:	cmpb	(r0),#'9
+	ble	40$		; no carry
+	movb	#'0,(r0)
+	incb	-(r0)		; hundreds
+	cmpb	(r0),#' +1
+	bne	20$
+	movb	#'1,(r0)
+	br	40$
+20$:	cmpb	(r0),#'9+1
+	bne	40$
+; oflo
+	movb	#'0,(r0)
+	inc	oflo
+
+40$:	rts	pc
+.page
+	.sbttl	main program
+main:
+	reset
+	spl	6
+	mov	#stack,sp	; set up the stack pointer
+	mov	#initsw,status
+	mov	#tics,tocs
+	mov	#dfinit,sfile
+	mov	#dflp,sbfile
+	jsr	pc,setup
+	bis	#ienabl,kcsr	; enable keyboard
+	bis	#lp,dfile2	; enable lp
+	mov	#dfile1,dpc	; start off display
+	jsr	pc,inmod	; initialize display
+	spl	0
+
+loop:	wait			; hang around
+	br	loop
+
+setup:	mov	#dfile,rdf
+	mov	#fl,rj
+10$:	mov	#fw,ri
+20$:	mov	#fill,(rdf)+
+	sob	ri,20$
+	mov	#5015,(rdf)+	; cr - lf
+	sob	rj,10$
+	mov	#dfile,cell
+	bic	#specsw,status
+	mov	#dflp,sbfile
+	mov	#xstart,penx
+	mov	#ystart,peny
+	rts	pc
+.page
+	.sbttl	init/modify - alter display
+;
+; Init - change all chars to fill chars
+;
+init:	jsr	pc,setup
+	br	inmod		; common code
+;
+;  Modify - change ' ' to fill chars
+;
+modify:	mov	#dfile,rdf
+	mov	#fl,rj
+5$:	mov	#fw,ri
+10$:	cmp	(rdf)+,#blank
+	bne	15$
+	mov	#fill,-2(rdf)	; remember we auto incr
+15$:	sob	ri,10$
+	add	#2,rdf
+	sob	rj,5$
+;+
+; Common code for initialising and modifying.
+; Also jsr'd to from main.
+; We don't really do much ...
+; The real work is done by lpint (locating cell)
+; and klint (locating/activating/deactivating cell).
+;
+; We just sit around until klint detects "go", upon
+; which it sets "gosw", causing us to return.
+;-
+inmod:	bic	#ienabl,lks	; stop clock
+	clr	oflo		; overflow flag
+	mov	#dfend,r0
+	movb	#'0,-(r0)	; reset counter
+	movb	#' ,-(r0)
+	movb	#' ,-(r0)
+	spl	0		; so keyboard & lp work
+10$:	wait
+	bit	#gosw,status	; finished ?
+	beq	10$		; no ...
+	spl	6		; yes
+;
+; Change fill chars to ' '
+;
+	mov	#dfile,rdf
+	mov	#fl,rj
+25$:	mov	#fw,ri
+30$:	cmp	(rdf)+,#fill
+	bne	35$
+	mov	#blank,-2(rdf)
+35$:	sob	ri,30$
+	add	#2,rdf
+	sob	rj,25$
+	mov	#dfrun,sfile	; display status = running
+	bic	#lp,dfile2	; disable lp
+	bic	#<gosw!initsw>,status
+	bis	#ienabl,lks	; start up clock
+	rts	pc		; return
+.page
+	.sbttl	nxtgen - derive next generation
+nxtgen:
+;+
+; Pass1 scans the neighbour of each cell and counts the active ones.
+; It marks the current cell as active by setting the "alive" bit
+; for the perusal of ...  pass 2.
+;
+; The neighbours are considered to be ordered thusly:
+;
+;		1!2!3
+;		-+-+-
+;		8!X!4
+;		-+-+-
+;		7!6!5
+;-
+;
+; count no. neighbours.
+	mov	#dfile,rdf
+	clr	rj
+100$:	clr	ri		; outer loop
+110$:	clr	count		; inner loop
+	mov	#8.,-(sp)
+10$:	jsr	pc,testn
+	sob	(sp),10$	; hah
+	tst	(sp)+		; reset stack
+;
+; Determine the next status of this cell.  The rules are:
+;
+;	< 2 active neighbours	- dead
+;	> 3   "		"	- dead
+;	= 2   "		"	- remains in current state
+;	= 3   "		"	- alive
+;
+200$:	cmp	count,#2
+	blt	220$		; dead
+	cmp	count,#3
+	bgt	220$		; dead
+; 2 or 3 neighbours
+	cmp	count,#3
+	beq	210$		; alive
+	cmpb	1(rdf),#alvb
+	bne	220$		; dead
+210$:	bis	#alive,(rdf)	; activate him
+220$:	add	#2,rdf		; next cell
+	inc	ri
+	cmp	ri,#fw
+	bne	110$
+	add	#2,rdf		; skip cr/lf
+	inc	rj
+	cmp	rj,#fl
+	bne	100$
+.page
+;+
+; Pass2 simply scans each cell, testing its "alive" bit.  If set,
+; is replaced by an active cell.  If not, it is replaced by a blank.
+;-
+	mov	#dfile,rdf
+	mov	#fl,rj
+30$:	mov	#fw,ri
+35$:	bit	#alive,(rdf)
+	bne	37$		; if alive
+	mov	#blank,(rdf)+	; dead
+	br	40$
+37$:	mov	#alv,(rdf)+	; alive
+40$:	sob	ri,35$
+	add	#2,rdf
+	sob	rj,30$
+	jsr	pc,incgen
+	rts	pc
+.page
+	.sbttl	display files
+;
+; The various display files live here ...
+;
+dfile1:	.word	point,xstart,ystart	; display starts here - top left
+dfile2:	.word	char!lpon!int7	; lp gets zapped on & off
+
+dfile:	.blkw	fl*<fw+1>
+
+	.word	char!lpoff
+	.word	point,genx,geny
+	.word	char
+	.ascii	/Gen   0/
+dfend=	.
+.even
+
+dfstat:	.word	point,statx,staty	; status display
+
+	.word	char
+	.word	djmp
+sfile:	.word	dfinit		; gets zapped with addr display
+
+dfinit:	.ascii	/Init/
+.even
+	.word	djmp,dfsbst
+dfrun:	.ascii	/Run/
+.even
+	.word	djmp,dfile1
+dfhalt:	.ascii	/Halt/
+.even
+	.word	djmp,dfile1
+dfmod:	.ascii	/Modify/
+.even
+	.word	djmp,dfsbst
+
+dfsbst:	.word	point,sbstx,sbsty
+	.word	char!blkon
+	.word	djmp
+sbfile:	.word	dflp		; gets zapped
+
+dfsbbk:	.ascii	/Block/
+.even
+	.word	djmp,dflp
+dfsbot:	.ascii	/Outline/
+.even
+	.word	djmp,dflp
+
+dflp:	.word	point
+penx:	.word	0
+peny:	.word	0
+	.word	char!blkon
+	.word	cursor
+	.word	char!blkoff
+	.word	point,disx,disy
+	.word	char
+	.ascii	/1!2!3/<12><15>
+.even
+	.word	point,disx,disy-yinc
+	.word	char
+	.ascii	/-+-+-/<12><15>
+.even
+	.word	point,disx,disy-<2*yinc>
+	.word	char
+	.ascii	/8! !4/<12><15>
+.even
+	.word	point,disx,disy-<3*yinc>
+	.word	char
+	.ascii	/-+-+-/<12><15>
+.even
+	.word	point,disx,disy-<4*yinc>
+	.word	char
+	.ascii	/7!6!5/<12><15>
+.even
+	.word	point,disx+<2*xinc>,disy-<2*yinc>
+	.word	char!blkon
+	.ascii	<177>
+.even
+	.word	char!blkoff
+	.word	djmp,dfile1
+
+
+
+
+	.end	main

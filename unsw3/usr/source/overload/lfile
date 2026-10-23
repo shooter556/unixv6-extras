@@ -1,0 +1,7 @@
+ -R /lib/crt0.o main.o find.o printf.o -c 1 2 3 4 5
+   -U -lc -l
+   -S 1 parse.o -a _parse
+   -S 2 link1.o -a _link1
+   -S 3 address.o -a _address
+   -S 4 map.o -a _map
+   -S 5 link2.o -a _link2
