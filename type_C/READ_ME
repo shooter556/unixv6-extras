@@ -1,0 +1,246 @@
+THE TYPESETTER C TOOLCHAIN ON STOCK V6
+=====================================
+
+The directories here turn a stock Sixth Edition system into one
+with the "typesetter" C compiler and the tools that go with it,
+built from source with nothing but the V6 system itself.  At the
+end the system has:
+
+	/lib/c0 c1 c2	the typesetter C compiler (long, unsigned,
+			typedef, initializers with =)
+	/bin/cc		the UNSW driver (#if expressions, #else,
+			-D, -I, -E, nested includes)
+	/bin/as		the UNSW assembler (-o, -u)
+	/lib/libc.a	the V6 C library, plus what the new
+			compiler needs (long * / %, new cret, ...)
+	/bin/ar /bin/ld	the new archive format (magic 0177545,
+			14 character names), all libraries converted
+	/lib/libS.a	the UNSW standard I/O library (stdio.h)
+
+This is the base that the 1BSD software expects.
+
+All sources come unchanged from the UNSW 3 tape.  Where a change
+is needed, run makes it with ed on a copy, as tc does.
+
+
+DIRECTORIES, IN THE ORDER THEY MUST BE INSTALLED
+
+	tc	the compiler passes c0 c1 c2 (see tc/READ_ME)
+	libc	new members for /lib/libc.a
+	as	the assembler
+	cc	the driver
+	ar	ar, ld, file and arcv; converts every library
+	stdio	libS.a and /usr/include/stdio.h
+
+Each directory has two scripts:
+
+	run	builds and tests, changes nothing outside
+		this directory (except /usr/tcboot)
+	install	installs the result, after saving what it
+		replaces
+
+Why this order:
+
+- libc comes first after tc because the new compiler generates
+  calls to lmul, ldiv, lrem, almul, aldiv and alrem, and its
+  functions that return a long need the new cret (see NOTES).
+  cc and arcv also need mktemp, and ar needs itol.
+- the UNSW cc calls "as -u -o file.o", which the V6 as does not
+  accept, so as must be installed before cc.  The UNSW as still
+  accepts the V6 "as -", so the tc driver keeps working.
+- ar.c, arcv.c and ld.c use long, so they need the new compiler
+  and the new libc.  ar must switch everything at once, see ar
+  below.
+- stdio needs -I from the UNSW cc, lseek and _exit from the new
+  libc, and is archived with the new ar.
+
+
+BEFORE YOU START
+
+1. Back up the disk images.  Each install changes /bin and /lib.
+
+2. Log in as root.  Run every script from its own directory.
+
+3. Free space, as measured on a stock system with type_C in
+   /usr/work (a separate RP02):
+	/ and /usr (rk0)	about 650 blocks for tc, then about
+				130 more for the rest
+	/usr/work		about 750 blocks for the sources,
+				about 1050 more for the builds; ar
+				keeps a copy of every library it
+				converts in ar/save
+
+4. Getting the files in.  uxtp only makes the leaf directories,
+   so make type_C first.  For example, with the tape on tm0 and
+   type_C going into /usr/work:
+
+	chdir /usr/work
+	mkdir type_C
+	tp xm0 makedirs.sh
+	sh makedirs.sh
+	tp xm0
+
+   On the host the tape is written with:
+
+	uxtp -r -s -o 0:0 work.tap type_C
+
+
+INSTALLING
+
+For each directory in the order above:
+
+	chdir /usr/work/type_C/<directory>
+	sh run
+
+Check the output as described below, and only then:
+
+	sh install
+
+Lines like "c00.c:" and the numbers printed by ed are normal.
+
+
+tc
+
+See tc/READ_ME.  run must print nothing between "any output
+between here and done means failure" and "done".
+
+
+libc
+
+run copies /lib/libc.a to save/libc.a (only the first time), and
+builds new/libc.a from it, adding or replacing:
+
+	lseek.o		32 bit seek, put before seek.o
+	mktemp.o	put before stat.o
+	lops.o		lmul ldiv lrem almul aldiv alrem
+			(longops.s), put before csv.o
+	itol.o		put before csv.o
+	csv.o		new cret, which leaves r0 and r1 alone
+	exit.o		calls __cleanup before exiting
+	clean.o		a dummy __cleanup, at the end
+	_exit.o		exit without __cleanup, at the end
+
+The order is worked out by ed from "ar t" of the saved library,
+so a libc.a that already differs from the stock one is fine.
+Names are at most 8 characters, the limit of the V6 archive.
+
+run ends by compiling ltest.c with the new library and running
+it.  It must print
+
+	long ops ok
+
+install copies new/libc.a to /lib/libc.a.
+To undo: cp save/libc.a /lib/libc.a
+
+
+as
+
+run assembles the UNSW assembler with the V6 one (stage1, in
+/usr/tcboot/as), then again with stage1 (stage2), using -u and
+-o.  The two must be identical: nothing may be printed between
+"any output between here and done means failure" and "done".
+stage1 uses a copy of as11.s that runs /usr/tcboot/as/as2; the
+final as1 runs /lib/as2.
+
+install saves /bin/as and /lib/as2 in /usr/tcboot/orig and
+installs as1 and as2 there.
+To undo: copy /usr/tcboot/orig/as and as2 back.
+
+
+cc
+
+run compiles cc.c with the tc driver, then compiles cc.c again
+with the result.  The two must be identical.  Then it compiles
+and runs ../libc/ltest.c with the new driver: long ops ok.
+
+install replaces /bin/cc.
+To undo: cp /usr/tcboot/cc /bin/cc (the tc driver), or
+/usr/tcboot/orig/cc (the V6 driver).
+
+
+ar
+
+The new ar and ld read only the new archive format, and the old
+ones read only the old format, so the programs and all the
+libraries must change together.
+
+run compiles ar (with the changes in NOTES), arcv, ld and file,
+then checks them without touching the system:
+
+- converts copies of libc.a and liba.a into new, and compares
+  "ar t" of the old and the converted copies
+- links ld with the new ld and the converted copies; the result
+  must be identical to ld
+- links ltest with them: long ops ok
+- if /usr/sys/conf/c.o exists, links a kernel twice, with the
+  old ld and lib1, lib2 and with the new ld and converted
+  copies; the two must be identical
+
+install saves in save the old ar, ld, file and every library,
+converts in place
+
+	/lib/libc.a liba.a libf.a filib.a libp.a libs.a liby.a
+	/lib/tmgb /usr/lib/tmgb
+	/usr/sys/lib1 /usr/sys/lib2
+
+installs ar, ld and file in /bin and arcv in /usr/bin, and runs
+ltest again.  arcv says "not archive format" for a file that is
+already converted, so running install twice is harmless.
+
+Convert any other archive of your own with arcv.  aredit (../aredit)
+only understands the old format.
+
+To undo: copy everything in save back where it came from (tmgb
+to /lib/tmgb, utmgb to /usr/lib/tmgb, lib1 and lib2 to /usr/sys).
+
+
+stdio
+
+run compiles everything with -I. (so it does not need
+/usr/include yet), and builds libS.a with each member before
+the members it uses.  ftell.o and strlen.o are left out, see
+NOTES.  It then runs stest.c, with its output sent to a file, so
+that the test also shows that exit flushes the buffers.  It must
+print
+
+	stdio ok
+
+install copies libS.a to /lib/libS.a and stdio.h to
+/usr/include/stdio.h (making /usr/include), and runs stest again,
+now with cc -lS.
+
+
+NOTES
+
+- The new compiler expects a cret that keeps r0 and r1, as the
+  long result of a function is returned in r0 and r1.  The V6
+  cret uses r1 as a scratch register, so with the V6 libc a
+  function returning a long loses the low word.  csv.s comes
+  from UNSW s4; the old compiler does not care.
+
+- The V6 ld reads a library once, from start to end.  A member
+  is loaded only if it defines a symbol that is undefined at that
+  point, so every member must come before the members it uses.
+
+- The V6 sh looks for a command in the current directory first.
+  In ar/run the old ar must be called as /bin/ar, or the new ar
+  just built there is used instead.
+
+- The V6 rm -r passes all the names of a directory as arguments
+  and fails on large directories with "Arg list too long";
+  libc/run removes each member as soon as it is archived.
+
+- ar.c is compiled without AUSAM, which uses the UNSW newfstat
+  system call and 16 bit user ids.  It also calls
+  ctime(arbuf.date), passing the long itself; the V6 ctime takes
+  a pointer, so run changes it to ctime(&arbuf.date).
+
+- ftell needs the UNSW tell system call, which V6 does not have.
+
+- strlen is already defined in perror.o of the V6 libc; with a
+  second one in libS.a, ld reports _strlen multiply defined.  The
+  _strlen used by libS comes from libc instead.
+
+- __cleanup (stdio's flush on exit) is 9 characters; the
+  assembler and the compiler both cut it to __cleanu.
+
