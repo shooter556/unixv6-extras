@@ -1,0 +1,6 @@
+: install -- install new/libc.a built by run
+: usage -- sh install  as root, only after run printed: long ops ok
+: the original library is kept in save/libc.a
+
+cp new/libc.a /lib/libc.a
+ls -l /lib/libc.a
