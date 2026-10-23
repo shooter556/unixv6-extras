@@ -51,3 +51,6 @@ docs/_build/
 time-dev/
 MT
 UT
+
+# local direnv settings
+.envrc
