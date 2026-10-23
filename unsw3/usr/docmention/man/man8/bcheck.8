@@ -1,0 +1,21 @@
+.th BCHECK VIII 1976
+.sh NAME
+bcheck \*- read all blocks on a file system
+.sh SYNOPSIS
+.bd bcheck
+filesystem
+.sh DESCRIPTION
+.bd Bcheck
+reads all blocks on the filesystem and if any error is encountered
+attempts to correct the situation by rewriting the offending
+block.
+.sh "SEE ALSO"
+dcheck(VIII), icheck(VIII), ncheck(VIII), check(VIII), fs(V), ipatch(VIII)
+.sh DIAGNOSTICS
+Gives summary of blocks on which errors were encountered.
+Asks if corrective action should be taken.
+Reply `y' for yes.
+.sh AUTHOR
+Greg Rose (University of New South Wales)
+.sh BUGS
+As for icheck, it believes the superblock and so can dump core.

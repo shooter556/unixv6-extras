@@ -1,0 +1,14 @@
+run mail
+run mkfs
+run mv
+run passwd
+run ps
+run restor
+run rm
+run rmtree
+run sh
+run stty
+run su
+run wall
+run who
+as write.s ; ld -n -s a.out -l; mv a.out write

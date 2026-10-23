@@ -1,0 +1,33 @@
+.th RMTREE VIII 11/4/78
+.sh NAME
+rmtree \*- remove a directory tree
+.sh SYNOPSIS
+.bd /etc/rmtree
+name [ initial directory ]
+.sh DESCRIPTION
+.it Rmtree
+removes an entire directory tree starting with
+.it name
+which is usually a directory name.
+The default
+.it "initial directory"
+is
+.it /tmp.
+Circularly linked directories are no problem,
+but mounted file systems are left alone.
+Any problems encountered cause termination of ancestor directory
+removal,
+with the mode of the offending file changed to 0,
+and its owner changed to root.
+.sh "SEE ALSO"
+init(VIII)
+.sh DIAGNOSTICS
+yes
+.sh AUTHOR
+Piers Lauder (\ University of Sydney\ )
+.sh BUGS
+Should
+.it fork
+on encountering a mounted file system,
+clear its inode map,
+and ...

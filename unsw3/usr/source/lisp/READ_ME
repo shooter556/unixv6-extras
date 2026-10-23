@@ -1,0 +1,57 @@
+
+CONTENTS OF THIS DIRECTORY:
+
+	lispa.mac	initialization routines for LISP
+	lispb.mac	storage allocation
+	lispc.mac	i/o routines for numbers
+	lispd.mac	general i/o
+	lispe.mac	EVAL and APPLY functions
+	lispf.mac	system dependent i/o routines
+	lispg.mac	function to allow access to UNIX editor.
+	libsource	archive file containing other archive files which
+			contain the LISP user functions.
+	lisp_errors	unprocessed error messages.
+	lisp.err	error message file arranged in a format suitable to be
+			read by LISP
+	err		'C' program to reformat lisp_errors to lisp.err.
+	mklisp, sfile, sfile1, sfile, narc45
+			shell procedures used to generate LISP.
+
+	To make LISP it should be sufficient to execute 'mklisp'.
+	Lispf.mac contains the name of the error message file, if lisp.err
+is moved to a different name, then the name in lispf.mac should be changed
+accordingly.
+
+	This version of LISP differs slighlty from that described in the
+LISP-11 manual. The most significant change is that made to the pseudo-function
+'lambda'. The syntax is
+
+	(lambda ( <argument list> )
+		(local <list of local variables> )
+		S1
+		S2
+		.
+		.
+		Sn
+	)
+
+	The lambda expression now has an implicit 'progn' allowing more than
+one s-expression to be interpreted in a function without explicit use of 'prog'
+or 'progn' functions. The pseudo-function 'local' adds to this further, by
+allowing the declaration of local variables. The 'local' expression is optional
+and, when used, may only occur immediately following the argument list.
+Prog's and progn's may still be used, although this is not encouraged, since
+other functions allowing iteration have benn provided e.g. the 'while'
+expression.
+
+	The 'define' functions have been changed to accomodate the new lambda
+expression. For example:
+
+	(de (function_name arg1 arg2 .. argn)
+	    (local L1 L2 .. Ln)
+	    S1
+	    S2
+	    .
+	    .
+	    Sn
+	)

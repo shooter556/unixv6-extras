@@ -1,0 +1,21 @@
+.th TRBAS I June/77
+.sh NAME
+trbas \*- translate DEC basic plus source to Unix format
+.sh SYNOPSIS
+.bd trbas
+<inputfilename >outputfilename
+.sh DESCRIPTION
+The changes made are :
+.s3
+.nf
+	cr/lf is replaced by newline;
+	lf/cr/null is replaced by _/newline.
+.fi
+.s3
+.it Trbas
+works as a filter.
+.sh "SEE ALSO"
+basicp (I)
+.sh BUGS
+This is a very primitive utility - no error checks are made.
+More features are being added.

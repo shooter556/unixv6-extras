@@ -1,0 +1,413 @@
+echoall
+cc -O -s taprd.c
+mv a.out /etc/taprd
+chmod 700 /etc/taprd
+chowm root /etc/taprd
+
+cc -O -s set.c
+mv a.out /usr/bin/set
+chmod 701 /usr/bin/set
+chown root /usr/bin/set
+
+cc -O -s remotes.c
+mv a.out /etc/remotes
+chmod 700 /etc/remotes
+chown root /etc/remotes
+
+cc -O -s message.c
+cp a.out /usr/bin/message
+chown root /usr/bin/message
+chmod 711 /usr/bin/message
+
+cc -s -O mc.c
+cp a.out /bin/mc
+chown root /bin/mc
+chmod 711 /bin/mc
+
+cc -s -O man.c
+cp a.out /usr/bin/man
+chown root /usr/bin/man
+chmod 4711 /usr/bin/man
+
+cc -s -O mail.c
+cp a.out /bin/mail
+chown root /bin/mail
+chmod 4711 /bin/mail
+
+cc -s -O mesg.c
+cp a.out /usr/bin/mesg
+chown root /usr/bin/mesg
+chmod 711 /usr/bin/mesg
+
+as mkdir.s
+strip a.out
+cp a.out /bin/mkdir
+chown root /bin/mkdir
+chmod 4711 /bin/mkdir
+
+cc -s -O shutdown.c
+cp a.out /etc/shutdown
+chown root /etc/shutdown
+chmod 700 /etc/shutdown
+
+cc -s -O mkfs.c
+cp a.out /etc/mkfs
+chown root /etc/mkfs
+chmod 700 /etc/mkfs
+
+cc -s -O mknod.c
+cp a.out /etc/mknod
+chown root /etc/mknod
+chmod 700 /etc/mknod
+
+cc -s -O mount.c
+cp a.out /etc/mount
+chown root /etc/mount
+chmod 700 /etc/mount
+
+cc -s -O mv.c
+cp a.out /bin/mv
+chown root /bin/mv
+chmod 711 /bin/mv
+
+cc -s -O  mvall.c
+cp a.out /usr/bin/mvall
+chown root /usr/bin/mvall
+chmod 711 /usr/bin/mvall
+
+cc -s -O ncheck.c
+cp a.out /bin/ncheck
+chown root /bin/ncheck
+chmod 700 /bin/ncheck
+
+: cc -s -O newgrp.c
+: cp a.out /bin/newgrp
+: chown root /bin/newgrp
+: chmod 711 /bin/newgrp
+
+cc -s -O nice.c
+cp a.out /usr/bin/nice
+chown root /usr/bin/nice
+chmod 711 /usr/bin/nice
+
+cc -s -O nm.c
+cp a.out /bin/nm
+chown root /bin/nm
+chmod 711 /bin/nm
+
+cc -s -O nohup.c
+cp a.out /usr/bin/nohup
+chown root /usr/bin/nohup
+chmod 711 /usr/bin/nohup
+
+cc -s -O od.c
+cp a.out /bin/od
+chown root /bin/od
+chmod 711 /bin/od
+
+cc -s -O passwd.c
+cp a.out /bin/passwd
+chown root /bin/passwd
+chmod 4711 /bin/passwd
+
+: as pfe.s
+: strip a.out
+: cp a.out /usr/bin/pfe
+: chown root /usr/bin/pfe
+: chmod 711 /usr/bin/pfe
+
+cc -s -O pr.c
+cp a.out /bin/pr
+chown root /bin/pr
+chmod 711 /bin/pr
+
+cc -s -O prof.c
+cp a.out /usr/bin/prof
+chown root /usr/bin/prof
+chmod 711 /usr/bin/prof
+
+cc -n -s -O ps.c
+chmod 100 /bin/ps
+/bin/ps >/null
+cp a.out /bin/ps
+chown root /bin/ps
+chmod 5711 /bin/ps
+
+cc -s -O ptx.c
+cp a.out /usr/bin/ptx
+chown root /usr/bin/ptx
+chmod 711 /usr/bin/ptx
+
+cc -s -O pwd.c
+cp a.out /usr/bin/pwd
+chown root /usr/bin/pwd
+chmod 4711 /usr/bin/pwd
+
+cc -s -O quiz.c
+cp a.out /usr/bin/quiz
+chown root /usr/bin/quiz
+chmod 711 /usr/bin/quiz
+
+cc -s -O rc.c
+cp a.out /usr/bin/rc
+chown root /usr/bin/rc
+chmod 711 /usr/bin/rc
+
+cc -s -O restor.c
+cp a.out /etc/restor
+chown root /etc/restor
+chmod 700 /etc/restor
+
+as rew.s
+strip a.out
+cp a.out /bin/rew
+chown root /bin/rew
+chmod 711 /bin/rew
+
+cc -s -O rm.c
+cp a.out /bin/rm
+chown root /bin/rm
+chmod 711 /bin/rm
+
+as rmdir.s
+strip a.out
+cp a.out /bin/rmdir
+chown root /bin/rmdir
+chmod 4711 /bin/rmdir
+
+cc -s -O sa.c
+cp a.out /usr/bin/sa
+chown root /usr/bin/sa
+chmod 711 /usr/bin/sa
+
+cc -s -n -O sh.c
+chmod 111 /bin/sh
+/bin/sh </null >/null
+rm -f /bin/sh
+cp a.out /bin/sh
+chown root /bin/sh
+chmod 1711 /bin/sh
+
+cc -s -O size.c
+cp a.out /bin/size
+chown root /bin/size
+chmod 711 /bin/size
+
+as sleep.s
+cp a.out /usr/bin/sleep
+chown root /usr/bin/sleep
+chmod 711 /usr/bin/sleep
+
+cc -s -O sort.c
+cp a.out /bin/sort
+chown root /bin/sort
+chmod 711 /bin/sort
+
+cc -s -O split.c
+cp a.out /usr/bin/split
+chown root /usr/bin/split
+chmod 711 /usr/bin/split
+
+cc -s -O strip.c
+cp a.out /bin/strip
+chown root /bin/strip
+chmod 711 /bin/strip
+
+cc -s -O stty.c
+cp a.out /bin/stty
+chown root /bin/stty
+chmod 711 /bin/stty
+
+cc -s -O su.c
+cp a.out /bin/su
+chown root /bin/su
+chmod 4711 /bin/su
+
+as sum.s
+strip a.out
+cp a.out /bin/sum
+chown root /bin/sum
+chmod 711 /bin/sum
+
+: cc -s -O sync.c
+: cp a.out /bin/sync
+: chown root /bin/sync
+: chmod 711 /bin/sync
+
+cc -s -O tee.c
+cp a.out /usr/bin/tee
+chown root /usr/bin/tee
+chmod 711 /usr/bin/tee
+
+cc -O -s time.c
+cp a.out /bin/time
+chown root /bin/time
+chmod 711 /bin/time
+
+as tp?.s
+ld a.out -lc -l
+strip a.out
+cp a.out /bin/tp
+chown root /bin/tp
+chmod 711 /bin/tp
+
+as itp.s
+ld a.out -lc -l
+strip a.out
+cp a.out /usr/bin/itp
+chown root /usr/bin/itp
+chmod 711 /usr/bin/itp
+
+cc -s -O tr.c
+cp a.out /usr/bin/tr
+chown root /usr/bin/tr
+chmod 711 /usr/bin/tr
+
+as tty.s
+ld -s a.out -l
+cp a.out /bin/tty
+chown root /bin/tty
+chmod 711 /bin/tty
+
+cc -s -O typo.c
+cp a.out /usr/bin/typo
+chown root /usr/bin/typo
+chmod 711 /usr/bin/typo
+
+cc -s -O umount.c
+cp a.out /etc/umount
+chown root /etc/umount
+chmod 700 /etc/umount
+
+cc -s -O uniq.c
+cp a.out /bin/uniq
+chown root /bin/uniq
+chmod 711 /bin/uniq
+
+cc -s -O units.c
+cp a.out /usr/bin/units
+chown root /usr/bin/units
+chmod 711 /usr/bin/units
+
+as update.s
+strip a.out
+cp a.out /etc/update
+chown root /etc/update
+chmod 700 /etc/update
+
+cc -s -O usort.c
+cp a.out /usr/bin/usort
+chown root /usr/bin/usort
+chmod 711 /usr/bin/usort
+
+cc -s -O wall.c
+cp a.out /etc/wall
+chown root /etc/wall
+chmod 700 /etc/wall
+
+cc -s -O wc.c
+cp a.out /usr/bin/wc
+chown root /usr/bin/wc
+chmod 711 /usr/bin/wc
+
+cc -s -O who.c
+cp a.out /bin/who
+chown root /bin/who
+chmod 711 /bin/who
+
+as write.s
+ld -s a.out -l
+cp a.out /bin/write
+chown root /bin/write
+chmod 711 /bin/write
+
+
+: cc -s -O maketape.c
+: cp a.out  /usr/bin/maketape
+: chown root /usr/bin/maketape
+: chmod 711 /usr/bin/maketape
+
+cc -s -O maze.c
+cp a.out  /usr/bin/maze
+chown root /usr/bin/maze
+chmod 711 /usr/bin/maze
+
+: cc -s -O mkproto.c
+: cp a.out  /usr/bin/mkproto
+: chown root /usr/bin/mkproto
+: chmod 711 /usr/bin/mkproto
+
+cc -s -O news.c
+cp a.out  /usr/bin/news
+chown root /usr/bin/news
+chmod 711 /usr/bin/news
+
+cc -s -O pack.c
+cp a.out  /usr/bin/pack
+chown root /usr/bin/pack
+chmod 711 /usr/bin/pack
+
+cc -s -O pcat.c
+cp a.out  /usr/bin/pcat
+chown root /usr/bin/pcat
+chmod 711 /usr/bin/pcat
+
+cc -s -O scap.c
+cp a.out  /usr/bin/scap
+chown root /usr/bin/scap
+chmod 711 /usr/bin/scap
+
+as speed.c
+strip a.out
+mv a.out  /usr/bin/speed
+chown root /usr/bin/speed
+chmod 711 /usr/bin/speed
+
+cc -s -O syms.c
+cp a.out  /usr/bin/syms
+chown root /usr/bin/syms
+chmod 711 /usr/bin/syms
+
+: cc -s -O talloc.c
+: cp a.out  /usr/bin/talloc
+: chown root /usr/bin/talloc
+: chmod 711 /usr/bin/talloc
+
+cc -s -O tapetest.c
+cp a.out /etc/tapetest
+chown root /etc/tapetest
+chmod 701 /etc/tapetest
+
+cc -s -O unpack.c
+cp a.out /usr/bin/unpack
+chown root /usr/bin/unpack
+chmod 711 /usr/bin/unpack
+
+cc -s -O zapdisk.c
+cp a.out /etc/zapdisk
+chown root /etc/zapdisk
+chmod 700 /etc/zapdisk
+
+as rev.s
+strip a.out
+cp a.out /usr/bin/rev
+chown root /usr/bin/rev
+chmod 711 /usr/bin/rev
+
+cc -O -s unlink.c
+cp a.out /etc/unlink
+chown root /etc/unlink
+chmod 700 /etc/unlink
+
+as sync.s
+strip a.out
+cp a.out /bin/sync
+chmod 700 /bin/sync
+
+cc -O -s ptbanner.c
+rm -f /usr/bin/ptbanner
+mv a.out /usr/bin/ptbanner
+chmod 711 /usr/bin/ptbanner
+chown root /usr/bin/ptbanner
+
+rm *.o a.out y.tab.c

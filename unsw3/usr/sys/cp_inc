@@ -1,0 +1,17 @@
+cp buf.h /usr/include/buf.h
+cp conf.h /usr/include/conf.h
+cp defines.h /usr/include/defines.h
+cp file.h /usr/include/file.h
+cp filsys.h /usr/include/filsys.h
+cp ino.h /usr/include/ino.h
+cp inode.h /usr/include/inode.h
+cp lnode.h /usr/include/lnode.h
+cp param.h /usr/include/param.h
+cp proc.h /usr/include/proc.h
+cp pzomb.h /usr/include/pzomb.h
+cp reg.h /usr/include/reg.h
+cp seg.h /usr/include/seg.h
+cp systm.h /usr/include/systm.h
+cp text.h /usr/include/text.h
+cp tty.h /usr/include/tty.h
+cp user.h /usr/include/user.h

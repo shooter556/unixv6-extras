@@ -1,0 +1,64 @@
+.th DTP V 30/6/78
+.sh NAME
+dtp \*- mag tape format
+.sh DESCRIPTION
+The
+command
+.it dtp
+dumps files to and extracts files from
+magtape at 800 or 1600 bpi.
+.br
+The tape consists of a series of 16384 byte records (32 disk blocks)
+followed by a tape mark. This is the largest record which is a power of
+two that can be written by DEC tape units at 800 bpi. Records of 32768 are
+possible at 1600 bpi. The first record and possibly subsequent records
+contain the tape directory. Its format is as follows.
+.s3
+.nf
+\fBstruct	dir_ent
+{
+	char	name[114];	/* file name */
+	int	mode;		/* access modes */
+	int	uid;		/* file owner */
+	long	size;		/* size of file in bytes */
+	long	modtime;		/* last mod time */
+	int	tapea;		/* tape address */
+}	dir_rec[128];\fR
+.fi
+.s3
+.it Name
+is the pathname where the file was found,
+.it mode
+are the permission modes of the file etc.
+.it Tapea
+is the tape address of the file. It is a 512 byte block number
+which is independent of the tape blocking.
+.br
+The first entry in the first tape block is special. It contains information
+about the rest of the tape. Its format is
+.s3
+.nf
+\fBstruct	tape_header
+{
+	int	nfiles;		/* number of files */
+	long	dumptime;		/* tape creation time */
+	int	ndirblks;		/* number of directory records */
+	char	pad[120];		/* unused */
+}\fR
+.fi
+.s3
+There is always at least one record in the directory. The actual number
+can be determined by reading the first one.
+.br
+After the directory there are sufficient records to contain all the files
+that have been dumped. Files start on a 512 byte boundary in the record
+and extend for (size+511)/512 continuous blocks, which may extend
+over several tape records.
+Files are dumped in the same order as they
+are in the directory. Thus the first file starts at the first data block.
+This can be used to distribute tapes created by
+.it dtp
+as the dtp program can be the first file and can be extracted by other means
+(eg. dd (I)).
+.sh "SEE ALSO"
+dtp (I), file system (V), ht (IV)

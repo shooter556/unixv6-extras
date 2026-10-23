@@ -1,0 +1,64 @@
+echoall
+as -o abort.o abort.s
+as -o access.o access.s
+as -o smdate.o smdate.s
+as -o longops.o longops.s
+as -o ltoi.o ltoi.s
+as -o itol.o itol.s
+as -o abs.o abs.s
+as -o alloc.o alloc.s
+as -o atof.o atof.s
+as -o cerror.o cerror.s
+as -o chdir.o chdir.s
+as -o chmod.o chmod.s
+as -o chown.o chown.s
+as -o close.o close.s
+as -o connect.o connect.s
+as -o limits.o limits.s
+as -o creat.o creat.s
+as -o csv.o csv.s
+as -o dup.o dup.s
+cc -O -c execc.c
+as -o execl.o execl.s
+as -o execv.o execv.s
+as -o exit.o exit.s
+as -o ffltpr.o ffltpr.s
+as -o fltpr.o fltpr.s
+as -o fork.o fork.s
+as -o fstat.o fstat.s
+as -o getc.o getc.s
+as -o getchr.o getchr.s
+as -o getcsw.o getcsw.s
+as -o getgid.o getgid.s
+as -o getpid.o getpid.s
+as -o getuid.o getuid.s
+as -o gtty.o gtty.s
+as -o hmul.o hmul.s
+as -o kill.o kill.s
+as -o ladd.o ladd.s
+as -o ldfps.o ldfps.s
+as -o link.o link.s
+as -o locv.o locv.s
+as -o ltod.o ltod.s
+cc -O -c atoi.c
+: cc -O -c ctime.c
+cc -O -c errlst.c
+cc -O -c getpw.c
+cc -O -c lseek.c
+as -o _exit.o _exit.s
+as -o cleanup.o cleanup.s
+as -o crt0.o crt0.s
+as -o fcrt0.o fcrt0.s
+as -o ctime.o ctime.s
+as -o envsav.o envsav.s
+as -o gprocs.o gprocs.s
+cc -c -O skill.c
+as -o tlimit.o tlimit.s
+as -o clktim.o clktim.s
+as -o lock.o lock.s
+as -o pp.o pp.s
+as -o vv.o vv.s
+cp crt0.o /lib/crt0.o; rm crt0.o
+cp fcrt0.o /lib/fcrt0.o; rm fcrt0.o
+ar r /lib/libc.a
+rm *.o

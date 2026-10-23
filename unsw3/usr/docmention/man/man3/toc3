@@ -1,0 +1,43 @@
+abort  \*-  generate an IOT fault
+abs, fabs \*- absolute value
+alloc, free \*- core allocator
+atan, atan2 \*- arc tangent function
+atof \*- convert ASCII to floating
+atoi \*- convert ASCII to integer
+crypt \*- password encoding
+ctime, ijtime  \*-  convert date and time to ASCII
+ecvt, fcvt \*- output conversion
+end, etext, edata \*- last locations in program
+envsave, envrest \*- execute non-local goto
+exp \*- exponential function
+floor, ceil \*- floor and ceiling functions
+fmod \*- floating modulo function
+fptrap \*- floating point interpreter
+gamma \*- log gamma function
+getarg, iargc \*- get command arguments from Fortran
+getc, getw, fopen  \*-  buffered input
+getchar \*- read character
+getpw \*- get name from UID
+hmul \*- high-order product
+ierror \*- catch Fortran errors
+ldiv, lrem \*- long division
+locv \*- long output conversion
+log \*- natural logarithm
+mktemp \- create temporary file name
+monitor \*- prepare execution profile
+nargs \*- argument count
+nlist \*- get entries from name list
+perror, sys\*_errlist, sys\*_nerr, errno \*- system error messages
+pow \*- floating exponentiation
+printf \*- formatted print
+prints \*- print string
+putc, putw, fcreat, fflush  \*-  buffered output
+putchar, flush \*- write character
+qsort \*- quicker sort
+rand, srand \*- random number generator
+reset, setexit \*- execute non-local goto
+setfil \*- specify Fortran file name
+sin, cos \*- trigonometric functions
+skill \*- send a signal to a set of processes
+sqrt \*- square root function
+ttyn \*- return name of current typewriter

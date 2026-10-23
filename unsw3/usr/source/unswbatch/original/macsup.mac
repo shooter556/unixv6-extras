@@ -1,0 +1,505 @@
+	.nlist ttm
+	.title	monitor	
+	.psect	monitor lcl,rel
+	; macro getc,putc,tracing,exit routines
+	; copyright  G.C. inc.
+	r0  =  %0
+	r1  =  %1
+	r2  =  %2
+	r3  =  %3
+	r4  =  %4
+	r5  =  %5
+	sp  =  %6
+	pc  =  %7
+	.globl getc,putc,rdump,fdump,dump,ltrace,pton,ptoff,exit
+	sysex$ =  1
+	read$  =  3
+	write$ =  4
+	tlimit$ = 39.
+	setps$ = 55.
+	signl$ = 48.
+	;
+	;
+	jmp	@#exit
+start$:	.word	407				; magic word for dumper
+error$:	.word	377
+	.page
+	;
+	;
+putc$:
+	mov	#170000,-(sp)
+	br	x$x
+putc:
+	; Turn off tracing here
+	tst	tracon
+	beq	putc$
+	trap	setps$
+	.word	170000
+x$x:
+	asl	r0
+	cmp	#100,r0
+	bgt	l0$
+	cmp	#376,r0
+	bgt	l3$
+l0$:	cmp	#20,r0
+	bgt	qu$
+	cmp	#34,r0
+	bmi	qu$
+	jmp	@tab1$-20(r0)
+tab1$:	.word	bs$,ht$,nl$,qu$,ff$,cr$
+bs$:	dec 	linln$
+	bpl	l4$
+	br	cr$
+ff$:	add	#100,nlins$
+	bic	#77,nlins$
+nl$:	inc	nlins$
+cr$:	clr	linln$
+	br	l4$
+ht$:	add	#10,linln$
+	bic	#7,linln$
+	br	l4$
+qu$:	mov	#176,r0
+	;
+l3$:	inc	linln$
+l4$:	asr	r0
+	cmp	linln$,#140.
+	bpl	linov$
+	cmp	nlins$,#600.
+	bpl	pagov$
+	movb	r0,@nchar$
+	inc	nchar$
+	inc	nchar$+2
+	bit	#1000,nchar$+2
+	beq	ex$
+	jsr	pc,flush$
+ex$:
+	mov	@sp,-(sp)
+	mov	4(sp),2(sp)
+	mov	(sp)+,2(sp)
+	rti
+flush$:
+	mov	#obuff$,nchar$
+	mov	r0,-(sp)
+	mov	#1,r0
+	trap	write$			; sys	write
+nchar$:	.word	obuff$
+	.word	0
+	clr	nchar$+2
+	mov	(sp)+,r0
+	rts	pc
+pagov$:
+	jsr	pc,flush$
+	movb	#1,error$
+	iot
+	;
+nlins$:	.word	0
+	;
+linov$:
+	jsr	pc,flush$
+	movb	#2,error$
+	iot
+	;
+linln$:	.word	0
+obuff$:	.blkb	1000
+	.page
+	;
+	;
+getc:
+	; Turn off tracing here
+	tst	tracon
+	beq	13$
+	trap	setps$
+	.word	170000
+	bic	#1,@sp			; clear c bit
+	br	14$
+13$:	mov	#170000,-(sp)
+14$:	tst	ichar$+2
+	bne	l5$
+	mov	#ibuff$,ichar$
+	mov	#1000,ichar$+2
+	clr	r0
+	trap	read$			; sys	read
+ichar$:	.word	ibuff$
+	.word	0
+	mov	r0,ichar$+2
+	blos	eof$		; branch on C or Z
+l5$:	movb	@ichar$,r0
+	inc	ichar$
+	dec	ichar$+2
+	br	gex$
+eof$:
+	tst	flg$
+	bne	endfl$
+	inc	flg$
+	inc	@sp			; set c bit
+	clr	r0
+gex$:
+	mov	@sp,-(sp)
+	mov	4(sp),2(sp)
+	mov	(sp)+,2(sp)
+	rti
+endfl$:
+	jsr	pc,flush$
+	movb	#3,error$
+	iot
+	;
+	;
+flg$:	.word	0
+ibuff$:	.blkb	1000
+	.page
+	;
+	;
+rdump:
+	; Turn off tracing here
+	trap	setps$
+	.word	170000
+	mov	@sp,-(sp)
+	mov	4(sp),2(sp)
+	mov	@sp,4(sp)
+	mov	#4,@sp
+	add	sp,@sp
+	mov	r5,-(sp)
+	mov	r4,-(sp)
+	mov	r3,-(sp)
+	mov	r2,-(sp)
+	mov	r1,-(sp)
+	mov	r0,-(sp)
+	mov	sp,r5
+	mov	#10,r4
+	mov	#putc$,r3
+	mov	linln$,-(sp)
+	beq	lab1$
+	mov	#12,r0
+	jsr	pc,@r3
+lab1$:
+	mov	#60,-(sp)
+	mov	#11,r0
+	jsr	pc,@r3
+loop$:
+	mov	#162,r0
+	jsr	pc,@r3
+	mov	@sp,r0
+	jsr	pc,@r3
+	inc	@sp
+	mov	#75,r0
+	jsr	pc,@r3
+	mov	(r5)+,r1
+	jsr	pc,decod$
+	mov	#40,r0
+	jsr	pc,@r3
+	sob	r4,loop$
+	mov	@r5,r1
+	mov	#160,r0
+	jsr	pc,@r3
+	mov	#163,r0
+	jsr	pc,@r3
+	mov	#75,r0
+	jsr	pc,@r3
+	jsr	pc,decod$
+	mov	#12,r0
+	jsr	pc,@r3
+	tst	(sp)+
+	mov	(sp)+,r4
+	beq	l13$
+l12$:
+	mov	#40,r0
+	jsr	pc,@r3
+	sob	r4,l12$
+l13$:
+	mov	(sp)+,r0
+	mov	(sp)+,r1
+	mov	(sp)+,r2
+	mov	(sp)+,r3
+	mov	(sp)+,r4
+	mov	(sp)+,r5
+	tst	(sp)+
+	rti
+
+
+decod$:
+	mov	#60,r0
+	asl	r1
+	adc	r0
+	jsr	pc,@r3
+	mov	#5,r2
+l11$:
+	clr	r0
+	ashc	#3,r0
+	add	#60,r0
+	jsr	pc,@r3
+	sob	r2,l11$
+	rts	pc
+	.page
+	;
+	;
+	;
+fdump:
+	trap	setps$
+	.word	170000
+	jsr	r5,dump$
+	.word	0,start$
+	mov	@sp,-(sp)
+	mov	4(sp),2(sp)
+	mov	(sp)+,2(sp)
+	rti
+	;
+dump$:
+	mov	#170000,-(sp)
+	br	dump$1
+dump:
+	trap	setps$
+	.word	170000
+dump$1:	mov	r5,-(sp)
+	mov	r4,-(sp)
+	mov	r3,-(sp)
+	mov	r2,-(sp)
+	mov	r1,-(sp)
+	mov	r0,-(sp)
+	mov	(r5)+,r4
+	mov	@r5,r5
+	bic	#37,r4			; round down
+	add	#40,r5			;
+	bic	#37,r5			; round up
+	mov	#putc$,r3
+	mov	linln$,-(sp)
+lp$:
+	mov	#12,r0
+	jsr	pc,@r3
+	mov	r4,r1
+	jsr	pc,decod$
+	mov	#11,r0
+	jsr	pc,@r3
+	jsr	pc,@r3
+1$:
+	mov	(r4)+,r1
+	jsr	pc,decod$
+	mov	#40,r0
+	jsr	pc,@r3
+	bit	#37,r4
+	bne	1$
+	cmp	r4,r5
+	blt	lp$
+	mov	#12,r0
+	jsr	pc,@r3
+	mov	(sp)+,r1
+	beq	3$
+	mov	#40,r0
+2$:	jsr	pc,@r3
+	sob	r1,2$
+3$:	mov	(sp)+,r0
+	mov	(sp)+,r1
+	mov	(sp)+,r2
+	mov	(sp)+,r3
+	mov	(sp)+,r4
+	mov	4(sp),r5
+	mov	2(sp),4(sp)
+	mov	(sp)+,@sp
+	add	#4,@sp
+	rti
+	.page
+	;
+	;
+	;
+ltrace:
+	; Turn off tracing here
+	trap	setps$
+	.word	170000
+	mov	@r5,locat$
+	bit	#100001,@r5
+	bne	offtl$
+	cmp	@r5,#start$
+	bpl	offtl$
+	mov	r0,@sp
+	mov	lbfpt$,r0
+	cmp	r0,#lbfpt$-14
+	bgt	fullb$
+	bit	#400,error$
+	beq	1$
+	mov	#177777,(r0)+
+	mov	r5,(r0)+
+1$:	mov	#177777,(r0)+
+	mov	@r5,(r0)+
+	mov	r5,(r0)+
+	mov	@(r5)+,@r0
+	mov	(r0)+,oval$
+	mov	r0,lbfpt$
+	bis	#1400,error$
+	trap	signl$
+	.word	5,trap$
+	inc	tracon
+	mov	@sp,r0
+	mov	r5,@sp
+	mov	2(sp),r5
+	mov	#170020,2(sp)
+	rtt
+offtl$:		; Address out of range
+		; If not -1 then trap
+	cmp	@r5,#177777
+	bne	invad$
+	mov	r0,@sp
+	mov	lbfpt$,r0
+	cmp	r0,#lbfpt$-4
+	bgt	fullb$
+	mov	(r5)+,(r0)+
+	mov	r5,(r0)+
+	mov	@sp,r0
+	bic	#400,error$
+	mov	r5,@sp
+	mov	2(sp),r5
+	clr	2(sp)
+	dec 	tracon
+	bit	#2000,error$
+	beq	rtl$
+	mov	#170020,2(sp)
+rtl$:	rtt
+	;
+invad$:		; Bad ptracing address trap out
+	movb	#5,error$
+	jsr	pc,flush$
+	iot
+fullb$:
+	movb	#6,error$
+	mov	(sp)+,r0
+	jsr	pc,flush$
+	iot
+	; Buffers E.T.C.
+oval$:	.word	0	; Old value of location
+locat$:	.word	177777	; Current tracing location
+ltbuf$:	.blkw	100.	; Tracing buffer
+lbfpt$:	.word	ltbuf$	; Location in buffer
+	.page
+	;
+pton:
+	trap	setps$
+	.word	170000
+	mov	r0,@sp
+	mov	pbfpt$,r0
+	cmp	r0,#pbfpt$-4
+	bgt	fulpb$
+	mov	#177777,(r0)+
+	mov	2(sp),@r0
+	mov	@r0,lstad$
+	mov	@lstad$,lstin$
+	sub	#4,(r0)+
+	mov	r0,pbfpt$
+	bis	#6000,error$
+	trap	signl$
+	.word	5,trap$
+	mov	@sp,r0
+	mov	2(sp),@sp
+	mov	#20,2(sp)
+	inc	tracon
+	rtt
+	;
+	;
+	;
+	;
+	;
+ptoff:
+	trap	setps$
+	.word	170000
+	bic	#2000,error$
+	dec	tracon
+	mov	2(sp),@sp
+	clr	2(sp)
+	bit	#400,error$
+	beq	prt$
+	mov	#20,2(sp)
+prt$:	rtt
+fulpb$:
+	movb	#4,error$
+	mov	(sp)+,r0
+	jsr	pc,flush$
+	iot
+lstin$:	.word	0	; Last instruction executed
+lstad$:	.word	0	; Last address executed
+ptbuf$:	.blkw	100.	; Tracing buffer
+pbfpt$:	.word	ptbuf$	; Location in buffer
+	.page
+	;
+trap$:
+	mov	r0,-(sp)
+	;trap	signl$			; sys	signal
+	;.word	5			; Not required on UNIX / VI
+	;.word	trap$
+	bit	#400,error$
+	beq	l20$
+	cmp	@locat$,oval$ 
+	beq	l20$
+	cmp	lbfpt$,#lbfpt$-4
+	bmi	tp1$
+	jmp	fullb$
+tp1$:	mov	lbfpt$,r0
+	mov	2(sp),(r0)+
+	mov	@locat$,@r0
+	mov	(r0)+,oval$
+	mov	r0,lbfpt$
+l20$:
+	bit	#2000,error$
+	beq	l21$
+	mov	2(sp),r0
+	sub	lstad$,r0
+	cmp	#2,r0
+	beq	tp3$
+	bit	#177771,r0
+	bne	jump$
+	mov	lstin$,r0
+	bic	#171010,r0
+	mov	r1,-(sp)
+	mov	r2,-(sp)
+	mov	#itab$,r2
+l40$:	mov	(r2)+,r1
+	bic	r0,r1
+	bne	l40$
+	sub	#etab$+2,r2
+	sxt	r0
+	mov	(sp)+,r2
+	mov	(sp)+,r1
+	tst	r0
+	bmi	tp3$
+jump$:
+	cmp	pbfpt$,#pbfpt$-4
+	bmi	tp2$
+	jmp	fulpb$
+tp2$:	mov	pbfpt$,r0
+	mov	lstad$,(r0)+
+	mov	2(sp),@r0
+	mov	@r0,lstad$
+	mov	@(r0)+,lstin$
+	mov	r0,pbfpt$
+	br	l21$
+tp3$:
+	mov	2(sp),r0
+	mov	r0,lstad$
+	mov	@r0,lstin$
+l21$:
+	mov	(sp)+,r0
+	rtt
+	;
+	;
+itab$:	.word	700,6000,60,7	; Register modes
+etab$:	.word	0
+tracon:	.word	0
+	.page
+	;
+	;
+exit:
+	; Turn off tracing here
+	trap	setps$
+	.word	170000
+	tst	(sp)+
+	jsr	pc,flush$
+	clrb	error$
+	tst	error$
+	bne	die$
+	mov	#1,r0
+	trap	tlimit$			; get time remaining to job
+	trap	sysex$			; sys	exit
+die$:
+	iot				; Tracing information present
+	;
+	;
+	;
+	;
+end$:	.word	407			; magic word for dumper
+	.end

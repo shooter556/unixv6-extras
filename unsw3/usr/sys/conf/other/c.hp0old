@@ -1,0 +1,37 @@
+#include	"../param.h"
+/*
+ */
+
+int	(*bdevsw[])()
+{
+	&hpopen,	&nulldev,	&hpstrategy, 	&hptab,	/*  0  ->  hp          */
+	&htopen,	&htclose,	&htstrategy, 	&httab,	/*  1  ->  ht          */
+	0
+};
+
+int	(*cdevsw[])()
+{
+	&klopen,   &klclose,  &klread,   &klwrite,  &klsgtty,	/*  0  ->  console     */
+	&lpopen,   &lpclose,  &nodev,    &lpwrite,  &nodev,	/*  1  ->  lp          */
+	&djopen,   &djclose,  &djread,   &djwrite,  &djsgtty,	/*  2  ->  dj          */
+	&nulldev,  &nulldev,  &mmread,   &mmwrite,  &nodev,	/*  3  ->  mem         */
+	&hpopen,   &nulldev,  &hpread,   &hpwrite,  &nodev,	/*  4  ->  hp          */
+	&htopen,   &htclose,  &htread,   &htwrite,  &nodev,	/*  5  ->  ht          */
+	&crdaopen,  &crdclose,  &crdread,   &nodev,    &nodev,	/*  6  ->  crd          */
+	&crdbopen,  &crdclose,  &crdread,   &nodev,    &nodev,	/*  7  ->  crdb         */
+	&syopen,   &nulldev,  &syread,   &sywrite,  &sysgtty,	/*  8  ->  sys         */
+	&dzopen,   &dzclose,  &dzread,   &dzwrite,  &dzsgtty,	/*  9  ->  dz          */
+#ifdef	ERROR_LOG
+	&elopen,   &elclose,  &elread,   &nodev,  &nulldev,	/* 10  ->  el          */
+#endif
+#ifndef	ERROR_LOG
+	&nodev,    &nodev,    &nodev,    &nodev,  &nodev,	/* 10  -> el 	*/
+#endif
+	0
+};
+	char	buffers[NBUF][514] ;
+
+int	rootdev	 { (000<<8) | 000 } ;	/*** root device on 1st logical disk on the ist rwp04 ***/
+int	swapdev	 { (000<<8) | 003  } ;	/*** swap device on 4th logical disk on the 1st rwp04 ***/
+int	swplo	  	  22 ;	/***  1 rp04 track skipped  --  this value  cannot be zero ***/
+int	nswap	  { (10*418)-22 } ; 	/***  10 rp04 cylinders less one track  ***/

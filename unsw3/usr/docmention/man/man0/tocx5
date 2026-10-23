@@ -1,0 +1,16 @@
+a.out(V) assembler and link editor output
+archive(V) ar (library) file format
+ascii(V) map of ASCII character set
+core(V) format of core image file
+dir(V) format of directories
+dump(V) incremental dump tape format
+fs(V) format of file system volume
+greek(V) graphics for extended TTY-37 type-box
+group(V) group file
+mtab(V) mounted file system table
+passwd(V) password file
+tabs(V) set tab stops
+tp(V) DEC/mag tape formats
+ttys(V) typewriter initialization data
+utmp(V) user information
+wtmp(V) user login history

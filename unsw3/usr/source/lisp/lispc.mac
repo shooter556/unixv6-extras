@@ -1,0 +1,382 @@
+	.title	lispfl
+	.ident	/v002/
+
+.hiseg
+
+; lisp floating point
+
+	global	<radix,.nil>
+
+
+	func	n.to.s,<nn>,<>,4
+
+	mov	nn(r5),r0
+	cmpb	1(r0),#h.real
+	bne	1$
+	movof	@2(r0),f0
+	cfcc
+	bpl	2$
+
+	callc	putc	#'-
+	negf	f0
+
+2$:	tstf	f0
+	cfcc
+	beq	8$
+	cmpf	e1.p8,f0
+	cfcc
+	ble	3$
+	cmpf	e1.n2,f0
+	cfcc
+	bge	3$
+	calli	fout
+6$:	freturn
+
+8$:	callc	putc	#'0
+	callc	putc	#'.
+	br	6$
+
+3$:	clr	r1
+7$:	cmpf	almost,f0
+	cfcc
+	bgt	4$
+	cmpf	nearly,f0
+	cfcc
+	ble	5$
+	calli	fout
+
+	callc	putc	#145
+	mov	#10.,r2
+	calli	iout
+	br	6$
+
+4$:	mulf	#^f10.0,f0
+	dec	r1
+	br	7$
+
+5$:	divf	#^f10.0,f0
+	inc	r1
+	br	7$
+
+1$:	mov	2(r0),r1
+	mov	radix,r2
+	calli	iout
+	br	6$
+
+iout:	clr	-(sp)
+	mov	#sysreg+4,-(sp)
+	tst	r1
+	bpl	1$
+	cmp	r2,#8.
+	beq	1$
+	neg	r1
+	callc	putc	#'-
+1$:	clr	r0
+	div	r2,r0
+	beq	2$
+	mov	r1,2(sp)
+	mov	r0,r1
+	calli	iout
+	mov	2(sp),r1
+2$:	mov	r1,r0
+	add	#'0,r0
+	callc	putc
+	cmp	(sp)+,(sp)+
+	reti
+
+fout:	mov	#sysreg+2,-(sp)
+	tstf	f0
+	cfcc
+	bpl	1$
+	callc	putc	#'-
+	negf	f0
+
+1$:	modf	#^f1.0,f0
+	cmpf	almost,f0
+	cfcc
+	bge	20$
+	addf	#^f1.0,f1
+	clrf	f0
+20$:	tstf	f1
+	cfcc
+	beq	3$
+
+	movf	f0,f4
+	movf	f1,f0
+	mov	#cvtbuf+10.,r3
+2$:	modf	tenth,f0
+	movf	f0,f2
+	movf	f1,f0
+	addf	#37114,f2
+	modf	#^f10.0,f2
+	movfi	f3,r0
+	add	#'0,r0
+	movb	r0,-(r3)
+	tstf	f0
+	cfcc
+	bne	2$
+
+4$:	movb	(r3)+,r0
+	callc	putc
+	cmp	r3,#cvtbuf+10.
+	blo	4$
+	movf	f4,f0
+
+3$:	callc	putc	#'.
+
+5$:	mov	#cvtbuf,r3
+	movb	#-1,(r3)+
+10$:	modf	#^f10.0,f0
+	movfi	f1,r0
+	movb	r0,(r3)+
+	cmp	r3,#cvtbuf+8.
+	blo	10$
+
+6$:	cmpb	-(r3),#5
+	blo	11$
+12$:	incb	-(r3)
+	cmpb	(r3),#9.
+	blos	11$
+	clrb	(r3)
+	br	12$
+
+11$:	mov	#cvtbuf+7,r3
+16$:	tstb	-(r3)
+	beq	16$
+	bmi	7$
+	movb	#-1,1(r3)
+	mov	#cvtbuf+1,r3
+
+8$:	movb	(r3)+,r0
+	bmi	7$
+	add	#'0,r0
+	callc	putc
+	br	8$
+
+7$:	tst	(sp)+
+	reti
+
+
+; Convert a string to a number.
+; Return number (either fixed or real)
+; or give failure return.
+
+	func	s.to.n,<str>,<>,5
+
+	mov	str(r5),r1
+	mov	2(r1),r1
+
+	clr	r3		; fixed result
+	clr	r2		; point in character node
+	clr	r4		; negation flag
+	clrf	f0		; floating result
+
+	clr	-(sp)		; digits past decimal point
+	clr	-(sp)		; digits in number
+
+	calli	getcs		; routine gets characters
+	bcs	1$
+	cmpb	r0,#'-
+	bne	2$
+	inc	r4
+	calli	getcs
+	bcs	1$
+
+2$:	sub	#'0,r0
+	cmpb	r0,#9.
+	bhi	3$
+	mul	radix,r3
+	add	r0,r3
+	mulf	#^f10.0,f0
+	movif	r0,f1
+	addf	f1,f0
+	inc	(sp)
+	calli	getcs
+	bcc	2$
+
+	cmp	(sp)+,(sp)+
+	tst	r4
+	beq	5$
+	neg	r3
+
+5$:	call	gnode
+	mov	2(sp),r4
+	mov	#t.int,(r4)+
+	mov	r3,(r4)
+	return
+
+1$:	freturn
+
+3$:	swab	r4		; exponent negative flag too
+	clr	r3		; now exponent
+	cmpb	r0,#'.-'0
+	bne	4$
+
+8$:	calli	getcs
+	bcs	6$
+	sub	#'0,r0
+	cmpb	r0,#9.
+	bhi	4$
+	mulf	#^f10.0,f0
+	movif	r0,f1
+	addf	f1,f0
+	inc	(sp)
+	dec	2(sp)
+	br	8$
+
+4$:	cmpb	r0,#'e-'0
+	bne	1$
+	calli	getcs
+	bcs	1$
+	cmpb	r0,#'+
+	beq	9$
+	cmpb	r0,#'-
+	bne	10$
+	inc	r4
+
+9$:	calli	getcs
+	bcs	1$
+
+10$:	sub	#'0,r0
+	cmpb	r0,#9.
+	bhi	1$
+	mul	#10.,r3
+	add	r0,r3
+	calli	getcs
+	bcc	10$
+
+6$:	tstb	r4
+	beq	11$
+	neg	r3
+
+11$:	swab	r4
+	tstb	r4
+	beq	12$
+	negf	f0
+
+12$:	tst	(sp)+
+	beq	1$
+	add	(sp)+,r3
+	bmi	flin14
+	beq	flexit
+
+15$:	mulf	#^f10.0,f0
+	sob	r3,15$
+
+flexit:	call	fsave
+	return
+
+flin14:	divf	#^f10.0,f0
+	inc	r3
+	bne	flin14
+	br	flexit
+
+getcs:	cmp	r1,.nil
+	beq	1$
+	cmp	r2,#1
+	bne	2$
+	cmp	(r1),#1
+	beq	1$
+2$:	cmp	r2,#2
+	bne	3$
+	mov	(r1),r1
+	clr	r2
+	br	getcs
+3$:	mov	r1,-(sp)
+	add	#2,(sp)
+	add	r2,(sp)
+	inc	r2
+	movb	@(sp)+,r0
+	clc
+	reti
+1$:	sec
+	reti
+
+;
+; convert numberic arguments to compatiable
+; types. Called with argument 0 pointed to by
+; r0, argument 1 pointer to by r1. If both are
+; integers, return is with carry set and both
+; in r0 and r1. If both are float or one is float
+; and one is integer, return is with values in f0 and
+; f1 and carry clear. Otherwise, return is with
+; overflow set
+
+	entry	typcon
+
+	bitb	#1,(r0)+
+	beq	1$
+	bitb	#1,(r1)+
+	beq	1$
+	cmpb	(r0),#h.int
+	bne	2$
+	cmpb	(r1),#h.int
+	bne	3$
+	mov	1(r0),r0
+	mov	1(r1),r1
+	sec
+	reti
+
+2$:	cmpb	(r0)+,#h.real
+	bne	1$
+	movof	@(r0)+,f0
+	cmpb	(r1),#h.int
+	bne	4$
+	movif	1(r1),f1
+	reti
+
+4$:	cmpb	(r1)+,#h.real
+	bne	1$
+	movof	@(r1)+,f1
+	reti
+
+3$:	cmpb	(r1)+,#h.real
+	bne	1$
+	movof	@(r1)+,f1
+	movif	1(r0),f0
+	reti
+
+1$:	sev
+	reti
+
+; Save floating number in f0 in a lisp float
+; node.
+
+	func	fsave,<>,<>,1
+
+	call	gnode
+	mov	2(sp),r0
+	call	gnode
+	mov	#t.real,(r0)+
+	tst	(sp)+
+	mov	(sp),(r0)
+	movfo	f0,@(sp)+
+	return
+
+; Save integer in r0 in a lisp
+; integer node.
+
+	func	isave,<>,<>,2
+
+	call	gnode
+	mov	2(sp),r1
+	mov	#t.int,(r1)+
+	mov	r0,(r1)+
+	return
+
+
+.loseg
+
+con.0:	.word	t.int,	0
+con.1:	.word	t.int,	1
+con.n1:	.word	t.int,	-1
+
+e1.p8:	.flt4	1.0e+8
+e1.n2:	.flt4	1.0e-2
+
+tenth:	.flt4	.1
+almost:	.flt4	.99999944444444449
+nearly:	.flt4	9.9999944444444449
+cvtbuf:	.blkb	10.
+
+	.end

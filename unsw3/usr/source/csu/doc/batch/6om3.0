@@ -1,0 +1,295 @@
+.bp
+.in 0
+.ig
+.ul 1
+..
+3. SOFTWARE
+
+.ti 3
+The following sections, in particular those to do with UNIX,
+are required reading in order that you may understand what is going on
+both at your 11/40 and at the CYBER.
+There are far too many computer operators who do so
+on nothing more than an action and reaction basis, with no other
+knowledge of what they are doing than a mixture of legend, mythology and 
+folklore passed down to them from a variety of obscure sources.
+.ti 3
+If you
+.ig
+.ul 1
+..
+KNOW
+what should be happening then you have won half the battle to make
+it happen.
+.ti 3
+The following is what should be happening.
+
+.ig
+.ul 1
+..
+3.1 CYBER
+
+.in 7
+.ig
+.ul 1
+..
+3.1.1 Quebec Export/Import (QEI)
+
+.ti 10
+Quebec export/import (QEI) is the name of a collection of
+programs which run on the CYBER 171.
+Part of QEI (1ED) runs in one of the ten PPUs and a second (EI200) runs from time to
+time in the CPU.
+A couple more (1LS, XSP) sometimes run in other PPUs.
+.ti 10
+QEI is a successor to normal CDC Export/Import (EI).
+.ti 10
+Export/Import was written to:
+
+.in 15
+.ti 13
+1) Handle communications between a number of remote batch
+terminals and a 6000 series CDC computer (eg a CYBER 171-18).
+
+.ti 13
+2) Schedule jobs submitted from those terminals in the form
+of card decks to be run in a similar fashion to jobs
+run at the central computer itself.
+
+.ti 13
+3) Direct printout resulting from any remote terminal job
+to a terminal.
+
+.in 7
+.ti 10
+QEI was written at Quebec University to provide certain facilities not
+provided in EI such as the "Q,x" command to interrogate
+KRONOS job queues.
+.ti 10
+EI (and so QEI) was written to communicate with a hardwired
+(non-programmable) hardware CDC USER-200 (200-UT) remote
+batch terminal.
+.ti 10
+Since communication with this device was of necessity on a rather moronic
+level, the line protocol (computer-terminal question-answer signalling
+convention) used is uninspiring and cumbersome.
+.ti 10
+As you may have guessed you are not operating a 200-UT terminal (thank god !)
+however we are still stuck with the line protocol because this is what QEI
+expects.
+Your 11/40 is programmed to act like a 200-UT so as to please QEI.
+
+.ig
+.ul 1
+..
+3.1.2 Kronos
+
+.ti 10
+You may think this is some of that (greek) mythology i mentioned.
+You may even be right but KRONOS is what CDC have called
+the CYBER operating system.
+.ti 10
+Some things in KRONOS you should know about are queues.
+A queue is an ordered collection of jobs, usually of a similar type
+or stage of completion. KRONOS queues are usually ordered by
+an associated priority.
+The queues of interest to us are:
+
+.in 15
+.ti 13
+1) Input queue - All users jobs read at the central site or the batch stations
+eventually find their way into this queue.
+Their initial priority is assigned depending on such things as central
+memory requirements and time limit and incremented by one (aged)
+at regular intervals.
+.ti 15
+Whenever possible a job is selected on a priority basis from the input queue
+to be run.
+
+.ti 13
+2) Execute queue - This is a quasi queue of the names of active
+jobs (those at a KRONOS control point) at present
+enjoying a small allocation of CPU time.
+.ti 15
+No ageing takes place on this queue.
+
+.ti 13
+3) Rollout queue - if a job does not run to completion after one period
+of CPU time it is rolled out to provide a place
+for another job and joins the rollout queue.
+.ti 15
+Its priority again begins to age and it is rolled back in for some more
+CPU time on a priority basis.
+
+.ti 13
+4) Output queue - When a job has run to completion (or been aborted)
+it joins the output queue. From here it is either
+printed at the central site or directed to an appropriate batch terminal.
+.ti 15
+Its priority continues to age here and printing or transmitting takes place on a priority
+basis.
+
+.in 7
+.ti 10
+Virtually from start to finish during processing a job is in one
+queue or another and by following a job through the queues you have
+followed it through its entire CYBER processing.
+
+.in 0
+.ig
+.ul 1
+..
+3.2 PDP-11
+
+.ti 3
+The software detailed in this section is for a disc based batch station
+running under UNIX Level 6.
+
+.in 7
+.ig
+.ul 1
+..
+3.2.1 Definitions
+
+.in 25
+.ti 15
+FILE      - A gathering together of data (a flock
+of characters ??).
+.ti 25
+A file has two main distinguishing features being a name and a length.
+
+.ti 15
+DIRECTORY - A directory is a file. what makes it a directory
+is that the data contained in it is a list of other file names.
+
+.ti 15
+PROCESS   - A process is a program running concurrently and
+asynchronously with any number of other processes.
+.ti 25
+A process may be signalled by another process so as to alter its
+state or operation.
+.ti 25
+A process may be created (born), may live (run) and may die
+(exit).
+.ti 25
+Some processes may reproduce by 'forking off' another process as
+a child.
+
+.ti 15
+SIGNALLING - A process may signal another process to alter
+its operation or state.
+
+.ti 15
+DAEMON    - A process which monitors changes in the contents of a
+directory and acts upon these changes in a predefined way.
+
+.ti 15
+DRIVER   - A program which directly communicates with a
+piece of hardware. Usually an interrupt service routine, the driver
+communicates with the system at large via a device file.
+
+.ti 15
+DEVICE FILE - A special file for communicating with a
+device driver. Output is written to a device file and input is
+read from it.
+
+.ti 15
+DATA SEGMENT -  The data segment of a process is defined as that part
+of the executable object file containing machine code and/or
+initialised data. The segment is RW (read/write).
+
+.ti 15
+TEXT SEGMENT - The text segment of a process is defined as that part
+of the executable object file containing only pure machine code.
+The segment is read only.
+
+.ti 15
+SHARED SEGMENTS - A process may use shareable segments (text or data)
+concurrently with other processes.
+The shared data and/or text occupies the space (memory) once only
+for many processes instead of each process having its own copy
+of the segment.
+Inter-process synchronisation is provided by the system.
+
+.ti 15
+SPOOLING  - This term is best explained by an example of how
+spooling is used at a batch station under UNIX.
+.ti 25
+Let us first look at a batch station without spooling (no discs or
+memory to support spooling).
+.ti 25
+When cards are read into the card reader, card images are sent
+to the CYBER to be processed.
+However, they travel along a line to the CYBER which can only
+transfer a maximum of 600 characters per second.
+.ti 25
+The card reader runs at 600 cards per minute and one need not be a
+mathematical genius to compute that this is 800 characters per second.
+.ti 25
+Since 600 is less than 800 it follows that you must read fewer than
+the rated number of cards per second or
+start picking the characters up off the floor.
+.ti 25
+But we have only mentioned the input side of things.
+most printers are 400 line per minute jobs.
+If we say that the average line contains 30 characters (and this is
+conservative), the data rate required to keep the printer going
+is 200 characters per second.
+.ti 25
+Because the communication line to the CYBER is operated
+in logical half duplex mode (transmission in only one direction
+at a time) you will see that if the printer is active at the same time
+as the card reader then things will really bog down.
+.ti 25
+Now let us look at a disc batch station.
+.ti 25
+The discs are used to temporarily store card images and printer lines.
+this is called spooling.
+.ti 25
+The card reader reads at its maximum speed because cards are being
+spooled to disc at many thousands of characters per second if need be.
+.ti 25
+The printer runs faster because printout is printed from disc as
+fast as the printer can print.
+.ti 25
+By spooling we overcome the stop-start nature of the data transmissions.
+a card deck does not have to go
+.ig
+.ul 1
+..
+now
+if printout is coming down to be spooled as fast as the line can
+take.
+Spooled decks may be sent at the maximum line speed if there is
+no printout being received.
+Both sending cards and receiving printout may go on as fast as
+possible while simultaneously another deck is being spooled
+and another spooled printout is printing.
+.ti 25
+The key fact here is that spooling allows you to use the
+communications line completely all the time.
+.ti 25
+In general, spooling removes discontinuities in data transfers
+leading to a generally smoother system.
+
+.in 7
+.ig
+.ul 1
+..
+3.2.2 UNIX
+
+.ti 10
+To quote from 'The UNIX Time-Sharing System'
+by Dennis. M. Ritchie and Ken Thompson.
+.in 10
+.ti 10
+
+"UNIX is a general-purpose, multi-user, interactive operating
+system for the Digital Equipment Corporation
+PDP 11/40, 11/45 and 11/70 computers."
+
+.in 7
+.ti 10
+NOW YOU KNOW!!!.
+.sp 2
+.nx 6om3.2

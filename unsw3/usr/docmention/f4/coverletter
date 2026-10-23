@@ -1,0 +1,39 @@
+	The enclosed disk contains the source necessary
+to use the Princeton Unix fortran compiler and run-time
+system. The disk is a unix file system with 4872 blocks.
+
+	The applicable DEC reference for the language accepted is
+the RT-11 Fortran Language Reference Manual.
+
+	The directory /doc contains supplementary documentation;
+changes to the language are described in the file "fortguide".
+The "*.doc" files contain manual-style documentation for the command of
+the same name. All documentation files should be nroff'ed with the
+macro file "roffmacs."
+
+	The shell file "make_fort" in /fortran will generate all
+of the software needed. Prior to running it, the proper one of {f.eis, f.fis, f.fpu}
+should be copied to the hardware description file "f.m11"
+
+	The following files will be created:
+
+	/usr/mdec/dcopy	- rk11 copy and compactification program
+	/bin/link	- fortran linker
+	/usr/bin/crefer	- cross reference processor for link
+	/usr/bin/libr	- fortran object librarian
+	/usr/bin/narc	- source archiver
+	/bin/macro	- fortran macro assembler
+	/lib/fortovr	- compiler overlays
+	/bin/fortran	- fortran_______ command
+	/lib/f4		- fortran library
+
+
+	If you have any problems,  contact:
+
+	Jeff Rottman
+	217 Fine Hall
+	Princeton University
+	Princeton, New Jersey
+		08540
+	(609) 452-6490
+

@@ -1,0 +1,27 @@
+.th PXREF I 4/1/77
+.sh NAME
+pxref \*- Pascal cross-reference program
+.sh SYNOPSIS
+.bd pxref
+file
+.sh DESCRIPTION
+This is the UNIX implementation of Wirth's cross reference program.
+It makes a cross reference of the Pascal program argument on the
+standard output.
+.sh "SEE ALSO"
+UNIX Pascal ``User Manual,'' ``Report Appendix,'' and ``PXP User Manual,''
+pc (I),
+pcx (I),
+pxp (I),
+pcc (I)
+.sh AUTHOR
+Niklaus Wirth
+.sh BUGS
+Cross reference is not block structured.
+.s3
+Identifiers are trimmed to 10 characters.
+.s3
+As Pascal is interpreted, this program is rather slow.
+.s3
+This program doesn't know that \fIassert\fR, \fIoct\fR, and \fIhex\fR
+are keywords.

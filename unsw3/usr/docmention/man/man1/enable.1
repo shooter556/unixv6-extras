@@ -1,0 +1,37 @@
+ENABLE(I)                       05/15/76                            ENABLE(I)
+
+NAME
+	enable--allow a terminal to talk to UNIX
+
+
+SYNOPSIS
+	enable [all] [linenumber...]
+
+DESCRIPTION
+	Enable edits the file /etc/ttys to specify that new terminals
+	can talk to UNIX. It then signals the init process to effect
+	the changes it has specified.
+
+	At least one argument must be specified. Explicit line numbers
+	may be grouped together or be separated by spaces. Thus,
+
+		"enable abcdhz" and
+		"enable a b c dh z" are equivalent.
+
+	The argument "all" enables ttys 9abcdefghijklmnoz (all but the
+	console teletype). "enable all 8" will enable all the standard
+	terminals at the time the program was written.
+
+NOTE
+	The reason for not having the "all" argument include tty8
+	is that enable is a link to disable, and it would not be
+	good to disable all the terminals.
+
+DIAGNOSTICS
+	Enable has an idea of what legal teletypes are; if you specify
+	a strange one, it asks you if you really want to enable that one.
+
+BUGS
+
+AUTHOR
+	J.A. Lowry

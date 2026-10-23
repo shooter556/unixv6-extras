@@ -1,0 +1,41 @@
+.th CHESS VI 11/1/73
+.sh NAME
+chess \*- the game of chess
+.sh SYNOPSIS
+.bd /usr/games/chess
+.sh DESCRIPTION
+.it Chess
+is a computer program that plays class D chess.
+Moves may be given either in standard (descriptive) notation
+or in algebraic notation.
+The symbol `+' is used to specify check;
+`o-o' and `o-o-o' specify castling.
+The
+.it chess
+program accepts the following options:
+.s3
+.nf
+	first		play black
+	resign		resign game
+	save		save the game in \fIchess.out\fR
+	remove		replay last set of moves
+	restore		continue saved game in \fIchess.out\fR
+	clock		print clock times
+	score		print game history
+	hint		suggest a move
+	repeat		repeat last move
+.fi
+.s3
+Each move is echoed in the appropriate notation followed by
+the program's reply.
+The board may be printed by typing an empty line.
+.sh FILES
+/usr/lib/book		opening `book'
+.sh DIAGNOSTICS
+The most cryptic diagnostic is `eh?' which
+means that the input was syntactically incorrect.
+.sh WARNING
+Over-use of this program
+will cause it to go away.
+.sh BUGS
+Pawns may be promoted only to queens.

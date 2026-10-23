@@ -1,0 +1,137 @@
+.pl 12i
+.de fo
+'bp
+..
+.wh -1i fo
+.in 10
+.nf
+.de xx
+.ne 8
+.ti -10
+.cu
+..
+.xx
+University of Sydney
+
+Basser Department of Computer Science
+Piers Lauder	692-2824
+
+University Computing Centre
+Geoff Cole	692-3491
+
+Department of Electrical Engineering
+Kevin Rosolen	692-3276
+
+Department of Chemical Engineering
+Chris Rowles	692-3001
+
+
+
+
+.xx
+University of New South Wales
+
+Australian Graduate School of Management
+Ian Johnstone	662-3752
+
+Department of Computer Science
+Peter Ivanoff	662-3788
+
+Faculty of Commerce
+Ken Schofield	662-2328
+
+Department of Building
+Roger Miller	662-????
+
+Department of Mechanical Engineering
+Brian Lederer	662-2835
+
+Computing Services Unit
+Colin Webb	662-3590
+
+
+
+
+.xx
+Royal Military College, Duntroon
+
+Computer Centre
+Wilma Stibbards	???-????
+
+
+
+
+.xx
+University of Melbourne
+
+Department of Computer Science
+Ken McDonnel	???-????
+
+
+
+
+.xx
+University of Queensland
+
+Department of Psychology
+Ross Gayler	???-????
+
+Prentice Computer Centre
+John Noad	370-6019
+
+Department of Computer Science
+Dick Kelly	???-????
+
+
+
+
+.xx
+Macquarie University
+
+Department of Statistics
+Don McNeil	888-1001
+
+
+
+
+.xx
+Australian Atomic Energy Commission, Lucas Heights
+
+Computer Centre
+Glyn Peady	531-3085
+
+
+
+
+.xx
+Commonwealth Industrial and Scientific Research Organisation
+
+Division of Computer Research
+John Smith	???-????
+
+
+
+
+.xx
+University of Newcastle
+
+Department of Computer Science
+David Blatt	???-????
+
+
+
+
+.xx
+University of Wollongong
+
+Department of Computer Science
+Juris Reinfelds	???-????
+
+
+
+
+.xx
+New South Wales Institute of Technology
+
+Department of Computer Science
+Geoff Bullen	???-????

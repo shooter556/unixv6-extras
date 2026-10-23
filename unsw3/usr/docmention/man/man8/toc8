@@ -1,0 +1,31 @@
+ac \*- login accounting
+bcheck \*- find missing blocks in filesystems
+boot procedures \*- UNIX startup
+chgrp \*- change group
+chown \*- change owner
+clri \*- clear i-node
+crash \*- what to do when the system crashes
+cron \*- clock daemon
+dcheck \*- file system directory consistency check
+df \*- disk free
+dpd \*- data phone daemon
+dump \*- incremental file system dump
+getty  \*- set typewriter mode
+glob \*- generate command arguments
+icheck \*- file system storage consistency check
+init  \*-  process control initialization
+ipatch \*- first aid for sick file systems
+lpd \*- line printer daemon
+mkfs \*- construct a file system
+mknod \*- build special file
+mod \*- modify documentation database.
+mount \*- mount file system
+ncheck  \*-  generate names from i-numbers
+restor \*- incremental file system restore
+sa \*- Shell accounting
+slp \*- set printer characteristics
+su  \*-  become privileged user
+sync \*- update the super block
+umount \*- dismount file system
+update \*- periodically update the super block
+wall  \*-  write to all users

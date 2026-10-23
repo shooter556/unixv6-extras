@@ -1,0 +1,17 @@
+.po 20
+.ll 80
+.pl 66
+.af % i
+.de fo
+.sp 2
+.tl '' % ''
+..
+.wh -3 fo
+.ce
+PERMUTED INDEX
+.sp 2
+.nf
+.de xx
+\\h"3i-\\w'\\$1'u"\\$1   \\$2
+..
+.so ptxx

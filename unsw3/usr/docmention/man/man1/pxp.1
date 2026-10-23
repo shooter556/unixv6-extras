@@ -1,0 +1,231 @@
+.th PXP I 4/1/77
+.sh NAME
+pxp \*- Pascal execution profiler
+.sh SYNOPSIS
+.bd pxp
+[
+.bd \*-cdfimntuwxy0248\*_
+] [
+.bd \*-z
+[ section ... ] ] file [ pmon.out ]
+.sh DESCRIPTION
+This document is a quick reference to
+.it pxp
+usage.  For an introduction
+and more explanation see the ``PXP User Manual.''
+.s3
+.it Pxp
+is a versatile program which can serve at least three distinct
+purposes.  It can be used to produce execution profiles of
+Pascal programs,
+to clean up the source text of programs,
+and as an aid to syntactic debugging.
+.s3
+.it Pxp
+can produce an execution profile of a program after
+a program has been compiled with the \fB\*-z\fR option
+enabled to
+.it "pc (I)"
+and the object has been executed.
+At process termination, the file \fIpmon.out\fR is created by
+the Pascal runtime system,
+containing information giving the number of times each statement
+in the program was executed.  The command:
+.s3
+.dt
+.bd "	pxp \*-z name.p"
+.s3
+then takes information present in the \fIpmon.out\fR
+file and merges it with a structured listing of the program.
+If the monitor data is not in the file \fIpmon.out\fR
+in the current directory,
+then the name of the data file must be given after the
+source program file name.
+.s3
+More specifically
+.it pxp
+is in
+profile mode
+if any of the \fB\*-z\fR, \fB\*-m\fR, or \fB\*-c\fR options are given on the
+command line.  In this case 
+.it pxp
+will print the header line of each procedure of function in the program
+giving an execution count.  The bodies of functions and procedures are
+also printed if the \fBz\fR option is on.  See also the descriptions
+of the \fB\*-n\fR and \fB\*-0\fR options which affect this.  The \fB\*-t\fR
+option sets profile mode but only causes the generation of a summary table.
+See the ``PXP User Manual'' for examples.
+.s3
+To use
+.it pxp
+to reformat Pascal programs, one specifies 
+neither a profile data file name nor the \fB\*-t\fR,
+\fB\*-z\fR,
+\fB\*-y\fR or
+\fB\*-m\fR
+flags.
+This produces a structured
+version of the program on the standard output in a format suitable
+for resubmission to
+.it pc.
+.it Pxp
+differs from many ``pretty printers'' in that it actually
+parses the entire program, using the same parser as 
+.it "pc (I)."
+It then walks the generated parse tree and, as its
+semantic actions, formats a program.  Thus, it can be used to see
+what the true structure of the program is.
+.s3
+.it Pxp
+can be used to syntactically debug a program.
+By using the \fB\*-y\fR option, one can obtain
+listings of the source lines which contain syntactic errors and
+reformatted listings of only the containing \fIunits\fR,
+giving the structure
+which
+.it pxp
+could discern.
+This feature of
+.it pxp
+is still under development.
+.s3
+The following flags are interpreted by
+.it pxp.
+For some of these flags the options can also be controlled in
+comments within the program text.  See the ``User Manual,''
+``PXP User Manual,'' and ``Report Appendix'' for details.
+The
+\fB\*-c\fR,
+\fB\*-m\fR,
+and \fB\*-t\fR
+options
+are distinct from those with the same letters in
+the text of the program.
+These flags as well as all non-alphabetic flags are 
+have effect only on the command line.
+.s3
+.dt
+.lp +6 5
+\fB\*-c\fR	Extract profile data from the file 
+\fIcore\fR rather than from \fIpmon.out\fR.
+File names other than \fIcore\fR may be given in the same way
+as names other than \fIpmon.out\fR are given.
+Defaults off, a command line only flag.
+.s3
+.lp +6 5
+\fB\*-d\fR	Omit declaration parts.
+Defaults off, but set on by \fB\*-z\fR, \fB\*-m\fR and \fB\*-c\fR.
+.s3
+.lp +6 5
+\fB\*-f\fR	Fully parenthesize expressions.
+The default is off and gives minimum
+parenthesization necessary to preserve the structure of the input
+text.
+.s3
+.lp +6 5
+\fB\*-i\fR	Indent nested procedures and functions.  Default is on.
+.s3
+.lp +6 5
+\fB\*-m\fR	Turns on profiling without enabling the \fBz\fR option flag.
+It is most
+useful when the program already has embedded \fBz\fR option control or only the
+procedure/function header lines are wanted.
+Default is off, a command line only flag.
+.s3
+.lp +6 5
+\fB\*-n\fR	Suppresses even the first line of procedures and functions
+when the \fBz\fR option is off. Default is off.
+.br
+.s3
+.lp +6 5
+\fB\*-t\fR	Print a table summarizing the procedures and functions and the
+number of times each was called. Default is off, a command line only flag.
+.s3
+.lp +6 5
+\fB\*-u\fR	72 column option.
+Default is off.
+See
+.it "pc (I)."
+.s3
+.lp +6 5
+\fB\*-w\fR	Warning message option.
+Default is on.
+See
+.it "pc (I)."
+.s3
+.lp +6 5
+\fB\*-y\fR	List only syntactic errors and \fIunits\fR in which they occur.
+Default is off, a command line only flag.  Under development.
+.s3
+.lp +6 5
+\fB\*-z\fR	Controls printing of the execution profile.
+Default is off.
+Giving the \fB\*-z\fR option on the command line not only puts
+.it pxp
+into profile mode
+but it also sets the \fBz\fR option so that, effectively, all of the program
+will be profiled.  If the \fB\*-z\fR option is followed by a list of section
+names (procedures/functions) then instead of
+enabling the profile at the beginning
+of the program,
+the effect of the \fB\*-z\fR option is to
+enable profiling during the bodies of those
+procedures or functions only.
+Details and examples are given in the ``PXP User Manual.''
+.i0
+.s3
+The following non-alphabetic options are command line only.
+.s3
+.lp +6 5
+\fB\*-\*_\fR	Underline keywords. Default is off.
+.s3
+.lp +6 5
+\fB\*-\fRd	Where \fId\fR
+is one of the digits 2, 4, or 8 sets the number of spaces
+of indenting per block level.  Default is 4.
+.s3
+.lp +6 5
+\fB\*-0\fR	When profiling, suppress the bodies of functions and procedures
+with 0 counts. Default is on.
+.i0
+.dt
+.sh FILES
+pmon.out	profile data
+.br
+core		for profile data when \fB\*-c\fR option given.
+.sh "SEE ALSO"
+UNIX Pascal ``User Manual,'' ``Report Appendix,'' and ``PXP User Manual,''
+pc (I),
+pcx (I),
+pcc (I),
+pxref (I)
+.sh DIAGNOSTICS
+.lp +6 6
+\fB"core": no profile data\fR
+.br
+The \fB\*-m\fR option was not enabled to 
+.it "pc (I)."
+.s3
+.lp +6 6
+\fB"core": bad format\fR
+.br
+Most likely the \fIcore\fR is not a \fIcore\fR from 
+.it "pcx (I)."
+.s3
+.lp +6 6
+\fBcounter mismatch\fR
+.br
+Occurs when the number of procedures and functions or the number
+of counters in the monitor data disagree with the number expected
+for the program, usually because the wrong program is specified
+or the program has been changed since it was compiled.
+.i0
+.sh AUTHOR
+William Joy
+.sh BUGS
+Comments are not yet preserved.
+.s3
+There should be an option to aid in program transportation, e.g.
+by commenting out assert statements, etc.
+.s3
+Does not know how to place multiple statements per line or to fold long lines.

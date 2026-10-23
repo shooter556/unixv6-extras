@@ -1,0 +1,6 @@
+echoall
+dtp nm0 dtp dtp-dist.s mk usr
+echo < /dev/rnmt0
+dd if=dtp of=/dev/nmt0
+dd if=dtp-dist.s of=/dev/mt0
+taprd /dev/rmt0

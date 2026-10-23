@@ -1,0 +1,115 @@
+.th TROFF I 1976
+.sh NAME
+troff  \*-  format text
+.sh SYNOPSIS
+.bd troff
+[ options ] [ files ]
+.sh DESCRIPTION
+.it Troff
+formats text for a Graphic Systems phototypesetter
+according to control lines embedded
+in the text files.
+It reads the standard input if
+no file
+arguments are given.
+An argument of just ``\-'' refers to the standard input.
+.s3
+The options, which may appear in any order so long as they
+appear before the files, are:
+.s3
+.ft I
+.lp +9 8
+option	meaning
+.ft R
+.s3
+.lp +9 8
+\fB-o\fIlist\fR	Print only pages whose page numbers appear
+in \fIlist,\fR which consists of comma-separated numbers and number ranges.
+A number range has the form \fIN-M\fR and means pages \fIN\fR through \fIM\fR;
+a initial \fI-N\fR means from the beginning to page \fIN\fR;
+and a final \fIN-\fR means from \fIN\fR to the end.
+.s3
+.lp +9 8
+\fB-n\fIN-\fR	Number first generated page \fIN\fR.
+.s3
+.lp +9 8
+\fB-s\fIN\fR	Stop every \fIN\fR pages.
+.it Troff
+will stop the phototypesetter every \fIN\fR pages,
+produce a trailer to allow changing of cassettes, and will resume after the
+phototypesetter START button is pressed.
+.s3
+.lp +9 8
+\fB-m\fIname\fR	Prepends the macro file \fB/usr/lib/tmac.\fIname\fR to
+the input \fIfiles\fR.
+.s3
+.lp +9 8
+\fB-r\fIaN\fR	Register \fIa\fR (one character) is set to \fIN\fR.
+.s3
+.lp +9 8
+\fB-i\fR	Read standard input after the input files are exhausted.
+.s3
+.lp +9 8
+\fB-q\fR	Invoke the simultaneous
+input-output mode of the \fBrd\fR request.
+.s3
+.lp +9 8
+\fB-t\fR	Direct output to the standard output instead of the
+typesetter.
+.s3
+.lp +9 8
+\fB-f\fR	Refrain from feeding out paper and stopping phototypesetter
+at the end of the run.
+.s3
+.lp +9 8
+\fB-w\fR	Wait until phototypesetter is available, if currently busy.
+.s3
+.lp +9 8
+\fB-b\fR	\fITroff\fR will report whether the phototypesetter is
+busy or unavailable.
+No text processing is done.
+.s3
+.lp +9 8
+\fB-a\fR	Send a printable (ASCII) approximation of the results to the
+standard output.
+.s3
+.lp +9 8
+\fB-p\fIN\fR	Print all characters in point size \fIN\fR while retaining
+all prescribed spacings and motions, to reduce phototypesetting elapsed time.
+.s3
+.lp +9 8
+\fB-g\fR	Prepare output for the Murray Hill Computation Center
+phototypesetter and direct it to standard output.
+.i0
+.dt
+.s3
+Each option is invoked as a separate argument; for example,
+.s3
+	\fBtroff -o\fI4,8-10 \fB-w\fI \fB-m\fIabc file1 file2\fR
+.s3
+requests formatting of pages 4,8,9 and 10 of a document contained in files
+named \fIfile1\fR and \fIfile2\fR,
+waits for the typesetter to become available,
+and invokes the macro package \fIabc\fR.
+.s3
+.it Troff
+may be used as a filter.
+.sh FILES
+.dt
+/usr/lib/suftab	suffix hyphenation tables
+.br
+/tmp/ta#	temporary
+.br
+/usr/lib/tmac.*	standard macro files
+.br
+.sh "SEE ALSO"
+TROFF User's Manual
+(internal memorandum).
+.br
+TROFF Made Trivial
+(internal memorandum).
+.br
+eqn (I),
+col (I),
+tbl (I)
+.sh BUGS

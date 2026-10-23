@@ -1,0 +1,55 @@
+.sp 2
+nn. Library extensions
+.PP
+Some extensions have been made to the fortran library
+corresponding to the system calls fork, exec, wait, sleep, signal
+and kill.
+See the Unix Programmers Manual for more details.
+.sp 2
+call fork( npid )
+	In the child, 'npid' is zero.
+	In the parent, it is the pid of the child,
+	or -1 if the fork failed.
+
+call exec( name, args,... )
+	The file 'name' is executed with the given arguments.
+	By convention, the first program argument is the
+	name of the program called.
+	The arguments do not terminate with a zero, as distinct
+	from "C" and assembler.
+
+	Note that the call does NOT return, unless the program
+	could not be found, or some other error was found.
+
+call wait( nstat, npid )
+	The process will wait for a child to terminate, in
+	which case the pid & status are returned.
+
+call sys (name, args ... )
+	This corresponds to the 'EXEC' call, except that it
+	is more like a subroutine call, since the routine
+	performs a fork/exec/wait sequence internally.
+
+	This call DOES return, unlike EXEC.
+
+n = nsys( prog, args ... )
+	Exactly like SYS, except it is a function call,
+	and a value is returned viz
+		0: ok
+		-1: error.
+
+call sleep( nsecs )
+	Go to sleep for "nsecs" seconds.
+
+call signal( nsig, label, nold )
+	Take action on signals received.
+	nsig: the signal to process.
+	label:		0: default action;
+			1: ignore;
+			otherwise assumed to be name of a
+			subroutine to be called.
+	nold: the old value of "label".
+
+call kill( npid, isig, ierr )
+	Send the signal "isig" to process "pid".
+	If successful, ierr = 0, else it it -1.

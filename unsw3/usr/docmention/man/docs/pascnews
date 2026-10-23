@@ -1,0 +1,192 @@
+        P A S C A L   N E W S
+
+5 June 77  >> Pascal-S available <<
+
+Pascal-S, Wirth's subset Pascal interpreter, is now available  on  UNIX
+as  "pascals".   It is a large Pascal program which was compiled by the
+Pascal compiler "pc" and is interpreted  by  the  interpreter  "pcxid."
+Although  it  runs  rather slowly, it may be interesting to students in
+CS154 and other persons interested  in  Wirth's  error  recovery  tech-
+niques.   Pascal-S  is like Pascal but the following features are omit-
+ted:
+
+        Files
+        Pointers
+        Variant Records
+        Enumerated Types
+        Subrange types
+        Packed
+        Sets
+        Labels and Gotos
+        Forward
+        With statements
+        ... There may be others ...
+
+Pascal-S does have arrays and non-variant records.
+
+Some problems with the program:
+
+     Comments may be delimited only by (* and *).
+
+     Some illegal characters (those not corresponding to any CDC  char-
+     acter) cause the program to die.
+
+     A number of machine dependencies were fixed  while  bringing  this
+     program up -- more may remain and cause incorrect functioning.
+
+     Pascal-S runs slowly as it is an interpreter running on top of  an
+     interpreter.   Also it has a large case statement at the center of
+     its interpreter which results in a slow, linear case label  search
+     in pcxid which interprets it, further exaggerating its slowness at
+     run time.
+
+Pascal-S takes the data immediately after the program  and  runs  "load
+and  go."  It gives values of variables in a backtrace at abnormal ter-
+mination.  Send comments on Pascal-S to 'bill' or  'pascal'  by  system
+mail.
+
+4 June 77  >> New version of pcx available <<
+
+A new version of pcx is now available as "pcxid." This version runs  in
+separate  i/d  space  which  allows slightly larger programs to run.  A
+number of students in CS154 have been running out of  memory  on  their
+programs.  It is useful to be aware of the following facts:
+
+1. A variable declared "integer" takes 2 words of machine memory.   Ar-
+rays  of integers are wasteful of precious memory if they will not con-
+tain full range integers.  Declaring subranges is the way to go.
+
+2. There are options 'p' post-mortem and 't' run-time tests which, when
+enabled,  make  the  program  larger.   The 'p' option allows the post-
+mortem backtrace and is probably not  dispensable.   However,  the  't'
+run-time  test  option  costs  program size and should be disabled over
+portions of the code which are debugged if space is  a  problem.   This
+will  make  the  code smaller and will make it run faster.  To turn run
+time tests off put a line like:
+
+        {$t-}
+
+before a group of debugged procedures, and a line like:
+
+        {$t+}
+
+when the following code should be range tested.  One can  also  disable
+tests on the command line.  More information is in the documentation on
+the Pascal system especially the Report Appendix.
+
+3. By deleting or commenting out unused diagnostics one can save  space
+in the code.
+
+4. Be aware that blank padding of constant strings occurs in  the  com-
+piler rather than at run time so that the following:
+
+        var area : array[1..1000] of char;
+
+        area := '  ';
+
+uses 1000 bytes of program for the assignment!   This  is  non-portable
+code in any case and should be done with a loop.
+
+I will add to this list of space-wasters if I think of any  more  major
+areas.  In any case this machine is not infinitely large.  If your pro-
+gram will not run with the standard pcx you should examine it and prune
+it  rather  than  going  to  pcxid if at all possible.  If you overflow
+pcxid and the above do not help you are simply out of luck.
+
+30 May 77  >> Text inclusion facility available <<
+
+A text inclusion facility is now available with UNIX Pascal.  This  fa-
+cility  allows  the  interpolation  of  text  from other files into the
+source stream of the compiler.  It can be used to divide large programs
+into  more  manageable pieces for ease in editing and ecological sound-
+ness (you can make listings of only those parts of your program you are
+working on.)
+
+The include facility is similar to that of the C compiler.  To  trigger
+it  one merely places the character '#' in the first position of a line
+and then (after an arbitrary number of blanks or tabs)  the  word  "in-
+clude"  followed by a file name enclosed in single ' or double " quota-
+tion marks.  The file name may be followed by a semicolon if  you  wish
+to pretend that this is a Pascal statement.  Include filenames must end
+in '.i'.  Thus a simple example:
+
+        program compiler(input, output);
+
+        #include "globals.i"
+        #include "scanner.i"
+        #include "parser.i"
+        #include "semantics.i"
+
+        begin
+                { main program }
+        end.
+
+The include pseudo-statement causes the lines from the included file to
+be  interpolated  into  the input.  For the purposes of compile and run
+time diagnostics and statement numbers in the listings,  the  lines  in
+the included file are numbered from 1.  Nested includes are possible up
+to 10 deep.
+
+Because the interpreter calculates offsets into procedures when  errors
+occur  by subtracting the error line number from the line number of the
+procedure header, it is not a good idea to put the code for a procedure
+or  function  in a different file from the procedure or function header
+line.
+
+Three related options have been added to the Pascal  compiler.   The  v
+option  causes the names of each included file to be printed in the di-
+agnostic output and can be used to watch the course of a large compila-
+tion.  The h and i options pertain to listings made when included files
+are present.
+
+'Include' lines are never printed in a listing.  If the 'h'  option  is
+not  set,  they  are  replaced by a line containing the file name and a
+colon.  This is the default setting.  If the h option is  enabled  then
+the  include  line  is replaced with a banner line similar to the first
+line of listings.  This line is placed on a new page in the listing.
+
+When a non-trivial line is encountered in the source text after an  in-
+clude  finishes,  the 'popped' filename is printed, in a manner similar
+to the above.
+
+For the purposes of error diagnostics when not making  a  listing,  the
+filename will be printed before each diagnostic if it has changed since
+the last filename was printed.
+
+Finally, the -i option may be used to obtain listings of  only  certain
+included  files.   This  is  similar to the -z option of pxp and can be
+used e.g. in:
+
+        % pc -i scanner.i compiler.p
+
+for the example above to make a  listing  of  the  stuff  in  the  file
+'scanner.i'.   The effect of this option is to save the list 'l' option
+before including the text of the file scanner.i (i.e. {$l>+}) and  then
+to  pop it after finishing processing scanner.i (i.e. {$l<}).  Multiple
+include file names may be given.
+
+Pxp has been changed to understand the 'h' and 'v' options and to  have
+the  include facility.  Note that the pxp 'i' option already has a dif-
+ferent meaning.  There is a new '1' option for pxp.  This  is  used  to
+pretty  print  files  to be included which do not contain complete pro-
+grams, or the main program when it contains includes.  If the file  be-
+ing  prettyprinted  is a include file, i.e. its name ends in '.i', then
+this will effectively enclose the file between the lines:
+
+        program x(output);
+
+and
+
+        begin end.
+
+In any case, the '1'  option  inhibits  includes,  and  causes  include
+statements  to  be  prettyprinted into other include statements.  If an
+include file contains a group of procedures or one or more  declaration
+parts  this  will work fine.  Note that just prettyprinting a file with
+includes without specifying any options makes one file  containing  all
+of the code.
+
+It is hoped that this facility will aid the construction of large  Pas-
+cal  programs.  Please report problems with these new features with the
+"trouble pascal" command.  Comments and suggestions may be directed  to
+'bill' by system mail.

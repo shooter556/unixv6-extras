@@ -1,0 +1,67 @@
+macro library
+
+miscellaneous macros:
+	$param				; defines register symbols
+
+unix macros:	any arguments are optional.  if all are left out
+	then the arguments will be completely left out.  i.e. .word
+	directives will be required after the macro.
+
+	system:
+	$indir	[indirectref]		; indirect system call
+	$exit	[statusnum]		; exit
+	$fork				; fork the process
+	$exec	[name][,argumentlist]	; exec a file
+	$wait				; wait for child to complete
+	$nice	[priority]		; reset process's priority
+	$break	[topaddr]		; change memory limits
+	$getpid				; find process i.d.
+	$sig	[signum][,label]	; specify signal action
+	$kill	[signo]			; send signal signo to process
+					; who's pid is in R0
+	$setuid	[uid]			; set process owner
+	$sleep	[seconds]		; sit around
+	$times	[buffer]		; get all times for process
+					; and it's children
+	$time				; get system time (into R0, R1)
+	$stime				; set system time (R0, R1)
+					; super user only
+	$ptrace	[childpid][,reqtype][,addr]	; parent-child connection
+	$prof	[buffer][,buffsize][,offset][,scale]	; enable profiling
+	$switch				; read switch register
+
+	$pp	lock
+	$vv	lock
+	$setpsw	newpsw
+
+	i/o system calls:	those calls which expect to find
+			a file i.d. in R0 are marked with an '*'.
+	$open	[filename][,mode]	; opens a file for r/w
+	$creat	[filename][,mode]	; creates a file
+	$close	[filedescriptor]	; closes a file
+*	$read	[bufferaddr][,buffsize]	; read
+*	$write	[bufferaddr][,buffsize]	; write
+*	$seek	[offset][,seektype]	; seek position in file
+	$link	[oldname][,newname]	; make a link
+	$unlink	[name]			; unlink a file
+	$mount	[specialfile][,name][,rwflag]	; mount file system
+	$umount	[specialfile]		; unmount a file system
+*	$stty	[args]			; set tty mode call
+*	$gtty	[argbuffer]		; get tty mode call
+	$dup	[oldfiledescriptor]	; duplicate file descriptor
+	$pipe				; make a pipe
+	$chmod	[name][,mode]		; change file's mode
+	$chown	[name][,owneruid]	; change file's owner
+	$stat	[name][,buffer]		; get file's status
+*	$fstat	[buffer]		; get file's status
+	$chdir	[name]			; set current directory
+	$mknod	[name][,mode][,addr]	; create a directory etc.
+	$sync				; sync.....
+
+gt40 macros:	contained within "gtsym$"
+	gtsym$				; symbols relevent to gt40
+	gtrel$	xdisplacement,ydisplacement[,intensify]
+	gtvec$	xdisplacement,ydisplacement[,intensify]
+	gtpnt$	xposition,yposition[,intensify]
+	.inh				; inhibit all interrupts
+	.enb				; restore previous priority

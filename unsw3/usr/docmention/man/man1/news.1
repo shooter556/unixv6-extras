@@ -1,0 +1,55 @@
+.th NEWS I 4/22/75
+.sh NAME
+news \*- news distribution program
+.sh SYNOPSIS
+.bd news
+[ option ]
+.sh DESCRIPTION
+.it News
+is used to print the news file, or to update the news file.
+.it News
+with no option prints the standard news file.
+.s3
+The legal options are:
+.s3
+.ft I
+.lp +8 7
+option	meaning
+.ft R
+.s3
+.lp +8 7
+s	send the standard input to the news file.
+.s3
+.lp +8 7
+p	print the standard news file.
+.s3
+.lp +8 7
+o	print the old news file.
+.s3
+.lp +8 7
+h	print the history news file.
+.i0
+.dt
+.s3
+.it News
+with the
+.bd s
+option works like the
+.it mail
+(I) command.
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 20
+/usr/news/mailbox	current news
+/usr/news/mbox	old news
+/usr/news/history	history of system development
+/bin/cat	to print news
+/bin/mail	to send news
+.fi
+.dt
+.sh "SEE ALSO"
+cat (I), mail (I)
+.sh AUTHOR
+Mike Tilson
+.sh BUGS

@@ -1,0 +1,688 @@
+.in 0
+.tl ''Program features''
+
+	lisp-11 provides several functions to allow the user to write
+algol-like sequences fo statements.
+
+
+
+
+.C0
+(prog vlist body)
+.C1
+nsubr
+.C2
+see McCarthy________, or Weissman________.
+The pseudo forms go__ and return______ may only appear at the
+top leval, or in a cond at the top level.
+
+
+.C0
+(progn x1 ... xn)
+.C1
+nsubr
+.C2
+x1__ ... xn__ are evaluated. The value returned is that yielded by xn.
+
+
+.C0
+(while p s1 ... sn)
+.C1
+nsubr
+.C2
+p_ is evaluated. If it is false, and this is the first time through, nil is returned.
+If it is false, but was previously true, the last value of sn is the value of the
+while.  If p is true (non-nil), the the si are evaluated, and it all starts again.
+
+
+.C0
+(for i t d s1 ... sn)
+.C1
+nsubr
+.C2
+First i_ is evaluated, and its value discarded.  
+Then t_ is evaluated. If it is nil, nil is returned.
+Otherwise the si are evaluated. Finally t_ is again
+evaluated; if it nil, the value of sn is returned as the value of the for.
+Othwrwise, the process repeats.
+.bp
+.in 0
+.tl ''String functions''
+
+
+	The following index notation will be used:
+s[n:m] is the substring starting at the n'th character of s
+and continuing for m characters.
+Truncation is automatic at the boundaries of the string.
+The first byte in a string is s[1:1].
+
+
+example:
+
+	"cat"[-1:2] = "c"
+
+
+.C0
+(ascii s)
+.C1
+subr
+.C2
+s_ must be a string. The value is the integer value of s[1:1].
+If s[1:1] = "", 0 is returned.
+
+
+.C0
+(char s)
+.C1
+subr
+.C2
+s_ is converted to an integer. A one-byte string is returned whose ascii
+representation is the low-order seven bits of s.
+
+
+.C0
+(concat s1 ... sn)
+.C1
+lsubr
+.C2
+all the si__'s must be strings. The value is their
+concatenation.
+
+
+.C0
+(dupl s n)
+.C1
+subr
+.C2
+s_ must be a string, n_ numeric. The value is s concatenated with
+itself n times. The null string is returned if n <_ 0.
+
+
+.C0
+(index s p n)
+.C1
+subr
+.C2
+the string s_ is searched for the pattern string p_
+starting at position n_. If it is not found, 0 is returned. Otherwise, the index
+of the first byte of the match is returned.
+
+
+.C0
+(size s)
+.C1
+subr
+.C2
+the number of bytes in s_ is returned.
+
+
+.C0
+(substr s n m)
+.C1
+subr
+.C2
+returns s_[n_,m_]
+.bp
+.in 0
+.tl ''Input-Output''
+
+	Lisp-11 provides a basic set of stream oriented input/output
+functions for communicating with the outside world.  Default input
+is from UNIX channel 0, and default output is to UNIX channel 1.
+Other channels may be opened for either input or output up to a system defining
+maximum.  All of the functions indicated here with an optional last
+argument "[n]" will take an integer channel number on which they
+are to perform their i/o function. 
+
+	Input files may be of two types: list or character.  The type need
+not be specified at opening, and can be changed in the middle of a file.
+However, in going from list to character mode initial blanks,
+tabs, or new-lines may be lost.
+
+.C0
+(close n)
+.C1
+subr
+.C2
+channel n is closed. nil is returned. channels 0 and 1
+cannot be closed.
+
+.C0
+(eof n)
+.C1
+subr
+.C2
+t_ is returned if the next read of the same type as that last done
+on channel n will produce an eof. Otherwise, nil is returned.
+
+
+.C0
+(fmode n m)
+.C1
+subr
+.C2
+n_ and m_ must be integers. Channel n is set to mode m.
+Bit 13 in m indicates character mode if set, list mode if
+reset. The low byte, if non-zero, is the line-size.
+
+
+.C0
+(genseed s)
+.C1
+subr
+.C2
+s_ must be a string. It is made the initial segment of all new
+identifiers produced by gensym______.  The previous seed is
+returned.
+
+
+.C0
+(gensym)
+.C1
+subr
+.C2
+A fresh identifier name is returned. It is not intern'ed.
+
+
+.bp
+.C0
+(incon s)
+.C1
+subr
+.C2
+s_ must be a string. It is regarded as the external representation of some
+lisp data, and converted for input.  The converted value is returned.
+
+
+.C0
+(intern x)
+.C1
+subr
+.C2
+x_ must be a symbolic atom. It is intern'ed, and a pointer to its
+unique representation returned. This is automatically done with all
+symbolic atoms read in.
+
+
+.C0
+(mkatom s)
+.C1
+subr
+.C2
+s_ must be a string. An atom is generated with that print name. It is intern'ed.
+
+
+.C0
+(openi s)
+.C1
+subr
+.C2
+s_ must be a string, and is used as a UNIX file name. The file named by s
+is opened for input, and the channel number on which it is open is returned.
+
+
+.C0
+(openo s)
+.C1
+subr
+.C2
+s_ is as in openi, but is opened for output (created!)
+
+
+.C0
+(outcon L)
+.C1
+subr
+.C2
+the output representation of L is returned as a string.
+
+
+.C0
+(outstr s [n])
+.C1
+lsubr
+.C2
+the string s is printed on the specified channel (1 is default).
+Enclosing quotes are not printed, and no new-line is appended.
+
+
+.C0
+(prin L [n])
+.C1
+lsubr
+.C2
+L_ is printed on the specified channel. No new-line is appended.
+
+
+.bp
+.C0
+(print L [n])
+.C1
+lsubr
+.C2
+L_ is printed on the specified channel. A new-line is appended.
+
+
+.C0
+(radix n)
+.C1
+subr
+.C2
+n_ must be 8. or 10. It is made the input-output radix. The old radix is returned.
+
+
+.C0
+(read [n])
+.C1
+lsubr
+.C2
+An s-expression is read from the indicated channel.
+
+
+.C0
+(readch [n])
+.C1
+lsubr
+.C2
+A one-byte string is returned containing the next byte on the indicated channel.
+
+
+.C0
+(remob s1 ... sn)
+.C1
+nsubr
+.C2
+The named symbolic atoms are removed from the oblist.
+
+
+.C0
+(setch s)
+.C1
+subr
+.C2
+The protect character is set to s_[1:1].
+The ignore character is set to s_[2:1].
+
+
+.C0
+(setsl x)
+.C1
+subr
+.C2
+The slashify-mode indicator is set to x. The previous value is returned.
+
+
+.C0
+(save s)
+.C1
+subr
+.C2
+s_ must be a string denoting a file name. All symbolic
+atoms and their values are written onto the named file,
+with the exception of those with subr____ type values.
+They are written in the format:
+.br
+(setq atm 'valueofatm)
+.br
+This may be edited, and then xfile'd, to restore
+a previous workspace.
+In particular, nil may not be assigned to.
+
+.co
+.C0
+(terpri [n])
+.C1
+lsubr
+.C2
+A new-line is output on the specified channel.
+
+
+.C0
+(xfile s)
+.C1
+subr
+.C2
+s_ must be a string denoting a UNIX file name.
+The s-expressions in the file are executed until an error or
+eof occurs.
+
+
+
+.in 0
+note:
+.in 8
+outstr, prin, and print return the value of their first argument.
+.bp
+.in 0
+.tl ''Error control and Garbage collection''
+
+
+..C0
+(*rset x)
+.C1
+subr
+.C2
+Sets the reset_____ flag in the interpreter to x, and returns the old value.
+If the reset_____ flag is nil, when an error occurs, variables are unbound
+and control ascends until a previous errset______ or the top level is reached.
+If the flag is non-nil, variable bindings are frozen, and debug_____ is called.
+When debug returns, bindings are then undone, and control ascends.
+
+
+.C0
+(addr x)
+.C1
+subr
+.C2
+An integer giving the core address of x is returned.
+
+
+.C0
+(backgag x)
+.C1
+subr
+.C2
+x_ must be an integer.  Normally, when an error occurs, a certain amount
+of back-trace information is printed. x_ specifies the number of levels
+to exhume. The old value is returned. The initial value is five.
+
+
+.C0
+(cont)
+.C1
+subr
+.C2
+Nil___ is returned. It permits an exit from debug_____.
+
+
+.C0
+(debug)
+.C1
+subr
+.C2
+debug_____ prints the message "SPECIAL MODE ..."  and then enters an eval loop.
+It exits after hearing from cont____ with value nil.
+
+
+.bp
+.C0
+(deposit n m)
+.C1
+subr
+.C2
+Integer n_ is deposited at address m_.
+
+
+.C0
+(err s)
+.C1
+subr
+.C2
+s_ must be a string. It is treated as an error message.
+If no errset is in effect, it is printed, a backtrace occurs, and control
+returns to the top level of lisp. If an errset is in effect,s is returned
+to it. err___ does not return.
+
+
+.C0
+(errset L f)
+.C1
+fsubr
+.C2
+If f_ evaluates to nil, this is equivalent to:
+.br
+(list (eval L))
+.br
+Otherwise, L is evaluated. If no error occurs, 
+(list (eval L)) is returned. If an error occurs, the string text of the error message
+is returned as the value of errset.
+errset______ saves the previous value of the reset_____ flag and initializes it to nil
+for the evaluation. It also saves and zeros the backgag count for the duration.
+
+.C0
+(examine n)
+.C1
+subr
+.C2
+The contents of core location n is returned.
+
+
+.C0
+(exit n)
+.C1
+subr
+.C2
+Lisp-11 is exited with return code n_.
+
+
+.C0
+(gc)
+.C1
+subr
+.C2
+A garbage collection is forced. nil is returned.
+
+
+.bp
+.C0
+(gc-count)
+.C1
+subr
+.C2
+The number of free cells collected on the last garbage collection
+is returned.
+
+
+.C0
+(gc-min n)
+.C1
+subr
+.C2
+n_ must be an integer. It is stored, and after a garbage collection,
+compared with the number of free cells collected. If fewer than n
+cells were collected, more core is requested from the system. If this
+core is not available, the warning message "TOO FEW FREE CELLS"
+is printed
+.in 0
+.bp
+.tl ''Future enhancements''
+
+	It would now be easy to implement arrays. However,
+the author does not particularly favor lisp arrays, and so they will probably
+not appear.
+
+
+	The author also views a compiler as unnecessary.
+.bp
+.tl ''System distribution''
+
+
+	lisp-11 is written in macro, and is linked using the
+fortran linker.
+
+	Almost all of the functions are in the object library
+lsplib. Their source may be found in the narc file
+libsource.
+
+	New functions may be added by editing lispa.m11.
+The format of a machine-code function may be readily deduced from examining
+some system functions.
+
+	There are conditional assemblies to eliminate floating-point
+code.  
+.bp
+.tl ''Function index''
+
+.na
+.nf
+.mk
+*append		6.a
+*apply		3.e
+*eq		5
+*eval		3.e
+*function	3.e
+*ge		5
+*gt		5
+*le		5
+*lt		5
+*ne		5
+*plus		7.a
+*rset		11
+*times		7.a
+abs		7.a
+add1		7.a
+addr		11
+and		5
+append		6.a
+apply		3.e
+ascii		9
+assoc		6.f
+atom		5
+backgag		11
+car		6.b
+cdr		6.b
+char		9
+clist		6.a
+close		10
+conc		6.c
+concat		9
+cond		4
+cons		6.a
+cont		11
+copy		6.d
+c[a/d...]r	6.b
+de		6.g
+debug		11
+deposit		11
+df		6.g
+difference	7.a
+divide		7.a
+dl		6.g
+dm		6.g
+dn		6.g
+ds		6.g
+dupl		9
+entier		7.a
+eof		10
+eq		5
+.in 40
+.rt
+eq.		5
+equal		5
+err		11
+errset		11
+eval		3.e
+evlis		3.e
+examine		11
+exit		11
+expr		3.e
+fexpr		3.e
+fixp		5
+float		7.a
+floatp		5
+fmode		10
+for		8
+fsubr		3.e
+function	3.e
+gc		11
+gc-count	11
+gc-min		11
+ge.		5
+genseed		10
+gensym		10
+gt.		5
+incon		10
+index		9
+initfn		3.e
+intern		10
+label		3.e
+lambda		3.e
+land		7.b
+last		6.b
+le.		5
+length		6.d
+lexpr		3.e
+list		6.a
+lnot		7.b
+lor		7.b
+lsh		7.b
+lsubr		3.e
+lt.		5
+lxor		7.b
+macro		3.e
+map		6.e
+mapc		6.e
+mapcar		6.e
+maplist		6.e
+max		7.a
+member		5
+.in 0
+.bp
+.mk
+memeq		5
+min		7.a
+minus		7.a
+mkatom		10
+nconc		6.c
+ncons		6.a
+ne.		5
+nexpr		3.e
+not		5
+nsubr		3.e
+null		5
+numberp		5
+openi		10
+openo		10
+or		5
+outcon		10
+outstr		10
+pair		6.a
+plus		7.a
+prin		10
+print		10
+prog		8
+progn		8
+quote		6.a
+quotient	7.a
+radix		10
+read		10
+readch		10
+recip		7.a
+remainder	7.a
+remob		10
+reverse		6.d
+rol		7.b
+ror		7.b
+rplaca		6.c
+rplacd		6.c
+rsh		7.b
+sassoc		6.f
+save		10
+select		4
+set		3.e
+setch		10
+setq		3.e
+setsl		10
+sexpr		3.e
+sign		7.a
+size		9
+ssubr		3.e
+stringp		5
+.in 40
+.rt
+sub1		7.a
+subr		3.e
+subst		6.d
+substr		9
+terpri		10
+times		7.a
+tval		3.e
+type		3.e
+unset		3.e
+unsetq		3.e
+val		3.e
+while		8
+xcons		6.a
+xfile		10
+.in 0
+.bp

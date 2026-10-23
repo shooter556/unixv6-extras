@@ -1,0 +1,74 @@
+.th PARA I July/76
+.sh NAME
+para \*- improved C paragrapher and syntax checker
+.sh SYNOPSIS
+.bd para
+file.c
+.sh DESCRIPTION
+A paragraphed listing of the named "C" program is produced on the
+standard output.
+Syntax errors are reported on the standard diagnostic output.
+Thus, to syntax check a program, it suffices to issue the command:
+
+.ti 10
+para file.c >/dev/null
+
+The syntax enforced is somewhat stricter than that enforced
+by the C compiler.
+Also, the preprocessor enforces the 8 character identifier
+rule strictly.
+(The standard "cc" preprocessor will only do so occasionally.)
+
+Programs with syntax errors will still be paragraphed, but they will
+look ugly near the point of the error.
+
+The input and output should not be the same, or you will come to grief.
+.sh FILES
+.sh "SEE ALSO"
+cc(I), csyn(VI), C Reference Manual
+.sh DIAGNOSTICS
+Of course.
+Messages which say "Fatal error" mean you
+have hit upon some internal limitation.
+.sh AUTHOR
+Mike Tilson
+.sh BUGS
+Error recovery, while generally better than that of the C compiler, is still not
+as good as it might be.
+
+If you have very long lines, they can get broken in places which will
+cause the resulting program to not compile.
+This is a bug in the C compiler, i.e.:
+.ti 10
+function
+.ti 10
+(x);
+.br
+will not compile because the newline is not treated strictly as a blank.
+
+If any input token is longer than 100 or so characters, you can dump core.
+
+In certain cases, macro processing can prevent newlines from being output
+where they should.
+for example,
+
+.nf
+#define cycle for(;;)
+#define x y
+main() {
+	cycle x;
+}
+
+instead of:
+
+main() {
+	cycle
+		x;
+}
+
+.fi
+which is correct.
+The problem occurs when there are two
+macros in a row, one of which causes a new line.
+This is fairly hard to fix, because you do not
+want new lines from inside macros.

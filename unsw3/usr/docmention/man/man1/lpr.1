@@ -1,0 +1,70 @@
+.th LPR I 7/17/74
+.sh NAME
+lpr \*- spool files ready for printing
+.sh SYNOPSIS
+.bd lpr
+[ -flag ... ] file ...
+.sh DESCRIPTION
+.it Lpr
+spools the named files for printing on the local line printer.
+Its action may be modified by the following flags.
+.s3
+.lp +11 10
+.ft I
+flag	meaning
+.ft R
+.s3
+.lp +11 10
+-\fBr\fR	remove file after spooling (if permissions allow).
+.s3
+.lp +11 10
+-\fBx\fR	do not print a banner page.
+.s3
+.lp +11 10
+-\fBe\fR\fIn\fR	\fIn\fR is a digit (0-7) indicating a priority level
+(lo-hi). The default is 0.
+.s3
+.lp +11 10
+-\fBs\fR	file is printed at low priority (level -1).
+.s3
+.lp +11 10
+-\fBi\fR\fIstring\fR	use the \fIstring\fR (max 20 characters)
+given as the banner page jobname.
+Default is login name.
+.s3
+.lp +11 10
+-\fBp\fR	push the job out of printer if last to be printed.
+.s3
+.lp +11 10
+-\fBc\fR	make a copy of the file when spooling.
+Links are used where possible.
+.s3
+.lp +11 10
+-\fBn\fR\fIm\fR	print \fIm\fR copies of the file under the one banner page.
+.i0
+.dt
+.s3
+If no files are specified, the standard input is read and spooled.
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 14
+/tmp/lpd	spool area directory
+.br
+/etc/passwd	for login names
+.br
+/etc/lpd	spool area and print manager
+.fi
+.sh "SEE ALSO"
+lpd (VIII), prstop (I), restart (I), repeat (I)
+.sh DIAGNOSTICS
+yes;
+but rather esoteric !
+.sh AUTHOR
+So many people have tinkered with
+.it lpr
+and
+\fIlpd\fR that space denies complete acknowledgement.
+However, Greg James (formerly of UNSW, now AAEC) deserves a mention.
+.sh BUGS
+Definitely, but rarely.

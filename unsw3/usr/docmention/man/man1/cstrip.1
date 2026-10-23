@@ -1,0 +1,20 @@
+.th CSTRIP I 12/4/78
+.sh NAME
+cstrip \*- strip extraneous garbage from C programs
+.sh SYNOPSIS
+.bd cstrip
+.sh DESCRIPTION
+.it Cstrip
+removes comments, surplus line feeds, and unneccesary spaces from C programs.
+Use as a filter.
+.sh "SEE ALSO"
+CC (I)
+.sh DIAGNOSTICS
+"Syntax error: n" \*- where
+.it n
+can be either: 1 (last char was '/');
+2 or 3 (unended comment); 4 (unended string); 8 (last char was '\\').
+.sh AUTHOR
+Piers Lauder (\ University of Sydney\ )
+.sh BUGS
+The result is unreadable.

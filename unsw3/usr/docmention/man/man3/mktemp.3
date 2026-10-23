@@ -1,0 +1,38 @@
+.th MKTEMP III 4/18/75
+.sh NAME
+mktemp \*- create temporary file name
+.sh SYNOPSIS
+.ft B
+char *mktemp(s)
+.br
+char *s;
+.ft R
+.sh DESCRIPTION
+.it Mktemp
+creates strings useful as the names of temporary files.
+The argument should end in the characters `aXXXXX'.
+The X's are replaced by the decimal process ID number;
+the `a' or other character is incremented until no file
+with the resulting name exists.
+Use of the process ID as part of the name means that the chance
+of accidental collision with
+other processes is small.
+The variable character preceding the X's
+is useful when several files are to be created by the
+same process.
+For example, the call
+.s3
+	mktemp("/tmp/pcsaXXXXX");
+.s3
+when used by process
+12345 returns strings in the sequence
+`/tmp/pcsa12345', `/tmp/pcsb12345', ....
+.s3
+.it Mktemp
+returns its argument after altering the characters
+it points to.
+Thus it is unwise to use
+a pointer to the same string in successive calls.
+.sh FILES
+.sh "SEE ALSO"
+.sh DIAGNOSTICS

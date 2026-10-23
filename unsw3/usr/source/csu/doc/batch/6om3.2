@@ -1,0 +1,198 @@
+.in 7
+.ig
+.ul 1
+..
+3.2.3 The "BATCH" Process
+
+.ti 10
+The BATCH process is used to start all processes to do
+with the Batch System and having done this it quietly exits.
+.ti 10
+When executed BATCH may ask a question of the operator (ref section 4.3.3)
+and then carries out some house keeping chores before starting the following
+processes
+
+	* EAR
+	* CRD
+	* SPL
+	* JTD
+	* PRINT
+	* MAC
+	* FTN
+	* LIST
+	* SHELL
+	* MONITOR
+
+.in 10
+None of the above listed processes may be started in any other way.
+
+.ig
+.ul 1
+..
+3.2.4 The "EAR" Process
+
+.ti 10
+EAR is the process which listens to the ravings of QEI,
+monitoring all messages.
+Certain messages are detected and cause a change in the Batch system
+e.g. when "KRONOS 2.1.2 ..." appears, this is assumed to mean that
+EXPORT has bean reinitialized, and so the batch station will login
+automatically.
+
+.ig
+.ul 1
+..
+3.2.5 The "CRD" Process
+
+.ti 10
+CRD spools cards from the card reader
+to be executed locally or sent to the CYBER by the JTD process.
+.ti 10
+CRD also checks all CYBER jobs for valid job cards.
+Invalid jobs are flushed to the local printer
+with a message of the form
+
+	"####  illegal job card"
+
+followed by some error message.
+
+.ig
+.ul 1
+..
+3.2.6 The "SPL" Process
+
+.ti 10
+SPL spools the printout received from the CYBER to be
+printed by the PRINT process.
+It may also return the output to the user's directory, if so
+specified on the "SUBMIT" command.
+
+.ig
+.ul 1
+..
+3.2.7 The "LPD" Process
+
+.ti 10
+LPD is not really part of the Batch system, but is utilized by it.
+LPD, the line printer daemon, when started, for example by the LPR command, creates a file
+"USR/LPD/LOCK".
+if this file already exists, LPD immediately dies.
+if not, LPD then examines the directory "/USR/LPD/X" for pointers
+to files to be printed and prints them.
+
+.ig
+.ul 1
+..
+3.2.8 The  "PRINT" process
+
+.ti 10
+This process takes print jobs from out of the Batch queues and passes
+them one by one to "LPD" for printing.
+
+.ig
+.ul 1
+..
+
+.ig
+.ul 1
+..
+3.2.9 The "MAC" Process
+
+.ti 10
+This process takes MACRO jobs from the local input queue,
+runs them and places
+all output into the local output queue to be printed by PRINT.
+
+.ig
+.ul 1
+..
+3.2.10 The "FTN" Process
+
+.ti 10
+This process takes UNIX Fortran jobs from the local input queue,
+runs them and places all output into the local output queue to be
+printed by PRINT.
+
+.ig
+.ul 1
+..
+3.2.11 The "SHELL" Process
+
+.ti 10
+This process takes SHELL jobs from the local input queue,
+runs them and places
+all output into the local output queue to be printed by PRINT.
+
+.ig
+.ul 1
+..
+3.2.12 The "LIST" Process
+
+.ti 10
+This process takes card decks from the local input queue,
+lists them and places
+all output into the local output queue to be printed by PRINT.
+
+.ig
+.ul 1
+..
+3.2.13 The "JTD" Process
+
+.ti 10
+JTD, the cyber daemon,
+when created examines the local input queues for spooled
+card decks to be sent to the CYBER and sends them.
+After sending all available decks JTD goes to sleep until
+more CYBER jobs enter the QUEUES.
+
+.ig
+.ul 1
+..
+3.2.14 The "JA" Process
+
+.ti 10
+JA is a process run to analyse stored statistical information.
+The information is stored by the Batch System software.
+
+.ig
+.ul 1
+..
+3.2.15 The 200-UT Driver
+
+.ti 10
+The 200-UT driver is the software interface between the CYBER
+line and the above batch station processes.
+It has been extensively rewritten and reduced in size for
+this new release of the Batch System.
+This interface is implemented as a set of four device files:
+
+	* CYBER commands up (cyb.cmdsu)
+	* CYBER commands down (cyb.cmdsd)
+	* CYBER jobs up (cyb.jobsu)
+	* CYBER jobs down. (cyb.jobsd)
+
+.ig
+.ul 1
+..
+3.2.16 The Card Reader Driver
+
+.ti 10
+The card reader driver is the software responsible
+for servicing the card reader interrupt.
+Card data is transfered via the device file "/DEV/CR0".
+
+.ig
+.ul 1
+..
+3.2.17 The Printer Driver
+
+.ti 10
+The printer driver is the software responsible for servicing the printer
+interrupt.
+This driver has been rewritten to use the internal buffer pool
+so that data is not logically
+passed to it character by character but in blocks 512 bytes long.
+The printer is driven at the same speeds but with less load on the CPU.
+Print data is transfered via a device file "/DEV/LP".
+
+.nx 6om4.0

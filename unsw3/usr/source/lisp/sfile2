@@ -1,0 +1,9 @@
+: loop
+if $1x = x goto out
+echo $1 ":"
+macro -ns  ../header.mac $1
+shift
+goto loop
+: out
+libr lsplib -a *.obj
+rm *.mac *.obj

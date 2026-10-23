@@ -1,0 +1,35 @@
+sh gen
+: slup a -up -xv -pav
+slup a -up
+*deck x.z
+*ident frednurk
+*/ fred nurk's comment
+This is the beginning of a lousy friendship!!!!
+what do you have to say about that??
+
+
+
+
+some more rubbish..
+*after .20
+++++++++++++++++++++++++++++++
+
+burp!!
+
+++++++++++++++++++++++++++++++
+*delete .37 .41
+*ident george
+*after .3
+*/ george's comment
+george doesn't have anything to say for himself
+*after frednurk.10
+###############
+	george says hello (?)
+###############
+*delete frednurk.12 .22
+*ident mary
+*after .15
+mary had a little lamb
+kjkjkjljkjkjjljljkjkj
+kjkjkjk
+*delete .30

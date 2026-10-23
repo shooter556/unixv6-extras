@@ -1,0 +1,1165 @@
+.bp
+.in 0
+.ds
+.ig
+.ul 1
+..
+4.0 OPERATION
+
+.ti 3
+This section contains what is hoped to be a concise guide to
+operating a batch station under the UNIX Level 6 system.
+
+.ig
+.ul 1
+..
+4.1 POWER UP
+
+.ti 3
+all is quiet, nothing is stirring not even a fan.
+.ti 3
+take the PDP 11/40 front panel key from its hiding place
+and insert it in the lock.
+in the following order do:
+
+.in 10
+ 1) Put ENABLE/HALT switch to HALT.
+ 2) Turn the key to POWER.
+ 3) Power on all peripherals not yet on.
+ 4) Place the discs on the correct drives
+	* system disc on drive 0
+	* spool disc on drive 1
+	* others on 2,3,4.....
+		(this configuration may actually vary on some systems)
+ 5) Put RUN/LOAD switch to RUN on all drives
+    with discs in place.
+ 6) Boot. (ref section 4.2)
+ 7) Turn key to LOCK.
+
+.in 0
+.ti 3
+you may now return the key to its hiding place, walk to the console
+and complete the startup dialogue.  (ref section 4.3.1)
+
+.ig
+.ul 1
+..
+4.2 BOOTING
+
+.ti 3
+when powered up the 11/40 has only one program in its memory.
+this program is called the bootstrap program.
+it is stored in an unerasable "read only memory" (ROM)
+and when executed will load another larger program and cause it to execute.
+.ti 3
+the execution of the ROM bootstrap to load the UNIX bootstrap (UBOOT)
+into core and execute it is called bootstrapping or "booting".
+UBOOT then loads the UNIX system and starts it running.
+.ti 3
+Among the disc batch stations on campus there are three different bootstrap
+programs in use.
+.ti 3
+Type one is in use at Mathematics and
+Commerce.
+Execution is initiated as follows.
+
+.in 10
+ 1) Ensure the front panel lock is at POWER position.
+ 2) Ensure ENABLE/HALT switch is at HALT.
+ 3) Set switch register to 773100 octal.
+	i.e.	uuuuuuduuddudddddd	u=switch up
+ 4) Depress and release the LOAD ADDRESS switch.
+ 5) Set switch register to 777406 octal.
+	i.e.	uuuuuuuuuuddddduud	d=switch down
+ 6) Put ENABLE/HALT switch to ENABLE.
+ 7) Depress and release the START switch.
+
+.in 0
+.ti 3
+Type two is in use at the Library and Computing Services Unit.
+execution is initiated as follows.
+
+.in 10
+ 1) Ensure the front panel lock is at POWER position.
+ 2) Ensure ENABLE/HALT switch is at halt.
+ 3) Set switch register to 773110 octal.
+	i.e.	uuuuuuduuddudduddd
+ 4) Depress and release LOAD ADDRESS switch.
+ 5) Put ENABLE/HALT switch to ENABLE.
+ 6) Depress and release the START switch.
+
+.in 0
+.ti 3
+Type three is in use at the Electrical Engineering and Mechanical Engineering.
+Execution is initiated as follows.
+
+.in 10
+ 1) Ensure the front panel lock is at POWER position.
+ 2) Ensure ENABLE/HALT switch is at halt.
+ 3) Set switch register to 773100 octal.
+	i.e.	uuuuuuduuddudddddd
+ 4) Depress and release LOAD ADDRESS switch.
+ 5) Put ENABLE/HALT switch to ENABLE.
+ 6) Depress and release the START switch.
+
+
+.in 0
+.ti 3
+Which ever way you initiate bootstrap execution,
+once you have booted you need only sit down and complete the startup dialogue.
+
+.ig
+.ul 1
+..
+4.3 RUNNING
+
+.ti 3
+All console entries are terminated by the CR (RETURN)
+key.
+
+.in 7
+.ig
+.ul 1
+..
+4.3.1 Startup
+
+.ti 10
+Having booted the system, the console prompts you to
+complete the startup dialogue which at present
+requires only one answer to a question like
+.nf
+.ss
+.ne 6
+.in 20
+
+			Wed Jul  7 09:31:07 1976
+if acceptable just <cr>
+otherwise enter date in the form
+mmddhhmm[yy]
+
+where the mmddhhmm[yy] is requesting the month number,
+day in moth number, hour in day number (24 hrs),
+minute in hour number and an optional year number (eg 75).
+.in 7
+.ds
+.fi
+
+.ti 10
+The startup procedure also performs a file system
+storage consistency check (ICHECK) and a file system
+directory consistency check (DCHECK) on all
+usually mounted discs.
+Checks required on any other mounted discs must be specifically
+initiated by the operator.
+.ti 10
+The output from these checks is displayed on the console
+and should be examined for any error indications (ref section 4.3.3).
+A typical out appears below.
+
+.ss
+.ne 33
+		/dev/rrk0:
+		freei     98
+		spcl      40
+		files    324
+		large    114
+		direc     24
+		indir    114
+		used    3619
+		free     294
+		high    3999
+		/dev/rrk1:
+		freei    104
+		spcl       0
+		files    680
+		large    127
+		direc     36
+		indir    128
+		used    3988
+		free     797
+		high    4871
+		/dev/rrk2:
+		freei    205
+		spcl       0
+		files    555
+		large    152
+		direc     48
+		indir    152
+		used    4050
+		free     735
+		high	4073
+		/dev/rrk0:
+		/dev/rrk1:
+		/dev/rrk2:
+.ds
+
+.ig
+.ul 1
+..
+4.3.2 Login
+
+.ti 10
+After an end-of-file (CTRL/D) or boot the terminal will eventually ask you to
+"LOGIN:".
+In response to this you type in (enter) a login name.
+for the batch station system this is "OPER".
+.ti 10
+If OPER has been password protected the console asks for the
+"PASSWORD:" to be entered to complete login.
+The distributed batch system has no OPER password.
+.ti 10
+When login has been completed correctly UNIX
+prompts with a "%".
+character.
+You may now enter commands.
+
+.ig
+.ul 1
+..
+4.3.3 Commands
+
+.ti 10
+the following list of commands should be read in conjunction with
+section 4.3.4 in order to correlate the commands with any
+troubles although trouble is rare.
+.ti 10
+we shall present the commands and their descriptions in the
+order you will most probably use them.
+.ti 10
+Parameters enclosed in square brackets ([]) are optional and options
+may be nested where indicated.
+
+.in 16
+.ti 7
+ICHECK - this is used to establish file system storage consistency.
+	usage:
+		ICHECK [flsys1 flsys2 ... flsysn]
+	where:
+		flsys - file system to check.
+			e.g. "/DEV/RK1" or "/DEV/RRK1"
+
+.ti 16
+Normal ICHECK output includes a report on
+
+		* The number of free inodes,
+		* The number of special files,
+		* The total number of files,
+		* The number of large and huge files,
+		* The number of directories,
+		* The number of indirect blocks, and the number of
+		  double-indirect blocks in huge files,
+		* The number of blocks used in files,
+		* The number of free blocks,
+		* The number of the highest block allocated.
+
+.ti 16
+Using the raw mode device file (RRKn) will speed execution
+of this command since the disc is read in large chunks.
+.ti 16
+A similar output from "ICHECK" to that shown below is satisfactory.
+
+.ss
+.ne 30
+		/dev/rrk0:
+		freei    105
+		spcl      40
+		files    324
+		large    114
+		direc     24
+		indir    114
+		used    3618
+		free     295
+		high    3999
+		/dev/rrk1:
+		freei    227
+		spcl       0
+		files    678
+		large    126
+		direc     36
+		indir    127
+		used    3963
+		free     822
+		high    4523
+		/dev/rrk2:
+		freei     99
+		spcl       0
+		files    610
+		large    163
+		direc     46
+		indir    163
+		used    4228
+		free     557
+		high    3756
+.ds
+
+.ti 16
+however if any other lines appear between the "/dev/..." lines and
+the following "FREEI......." lines
+you should IMMEDIATELY consult a guru
+(Appendix G).
+.ti 16
+though this is rare it must not be taken lightly and no unskilled
+attempt should be made to correct the error or use the system until
+corrected.
+.ti 16
+the output from an "ICHECK" of a bad disc appears
+below.
+
+.ss
+.ne 13
+		/dev/rrk1:
+		2 dups in free
+		3 missing
+		unallocated and non-zero inode: 293
+		freei     99
+		spcl       0
+		files    195
+		large     34
+		direc     29
+		indir     34
+		used    1043
+		free    3765
+		high    2675
+
+.ds
+
+.ti 7
+DCHECK - This command is used to check file system directory consistency.
+	usage:
+		DCHECK flsys
+	where:
+		flsys - file system to check
+
+.ti 16
+Raw mode device files will speed execution of this command.
+.ti 16
+Normal DCHECK output consists of only one line giving the device file
+name.
+
+		/dev/rrk0:
+
+Any error lines appear immediately after this line for example
+
+.ss
+.ne 14
+		/dev/rrk2:
+		entries	link cnt
+		323	0	0
+		327	0	0
+		462	0	0
+		624	0	0
+		632	0	0
+		640	0	0
+		662	0	0
+		666	0	0
+		676	0	0
+		684	0	0
+		710	0	0
+		722	0	0
+.ds
+.ti 16
+The errors if any should not be taken lightly.
+Consult a GURU.
+
+.ti 7
+DATE - In order to maintain the statistics (and other things) UNIX
+must have a reasonably accurate idea of the date and time.
+this command is used to manipulate the date and time from a terminal.
+	usage:
+		DATE [mmddhhmm[yy]]
+	where:
+		mm - 2 digit month of the year
+		dd - 2 digit day of the month
+		hh - 2 digit hour of the day
+		mm - 2 digit minute of the hour
+		yy - optional 2 digit year number
+			(eg 75)
+
+.ti 16
+Once the date has been set in the startup dialogue only the "Super User"
+may reset the date.
+.ti 16
+DATE with no parameters will display the present UNIX date
+and time.
+
+.ti 7
+BATCH - This command starts execution of the Batch System processes.
+.ti 16
+This should be the only command necessary to start complete
+communication with the CYBER , start
+reading cards, start printing printout and every other little thing.
+	usage:
+		BATCH [options ...]
+
+.ti 16
+Various options are available when Batch is started.  Only the first two
+characters need be given.
+They are:
+
+	cold		- do a cold start
+	tlnnn		- set max time limit to 'nnn' seconds
+	clnnn		- set card limit to 'nnn' cards
+	jlnnn		- set cyber job limit to 'nnn' jobs
+	rlnnn		- set limit on sectors received to 'nnn'
+	slnnn		- set limit on lines in submit files to 'nnn'
+	cyber		- don't allow cyber jobs to enter system
+	local		- don't allow local ...
+	submit		- don't allow submit jobs ...
+	nc		- don't use card reader
+	np		- don't use line printer
+	macro		- don't allow macro jobs
+	fortran		- don't allow fortran jobs
+	shell		- don't allow shell jobs
+
+BATCH checks the queue status available from the last time BATCH
+was running and if all queues were empty performs a COLD start (see below).
+.ti 16
+If the queues were not empty, BATCH provides you with a DQ display.
+If the queues are in a mess, the display will not appear (since "DQ"
+crashed) and instead you will get the message "Queues are screwed".
+In any case, it then asks the question
+
+	"re-initialize the batch system ? "
+
+.ti 16
+To this you may reply either <return> if you wish to
+retain information present in the Batch System
+(tables of jobs, where they are etc) or "COLD" if you wish to start afresh
+with no knowledge retained from an earlier time.
+.ti 16
+The "COLD" reply will obtain the response
+
+	"directory being cleared & queues reinitialized"
+
+.ti 16
+The carriage return response will produce a summary of what the Batch System
+thought was happening when it was last closed down, similar to the following.
+
+	"qeueues being restored"
+	"jobname - was being read/received"
+	"jobname - was being transmitted"
+	"jobname - was spooling"
+	"jobname - was being received"
+	"jobname - was executing"
+	"jobname - was unidentified"
+
+where jobname is some batch job.
+.ti 16
+Somewhere in the above dialogue, occasionally a CYBER "PLEASE LOGIN."
+message may appear but never fear, you may ignore it.
+BATCH will login to the CYBER using the correct individual Batch Station
+account and password.
+
+.ti 7
+local - this is the same as "batch" (and takes the
+same options) but does not start the cyber daemons "SPL", "JTD" and "EAR".
+
+.ti 7
+L - This is the command used to login to the CYBER
+but its use is hardly ever required because the entire login sequence
+is completed for you by the BATCH process.
+.ti 16
+"L" may be needed if the Batch Station is logged off using the "B" command
+without closing down the whole Batch System.
+	usage:
+		L account [passwd]
+	where:
+		account - CYBER batch acc. no.
+		passwd - is the account password,
+
+.ti 7
+PS - This command is used to list information on the
+processes currently running on the 11/40.
+	usage:
+		PS [y]
+	where:
+		y - may be a number of different parameters
+.ti 16
+The most common parameters given to "PS" are "A" and "X" as below.
+		"PS AX"
+.ti 16
+To aid explanation, here is an output from this command.
+.ss
+.ne 33
+
+	TTY  PID   TIME  COMMAND
+	?:     0  93.30s unix
+	?:     1   1.58s init
+	     238   1.38s -
+	a:    35   0.16s - d
+	      14  23.58s update
+	      18   0.04s errlog
+	      20   0.50s cron
+	      22 103m41s .sponge
+	b:    36   0.16s - d
+	c:    37   0.16s - d
+	e:    38   0.14s - t
+	f:    39   0.20s - t
+	g:    40   0.18s - t
+	h:    41   0.16s - t
+	k:    42   0.16s - k
+	l:   214   0.22s - T
+	o:    44  10.44s -
+	o:   148   0.82s /bin/sh /usr/bin/s
+	o:   149   0.22s sleep 50000
+	     240   3.34s ps ax
+	     221   0.26s .print
+	     220   0.48s * batch *
+	     222   1.72s .jtd
+	     223   0.16s .spl
+	     224   0.22s .ear
+	     225   0.12s .crd
+	     226   0.18s .mac
+	     227   0.14s .ftn
+	     228   0.10s .list
+
+.ds
+.ti 16
+All process ID numbers (PIDs) are displayed and for processes
+not swapped out onto disc (at the time the "PS AX" was done)
+a fairly close description of the process is displayed
+beside the PID.
+.ti 16
+The TTY column gives the tty id-number of the terminal which initiated
+the process, processes without such a number are those
+started from the terminal which initiated the PS command itself.
+.ti 16
+From this you are able
+see that all batch station processes are running (the whole gaggle of PIDs
+from 220 onwards owned by tty8 in this case).
+
+.ti 7
+DQ - This is a command used to interrogate the local tables
+of spooled card decks, jobs at the CYBER, local jobs and 
+spooled print jobs.
+a lot of other information is also printed relating to the status of
+the batch system, which is pretty self-explanatory.
+any messages that the central site operator sends out
+are displayed as well.
+Jobs flagged with '+' are in the alternate print queue at cyber.
+jobs flagged with '-' will not be printed on return from the cyber,
+but rather will remain in the batch working directory.
+	usage:
+		DQ
+
+.ti 7
+AUTOQ - This command invokes the DQ command with some extra information.
+AUTOQ will continuously execute a DQ command every 30 seconds until
+stopped with the DELETE or RUBOUT keys.
+	usage:
+		AUTOQ
+
+.ti 7
+LPR - This command is used to spool
+locally generated files to be printed.
+it is very handy for producing banner pages to line up the printer
+after a paper jam or change.
+	usage:
+		LPR [file1 file2 ... filen]
+	where:
+		file - is a file you wish printed
+.ti 16
+if invoked with no parameters it will spool all further entries
+from the console until an end of file (CTRL/D) and then
+print all spooled entries preceded by a banner page.
+therefore the following will produce a banner page only
+
+	"LPR"
+	(CTRL/D)
+
+.ti 7
+PASSWD - This command is used to change or create a password
+associated with a specific UNIX login name.
+	usage:
+		PASSWD lname [passwd]
+	where:
+		lname - is the login name
+		passwd - is the new password for lname
+
+if the password is not given with the command,
+it will prompt you for it (with echo turned off).
+.ti 16
+for example if you wished to change the OPER login name password
+to "magnexcellent" you would enter
+
+	"PASSWD OPER"
+	Password:  MAGNEXCELLENT (doesn't get echoed)
+
+.ti 16
+Two double quotes ("") is a null (removed) passwd.
+
+.ti 7
+A - Rewind the printfile presently being received from the CYBER.
+This printfile is never the one presently
+printing on the printer.
+Consult the DQ display to find the job being received from the CYBER.
+	usage:
+		A
+
+.ti 7
+B - This command
+logs off from the CYBER but does NOT close down the
+whole Batch System.
+Local processing may continue until a STOP command is given.
+The "L" command will allow you to log back into the CYBER.
+The log off is ultimately verified by the appearance of the
+message
+	"KRONOS 2.1.2 LEVEL 439."
+.ti 16
+If this is not forthcoming then the CYBER may be dead.
+	usage:
+		B
+
+.ti 7
+C - Asks the CYBER to send the rest of a previously suspended
+printout to the batch station.
+	usage:
+		C
+
+.ti 7
+D - This command purges a job in the CYBER
+output queue.
+	usage:
+		D name O
+	where:
+		name - jobname from a "Q O" command
+			or deduced from a "DQ" display.
+
+.ti 7
+D - This command will purge a job from any CYBER
+queue other than the output queue.
+	usage:
+		D name
+	where:
+		name - jobname from a "Q x" command
+			or deduced from a DQ display.
+			(x is I,E or R)
+
+.ti 7
+E LP - This command will cancel the CYBER batch job currently being received
+from the CYBER.
+Use the DQ display to find the job currently being received.
+	usage:
+		E LP
+
+.ti 7
+E CR - This command will cancel the CYBER batch job currently
+being sent to the CYBER.
+Use the DQ display to find the job being sent.
+	usage:
+		E CR
+
+.ti 7
+CANCEL CR - This command cancels the job at present on the
+card reader.
+	usage:
+		CANCEL CR
+
+.ti 7
+CANCEL LP - This command cancels the job printing on the printer.
+	usage:
+		CANCEL LP
+
+.ti 7
+CANCEL macro - this command will kill any job produced by
+the macro process.
+	usage:
+		CANCEL macro
+
+.ti 7
+CANCEL fortran (or ftn) - as for macro
+
+.ti 7
+CANCEL shell - as for macro
+
+.ti 7
+PRSTOP - This command will delete the printout currently on the printer,
+and is the same as "cancel lp".
+	usage:
+		PRSTOP
+
+.ti 7
+RESTART - This command causes the printout at present on the printer
+to be restarted immediately, from the beginning, complete
+with banner page.
+At batch stations where the printer has a habit of of tearing
+the paper this is a very useful command.
+	usage:
+		restart
+
+.ti 7
+repeat - this will cause the job currently printing to be printed
+all over again when is is finished.
+	usage:
+		repeat
+
+.ti 7
+F id - This command will make EXPORT send back printouts with a queue id
+of "id".  The normal id is 0, and the "alternate queue" is 1.
+Therefore a job placed in the alternate print queue
+by the "o" command can be retrieved by "f 1".
+	usage:
+		f 1
+
+.ti 7
+F - This command will cause you to revert
+to printing normal files after messing around with the "F id" command.
+	usage:
+		F
+
+.ti 7
+G - this command asks the CYBER to accept more cards.
+The use of this command is unnecessary under
+the UNIX batch system
+as the 200-UT driver issues a "G" command every 20 seconds.
+However it will cause no harm to use it.
+	usage:
+		G
+
+.ti 7
+I - This command is a general reset
+of any interrupted CYBER operations (what ever that means ??).
+The use of this command is unnecessary under the UNIX
+batch system.
+	usage:
+		I
+
+.ti 7
+M - This command displays a message on the CYBER
+operators "B" display.
+	usage:
+		M message
+	where:
+		message - max 18 character message, may be in quotes
+
+.ti 7
+N - This command instructs the CYBER to stop sending
+jobs to the batch station
+at the end of a job.
+	usage:
+		N
+
+.ti 7
+n c - revert to receiving again.
+this will cancel the effect of an 'n' command.
+	usage:
+		n c
+
+.ti 7
+O - This command will place a job currently in the Cyber output queue
+into some other output queue e.g. for another batch station.
+It may also place the job into the "alternate" queue, where it will stay
+until released by the "F 1" command.  Jobs in the alternate queue
+are flagged by "+".
+	usage:
+		O jobname XXXX
+	where XXXX is one of:
+		ELEC,
+		MECH,
+		MATH,
+		COMM,
+		CHEM,
+		TERC,
+		CIVL,
+		APSC,
+		PHYS,
+		CENT	(central site),
+		ALT	(alternate queue).
+
+.ti 7
+P - This command is used to alter the priority of a job
+in the CYBER output queue.
+	usage:
+		P name p
+	where:
+		name - jobname from "Q O" command
+			or deduced from a DQ display.
+		p - 2 digit priority
+.ti 16
+the 2 digit priority given replaces the 2 most significant digits
+of the 4 digit priority number associated with the jobname
+obtained from a "Q O" command.
+
+.ti 7
+Q B - This command displays jobs to be
+printed at the central site.
+	usage:
+		Q B
+
+.ti 7
+Q I - This command displays jobs from your batch station
+currently in the CYBER input queue.
+	usage:
+		Q I
+
+.ti 7
+Q O - This command displays jobs from your batch station
+currently in the CYBER output queue.
+	usage:
+		Q O
+
+.ti 7
+Q R - This command displays jobs from your batch station currently
+in the CYBER rollout queue.
+	usage:
+		Q R
+
+.ti 7
+Q E - This command displays jobs from your batch station
+currently at a CYBER control point (in the active queue).
+	usage:
+		Q E
+
+.ti 7
+Q N - This command displayes the CYBER name of the
+last job read from your batch station.
+	usage:
+		Q N
+
+.ti 7
+Q I A - Tells you the total number of jobs in the
+CYBER input queue.
+	usage:
+		Q I A
+
+.ti 7
+Q O A - Tells you the total number of jobs in
+the CYBER output queue.
+	usage:
+		Q O A
+
+.ti 7
+Q R A - Tells you the total number of jobs in
+the CYBER rollout queue.
+	usage:
+		Q R A
+
+.ti 7
+R - This command asks the CYBER to accept more cards.
+The use of this command is unnecessary under the UNIX batch
+system.
+	usage:
+		R
+
+.ti 7
+S - Suspend printfile presently being received from the CYBER
+and note the position in the file for later restart of transmission.
+This printfile is never the one presently printing on the printer.
+Consult the DQ display to find the job being received from the CYBER.
+	usage:
+		S
+
+.ti 7
+SUBMIT - This is a terminal command used to place the contents of
+a UNIX file into the Batch System input queue.
+.ti 16
+The command will only work when the Batch System is running.
+.ti 16
+The file must contain all relevant control cards and EORs (CTRL/R)
+needed for normal batch processing.
+The UNIX end-of-file condition implies the EOI.
+.ti 16
+Because batch processing is very card oriented,
+lines over 80 columns long are flagged and cause the job to be immediately
+flushed to the local printer.
+.ti 16
+Once submitted the job proceeds as if it had come in via the card reader,
+although it is flagged internally as having come from a terminal.
+.ti 16
+if a flag '-' is given then the job is not printed on return from
+the cyber, but rather will be returned to the user's directory under
+the encoded batch file name.
+The user is notified by mail when this happens.
+If the file cannot be returned, it will be printed instead.
+Note that the file is returned exactly as received from the Cyber
+i.e. it will have the banner page, dayfile & blank compression
+in it.
+.ti 16
+this is useful for intercepting certain listings from the cyber.
+	usage:
+		SUBMIT [-] filename
+	where:
+		filename - name of UNIX file to be submitted
+
+.ti 16
+SUBMIT, like the CRD process, checks CYBER jobs for invalid
+job cards and, if found
+does not send the job to the CYBER.
+Instead the job is flushed straight to the local printer with an error message
+of the form
+
+	"####  illegal job card"
+
+followed by some error message.
+
+.ti 7
+closedown - This command is used to close down the UNIX system at the
+end of a days confusion.
+closedown causes the UNIX systems idea of the date and time of day to be written to disc,
+does a SYNC and
+checks to see if there are any other UNIX users signed on
+and warns you of this fact with a message.
+
+.ti 7
+U - Returns printfile presently being received
+from the CYBER to the CYBER output queue at zero priority.
+This printfile is never the one presently printing on the printer.
+Consult the DQ display to find the job currently being received from the CYBER.
+	usage:
+		U
+
+.ti 7
+WHO - This command tells you who is currently
+logged on to the UNIX system.
+	usage:
+		WHO
+.ti 16
+The information displayed includes the users login name, their
+teletype number and the time of logging in.
+.ti 16
+Unless you have other terminals connected to your 11/40 the result
+of this command will always be similar to
+.ss
+.ne 1
+
+	oper    tty8 Jul  7 13:42
+
+.ds
+.ti 16
+If you have other terminals connected then it may be something like
+
+.ss
+.ne 3
+
+	oper    tty8 Jul  7 13:42
+	ianj    ttyg Jul  7 12:44
+	pete    ttyk Jul  7 13:51
+
+.ds
+.ti 16
+People become very irate if their 11/40 drops out from under them
+while they are using a terminal so you should always check WHO
+else is logged on before you close the system down.
+The CLOSEDOWN command performs this check this for you.
+
+.ti 7
+STOP - This command closes down all Batch System
+processes.
+The B command should be used to log off from the CYBER before
+the STOP command is given, if only for aesthetic reasons.
+.ti 16
+Batch System close down is verified
+by the appearence of the message
+
+	"** batch has completed"
+.ti 16
+If the Batch System is already closed you are told
+
+	"batch not active"
+
+
+	usage:
+		STOP
+
+.ti 7
+JA - This command starts the JA process.
+JA cannot be started while the Batch System is running and
+so its first message
+asks you to verify that BATCH is closed
+to which you reply "yes" or ""no".
+.ti 16
+JA analyses and condenses the bulk statistics
+compiled by the Batch System into a summary file for later use.
+JA will produce a printout with all sorts of nice information.
+Try one soon.
+	usage:
+		JA
+
+.ti 7
+SYNC - 
+UNIX maintains a set
+of tables in memory by which it accesses the disc file system.
+These tables in part constitute what is known as the
+UNIX Super Block.
+Periodically, every 30 seconds if the file system is active, the Super Block is written to disc
+so as to preserve a reasonably up to date copy (for the next system
+BOOT) in case anything catastrophic happens in the next
+30 seconds.
+If the system status has not changed in the last 30 seconds
+the needless update is not performed.
+.ti 16
+Obviously the disc copy of the SuperBlock
+may only be a rough estimate of what the file system was like since
+a great number of files can be modified in 30 seconds.
+However, barring catastrophes, UNIX requires an accurate copy of the
+Super Block and this is where the SYNC command comes in.
+.ti 16
+SYNC does nothing else but immediately write the current
+copy of the Super Block to disc.
+the command is usually invoked when the system is in a fairly static
+state (most processes to do with the batch station and local terminals
+stopped) and so there is little chance of any new files being created
+before you can halt the CPU or close the system down.
+.ti 16
+The CLOSEDOWN command performs additional checks and should be used in preference
+to SYNC at system close down.
+
+	usage:
+		SYNC
+
+.ti 7
+COUNT - show the number of line errors.
+This will give a display of the number of each type of line error.
+Any abnormal number (I don't quite know what is normal) should be reported.
+	Usage:
+		count [unixfile]
+	where:
+		unixfile is the file for the symbol table (default /unix)
+
+.ti 7
+DISABLE - Disable a batch process.
+This command will allow the operator to disable a batch
+process such as FORTRAN etc.  Any attempt to make use of that process
+will be flagged with an error message.
+	Usage:
+		disable process ...
+	where process is one of:
+		all		(disable the lot),
+		cyber		(no cyber jobs allowed),
+		submit		(no submit jobs),
+		local		(no local jobs)
+		shell
+		fortran, ftn
+		macro.
+
+Only the first two characters need be given
+
+.ti 7
+ENABLE - Enable a batch process.
+This is the inverse of the "DISABLE" command, and usage is similar.
+	Usage:
+		enable proc ...
+
+.ti 7
+ENTL - Enter maximum time limit.
+Local jobs are assigned a default time limit of 20 seconds.
+By specifying a parameter on the job card, one may increase this limit
+up to a certain limit.
+The default limit is 120 seconds, but may be set by this command.
+	Usage:
+		entl nnn
+	where:
+		nnn is the max time limit allowed (< 65536 seconds).
+
+.ti 7
+ENCL - Enter card limit.
+Cyber jobs reading on the card reader have a default limit of 1000 cards.
+Any more than this will cause the job to be flushed.
+This limit can be changed by this command.
+	Usage:
+		encl nnn
+	where:
+		nnn is the no. cards allowed (< 65536).
+
+.ti 7
+ENRL - Enter receive limit.
+A limit of 100 sectors is placed on jobs received from Cyber.
+Any more than this and the job is automatically placed in the "alternate
+print" queue and a message is given.
+Note that the number of sectors displayed by "q o" is NOT the
+number of sectors received, since buffers are reformatted before
+being sent down.
+It is, however, a rough guide.
+This limit may be changed by this command.
+	Usage:
+		enrl nnn
+	where
+		nnn is the number of sectors allowed (< 65536).
+
+.ti 7
+ENJL - Enter job limit.
+There is a maximum of 75 Cyber jobs allowed in the Batch queues at once.
+Any more than this entered via "submit" or card reader will cause the job to
+be flushed.
+The limit may be set by this command.
+	Usage:
+		enjl nnn
+	where:
+		nnn is the number of cyber jobs allowed (<= 100).
+.ti 16
+Note that "enjl 0" will disable all cyber job entry, and that "nnn" can
+only go up to 100 (total number of queue elements).
+
+.ti 7
+ENSL - Enter submit limit.
+This is basically the same as "encl" except it applies to the number of
+lines in cyber "submit" jobs.
+	Usage:
+		ensl nnn
+
+.ti 7
+PURGE - Purge jobs from Batch queues.
+This command allows one to remove jobs from Batch queues, or to delete
+an entire queue.
+It may be used in three ways.
+
+1)	Usage:
+		purge Q
+	where:
+		Q is the queue (see below) will cause a question to
+be asked
+.ti 16
+"Purge of entire queue? Confirm:".
+.ti 16
+Any entry starting with "y" will cause deletion of the entire queue,
+otherwise the command exits.
+.sp
+2)	Usage:
+		purge Q -
+.ti 16
+will cause the program to step through the given queue printing job names.
+To delete an entry, type "y".
+To step to the next entry, just type carriage return.
+To exit immediately, type "x".
+Any other entry causes the line to be repeated.
+It works just like DSW(I) in the UNIX Programmers Manual.
+.sp
+3)	Usage:
+		purge Q job ...
+	where:
+		job is a job in that queue will cause deletion
+of that job.
+.ti 16
+A job name may be preceded by "-n" in which case the "n'th" occurrence
+of that job gets deleted.  Note that "purge Q -2 fred -3 fred" does not
+do what you may think it does.  It will not delete the third job, but the
+fourth since one preceding job has already been purged, and the queue
+is rescanned each time.  A slight aberration.
+.ti 16
+.sp
+"Q" may be one of:
+	a	at cyber
+	c	for cyber
+	f	fortran
+	l	list
+	m	macro
+	p	print
+	s	shell
+
+.ti 7
+STATUS - Give status of Batch system.
+This command merely prints out some interesting (?) info about the
+current status of the environment of Batch.
+It is not really useful unless there is something odd going on...
+	Usage:
+		status
+
+.ti 7
+QLOOK - Look at the queues in the checkpoint file.
+This command merely decodes the information in the checkpoint file
+in a human-readable form.
+It is not really useful unless there is something odd going on ...
+	Usage:
+		qlook
+
+.nx 6om4.3

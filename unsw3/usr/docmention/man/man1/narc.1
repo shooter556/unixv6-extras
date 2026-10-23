@@ -1,0 +1,59 @@
+.th NARC I 12/17/75
+.sh NAME
+narc \*- source archiver
+.sh SYNOPSIS
+.bd narc
+file -k1 a11 ... a1n ... -km am1 ... amn
+.sh DESCRIPTION
+	narc____ is a revision of the unix archiver (ar__ (i)) to exploit the
+.it Narc
+is a revision of
+.it ar
+(I) to exploit
+the
+new file system.
+The action of
+.it narc
+is determined by a left-to-right
+scan of the command.
+The valid keys are:
+.s3
+.ft I
+.lp +17 16
+key	meaning
+.ft R
+.s3
+.lp +17 16
+-d f1 ... fn	The named files are deleted from the library.
+.s3
+.lp +17 16
+-r f1 ... fn	The named files are replaced.
+.s3
+.lp +17 16
+-m f1 ... fn	The named files are replaced if their modification date is more
+recent than the copy in the archive.
+.s3
+.lp +17 16
+-i k f1 ... fn	The named files are placed before the \fIk\fR file in the library.
+.s3
+.lp +17 16
+-x f1 ... fn	The named file are extracted from the library.
+If no files are specified, then
+all files are extracted.
+.s3
+.lp +17 16
+-a f1 ... fn	The named files are appended to the archive.
+If the archive does not exist, it is
+created.
+.s3
+.lp +17 16
+-l	The archive contents are listed.
+.i0
+.dt
+.sh FILES
+narc.tmp		work file
+.sh BUGS
+Generally, file names must be in the correct order.
+This is rediculous, and
+.it narc
+should be fixed to eliminate this.

@@ -1,0 +1,5 @@
+if $1x = x goto  loop
+macro -ns header lisp$1.mac
+: loop
+link -id lisp?.obj lsplib
+mv lispa.out newlisp

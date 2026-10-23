@@ -1,0 +1,92 @@
+.th MACRO I 2/11/76
+.sh NAME
+macro \*- macro assembler
+.sh SYNOPSIS
+.bd macro
+[option ...] file1 file2 ... filen
+.sh DESCRIPTION
+.it Macro
+assembles the concatenation of the specified files terminating
+when a ".end" directive is encountered.
+The resulting object file is usually named "filen.obj" (see below).
+If a file argument does not contain a dot, then "file.mac"
+will be sought as an alternative
+.bd before
+"file" itself.
+.s3
+Options, if desired,
+may appear anywhere in the command,
+and may be chosen from the following list:
+.s3
+.ft I
+.lp +10 9
+option	meaning
+.ft R
+.s3
+.lp +10 9
+-ls	produce an assembly listing file named "filen.lst"
+.s3
+.lp +10 9
+-cr	produce a cross-reference listing file named "filen.lst".
+if the "-ls" option is also included,
+the cross-reference listing is appended to the assembly listing.
+.s3
+.lp +10 9
+-lp	the same as "-ls" but causes "filen.lst" to be spooled
+for printing.
+The listing file is removed after printing.
+.s3
+.lp +10 9
+-no	no object file is produced.
+This is useful for syntax checking or producing listings alone.
+.s3
+.lp +10 9
+-ns	all symbol information is left out of the resultant object files.
+.s3
+.lp +10 9
+-li
+.lp +10 9
+-nl	allow entry of ".list" and ".nlist" directives on the command
+line as below:
+
+		macro "-li:meb,com"
+.s3
+.lp +10 9
+-en
+.lp +10 9
+-ds	allows the entry of ".enabl" and ".dsabl" directives
+in a similar way to directives used with
+"-li" and "-nl".
+.s3
+.lp +10 9
+-na:file	specifies the output file name(s).
+All output files which would normally be of the type "filen.xxx"
+become "file.xxx".
+.s3
+.lp +10 9
+-ls:\fIn\fR	allocates an extra \fIn\fRK words of space for the
+symbol table and macro storage.
+.i0
+.dt
+.s3
+Certain installations have included ``,'' as well as `` ''
+as a shell argument separator
+and so commas in the "-li", "-nl", "-en" and "-ds" options
+must be escaped.
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 20
+/lib/sysmac.sml	system macro library
+/bin/macxrf	cross-reference post-processor
+/bin/lpr	print spooler
+filen.xrf	intermediate cross-reference temporary file
+.fi
+.sh "SEE ALSO"
+DEC macro-11 manual
+.br
+macro (VII)
+.sh BUGS
+.it
+Macro may loop when short of memory.
+See "-xs" and "-ls:\fIn\fR".

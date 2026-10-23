@@ -1,0 +1,888 @@
+goto start
+:
+: loop
+:
+echonone
+shift
+if $1x != x goto start
+rm *.o a.out
+exit
+:
+: start
+:
+if $1x = absoutx goto absout
+if $1x = acx goto ac
+if $1x = arcvx goto arcv
+if $1x = arx goto ar
+if $1x = askx goto ask
+if $1x = bannerx goto banner
+if $1x = basx goto bas
+: if $1x = bcdx goto bcd
+: if $1x = bcheckx goto bcheck
+if $1x = bcx goto bc
+if $1x = beepx goto beep
+if $1x = byex goto bye
+if $1x = calx goto cal
+if $1x = catx goto cat
+if $1x = ccx goto cc
+if $1x = cdbx goto cdb
+if $1x = chdirx goto chdir
+if $1x = chkx goto chk
+if $1x = chmodx goto chmod
+if $1x = chownx goto chown
+if $1x = clrix goto clri
+if $1x = cmpx goto cmp
+: if $1x = cnvtwtmpx goto cnvtwtmp
+if $1x = colx goto col
+if $1x = commx goto comm
+if $1x = copyx goto copy
+if $1x = cpallx goto cpall
+if $1x = cpx goto cp
+if $1x = createx goto create
+if $1x = cronx goto cron
+if $1x = crx goto cr
+if $1x = cryptx goto crypt
+: if $1x = ctoforx goto ctofor
+if $1x = datex goto date
+if $1x = dbx goto db
+if $1x = dcx goto dc
+if $1x = dcheckx goto dcheck
+if $1x = dcopyx goto dcopy
+: if $1x = ddtx goto ddt
+if $1x = ddx goto dd
+if $1x = dfx goto df
+if $1x = diffx goto diff
+: if $1x = disktestx goto disktest
+: if $1x = disx goto dis
+if $1x = dswx goto dsw
+if $1x = dumpx goto dump
+if $1x = dux goto du
+if $1x = echox goto echo
+if $1x = edreconx goto edrecon
+: if $1x = edx goto ed
+if $1x = emx goto em
+: if $1x = enablex goto enable
+if $1x = errlogx goto errlog
+if $1x = execx goto exec
+if $1x = exitx goto exit
+: if $1x = fcx goto fc
+if $1x = fedx goto fed
+if $1x = filex goto file
+if $1x = findx goto find
+: if $1x = flipx goto flip
+if $1x = formx goto form
+if $1x = fsizex goto fsize
+if $1x = fwdx goto fwd
+if $1x = getitx goto getit
+if $1x = gettyx goto getty
+if $1x = globx goto glob
+if $1x = gotox goto goto
+if $1x = grepx goto grep
+if $1x = gripex goto gripe
+: if $1x = gsix goto gsi
+if $1x = icheckx goto icheck
+if $1x = ifx goto iff
+if $1x = initx goto init
+if $1x = ipatchx goto ipatch
+if $1x = killx goto kill
+: if $1x = laprx goto lapr
+if $1x = ldx goto ld
+if $1x = listx goto list
+if $1x = lnx goto ln
+if $1x = logx goto log
+if $1x = lpdx goto lpd
+if $1x = lprx goto lpr
+if $1x = lsx goto ls
+if $1x = prstopx goto prstop
+
+echo $1 unknown !!!!
+goto loop
+
+: absout
+echoall
+cc -s -O absout.c
+rm -f /etc/absout
+mv a.out /etc/absout
+chmod 700 /etc/absout
+chown bin /etc/absout
+goto loop
+
+: ac
+echoall
+cc -s -O ac?.c -lP
+rm -f /usr/bin/ac
+mv a.out /usr/bin/ac
+chmod 705 /usr/bin/ac
+chown bin /usr/bin/ac
+rm *.o
+goto loop
+
+: ar
+echoall
+cc -s -O ar.c -lP
+rm -f /bin/ar
+mv a.out /bin/ar
+chmod 705 /bin/ar
+chown bin /bin/ar
+goto loop
+
+: arcv
+echoall
+cc -s -O arcv.c
+rm -f /usr/bin/arcv
+mv a.out /usr/bin/arcv
+chmod 705 /usr/bin/arcv
+chown bin /usr/bin/arcv
+goto loop
+
+: ask
+echoall
+cc -s -O ask.c
+rm -f /usr/bin/ask
+mv a.out /usr/bin/ask
+chmod 705 /usr/bin/ask
+chown bin /usr/bin/ask
+goto loop
+
+: banner
+echoall
+cc -s -O banner.c
+rm -f /usr/bin/banner
+mv a.out /usr/bin/banner
+chmod 705 /usr/bin/banner
+chown bin /usr/bin/banner
+goto loop
+
+: bas
+echoall
+as bas.s
+strip a.out
+rm -f /usr/bin/bas
+mv a.out /usr/bin/bas
+chmod 705 /usr/bin/bas
+chown bin /usr/bin/bas
+goto loop
+
+: bc
+echoall
+yacc bc.y
+cc -s -O y.tab.c -ly
+rm -f y.tab.c
+rm -f /usr/bin/bc
+mv a.out /usr/bin/bc
+chmod 705 /usr/bin/bc
+chown bin /usr/bin/bc
+goto loop
+
+: bcd
+echoall
+cc -s -O bcd.c
+rm -f /usr/bin/bcd
+mv a.out /usr/bin/bcd
+chmod 705 /usr/bin/bcd
+chown bin /usr/bin/bcd
+goto loop
+
+: bcheck
+echoall
+cc -s -O bcheck.c
+rm -f /etc/bcheck
+mv a.out /etc/bcheck
+chmod 700 /etc/bcheck
+chown bin /etc/bcheck
+goto loop
+
+: beep
+echoall
+as beep.s
+strip a.out
+rm -f /usr/bin/beep
+mv a.out /usr/bin/beep
+chmod 705 /usr/bin/beep
+chown bin /usr/bin/beep
+goto loop
+
+: bye
+echoall
+cc -s -O bye.c
+rm -f /usr/bin/bye
+mv a.out /usr/bin/bye
+chmod 705 /usr/bin/bye
+chown bin /usr/bin/bye
+goto loop
+
+: cal
+echoall
+cc -s -O cal.c
+rm -f /usr/bin/cal
+mv a.out /usr/bin/cal
+chmod 705 /usr/bin/cal
+chown bin /usr/bin/cal
+goto loop
+
+: cat
+echoall
+as cat.s
+strip a.out
+rm -f /bin/cat
+mv a.out /bin/cat
+chmod 705 /bin/cat
+chown bin /bin/cat
+goto loop
+
+: cc
+echoall
+cc -n -s -O cc.c
+chmod 700 /bin/cc
+cc
+rm -f /bin/cc
+mv a.out /bin/cc
+chmod 1705 /bin/cc
+chown bin /bin/cc
+goto loop
+
+: cdb
+echoall
+cc -s -O cdb?.c
+rm -f /usr/bin/cdb
+mv a.out /usr/bin/cdb
+rm -f cdb?.o
+chmod 705 /usr/bin/cdb
+chown bin /usr/bin/cdb
+goto loop
+
+: chdir
+echoall
+cc -s -O chdir.c
+rm -f /etc/chdir
+mv a.out /etc/chdir
+chmod 701 /etc/chdir
+chown bin /etc/chdir
+goto loop
+
+: chk
+echoall
+cc -s -O chk.c
+rm -f /etc/chk
+mv a.out /etc/chk
+chmod 700 /etc/chk
+chown bin /etc/chk
+goto loop
+
+: chmod
+echoall
+cc -s -O chmod.c
+rm -f /usr/bin/chmod
+mv a.out /usr/bin/chmod
+chmod 705 /usr/bin/chmod
+chown bin /usr/bin/chmod
+goto loop
+
+: chown
+echoall
+cc -s -O chown.c -lP
+rm -f /etc/chown
+mv a.out /etc/chown
+chmod 700 /etc/chown
+chown bin /etc/chown
+goto loop
+
+: clri
+echoall
+as clri.s
+strip a.out
+rm -f /etc/clri
+mv a.out /etc/clri
+chmod 700 /etc/clri
+chown bin /etc/clri
+goto loop
+
+: cmp
+echoall
+cc -s -O cmp.c
+rm -f /usr/bin/cmp
+mv a.out /usr/bin/cmp
+chmod 705 /usr/bin/cmp
+chown bin /usr/bin/cmp
+goto loop
+
+: cnvtwtmp
+echoall
+cc -s -O cnvtwtmp.c
+rm -f /usr/bin/cnvtwtmp
+mv a.out /usr/bin/cnvtwtmp
+chmod 705 /usr/bin/cnvtwtmp
+chown bin /usr/bin/cnvtwtmp
+goto loop
+
+: col
+echoall
+cc -s -O col.c
+rm -f /usr/bin/col
+mv a.out /usr/bin/col
+chmod 705 /usr/bin/col
+chown bin /usr/bin/col
+goto loop
+
+: comm
+echoall
+cc -s -O comm.c
+rm -f /usr/bin/comm
+mv a.out /usr/bin/comm
+chmod 705 /usr/bin/comm
+chown bin /usr/bin/comm
+goto loop
+
+: copy
+echoall
+cc -s -O copy.c -lP
+rm -f /bin/copy
+mv a.out /bin/copy
+chmod 705 /bin/copy
+chown bin /bin/copy
+goto loop
+
+: cp
+echoall
+cc -s -O cp.c
+rm -f /bin/cp
+mv a.out /bin/cp
+chmod 705 /bin/cp
+chown bin /bin/cp
+goto loop
+
+: cpall
+echoall
+cc -s -O cpall.c
+rm -f /usr/bin/cpall
+mv a.out /usr/bin/cpall
+chmod 705 /usr/bin/cpall
+chown bin /usr/bin/cpall
+goto loop
+
+: cr
+echoall
+as cr.s
+strip a.out
+rm -f /usr/bin/cr
+mv a.out /usr/bin/cr
+chmod 705 /usr/bin/cr
+chown bin /usr/bin/cr
+goto loop
+
+: create
+echoall
+cc -s -O create.c
+rm -f /usr/bin/create
+mv a.out /usr/bin/create
+chmod 705 /usr/bin/create
+chown bin /usr/bin/create
+goto loop
+
+: cron
+echoall
+cc -s -O cron.c
+rm -f /etc/cron
+mv a.out /etc/cron
+chmod 700 /etc/cron
+chown cron /etc/cron
+goto loop
+
+: crypt
+echoall
+cc -s -O crypt.c
+rm -f /usr/bin/crypt
+mv a.out /usr/bin/crypt
+chmod 705 /usr/bin/crypt
+chown bin /usr/bin/crypt
+goto loop
+
+: ctofor
+echoall
+cc -s -O ctofor.c
+rm -f /usr/bin/ctofor
+mv a.out /usr/bin/ctofor
+chmod 705 /usr/bin/ctofor
+chown bin /usr/bin/ctofor
+goto loop
+
+: date
+echoall
+cc -s -O date.c
+rm -f /bin/date
+mv a.out /bin/date
+chmod 705 /bin/date
+chown bin /bin/date
+goto loop
+
+: db
+echoall
+as db?.s
+strip a.out
+rm -f /bin/db
+mv a.out /bin/db
+chmod 705 /bin/db
+chown bin /bin/db
+goto loop
+
+: dc
+echoall
+as dc?.s
+strip a.out
+rm -f /bin/dc
+mv a.out /bin/dc
+chmod 705 /bin/dc
+chown bin /bin/dc
+goto loop
+
+: dcheck
+echoall
+cc -s -O dcheck.c
+rm -f /etc/dcheck
+mv a.out /etc/dcheck
+chmod 700 /etc/dcheck
+chown bin /etc/dcheck
+goto loop
+
+: dcopy
+echoall
+cc -s -O dcopy.c
+rm -f /etc/dcopy
+mv a.out /etc/dcopy
+chmod 700 /etc/dcopy
+chown bin /etc/dcopy
+goto loop
+
+: dd
+echoall
+cc -s -O dd.c
+rm -f /bin/dd
+mv a.out /bin/dd
+chmod 705 /bin/dd
+chown bin /bin/dd
+goto loop
+
+: ddt
+echoall
+cc -s -O ddt?.c
+rm -f /usr/bin/ddt
+mv a.out /usr/bin/ddt
+rm -f ddt?.o
+chmod 705 /usr/bin/ddt
+chown bin /usr/bin/ddt
+goto loop
+
+: df
+echoall
+cc -s -O df.c
+rm -f /usr/bin/df
+mv a.out /usr/bin/df
+chmod 4705 /usr/bin/df
+chown root /usr/bin/df
+goto loop
+
+: diff
+echoall
+cc -s -O diff1.c diff2.s
+rm -f /usr/bin/diff
+mv a.out /usr/bin/diff
+chmod 705 /usr/bin/diff
+chown bin /usr/bin/diff
+goto loop
+
+: dis
+echoall
+cc -s -O dis.c
+rm -f /usr/bin/dis
+mv a.out /usr/bin/dis
+chmod 705 /usr/bin/dis
+chown bin /usr/bin/dis
+goto loop
+
+: disktest
+echoall
+cc -s -O disktest.c
+rm -f /etc/disktest
+mv a.out /etc/disktest
+chmod 700 /etc/disktest
+chown bin /etc/disktest
+goto loop
+
+: dsw
+echoall
+as dsw.s
+strip a.out
+rm -f /bin/dsw
+mv a.out /bin/dsw
+chmod 705 /bin/dsw
+chown bin /bin/dsw
+goto loop
+
+: du
+echoall
+cc -s -O du.c -lP
+rm -f /bin/du
+mv a.out /bin/du
+chmod 705 /bin/du
+chown bin /bin/du
+goto loop
+
+: dump
+echoall
+cc -s -O dump.c
+rm -f /etc/dump
+mv a.out /etc/dump
+chmod 700 /etc/dump
+chown bin /etc/dump
+goto loop
+
+: echo
+echoall
+as echo.s
+strip a.out
+rm -f /bin/echo
+mv a.out /bin/echo
+chmod 705 /bin/echo
+chown bin /bin/echo
+goto loop
+
+: edrecon
+echoall
+as edrecon.s
+strip a.out
+rm -f /usr/bin/edrecon
+mv a.out /usr/bin/edrecon
+chmod 705 /usr/bin/edrecon
+chown bin /usr/bin/edrecon
+goto loop
+
+: em
+echoall
+cc -n -s -O em.c
+chmod 700 /bin/em
+em </null >/null
+rm -f /bin/em
+mv a.out /bin/em
+chmod 705 /bin/em
+chown bin /bin/em
+rm -f /bin/ed /bin/e
+ln /bin/em /bin/e
+ln /bin/em /bin/ed
+cp emhelp /usr/lib/emhelp
+chmod 604 /usr/lib/emhelp
+chown bin /usr/lib/emhelp
+goto loop
+
+: enable
+echoall
+cc -s -O enable.c
+rm -f /etc/enable
+mv a.out /etc/enable
+chmod 700 /etc/enable
+chown bin /etc/enable
+goto loop
+
+: errlog
+echoall
+cc -s -O errlog.c
+rm -f /etc/errlog
+mv a.out /etc/errlog
+chmod 700 /etc/errlog
+chown bin /etc/errlog
+goto loop
+
+: exec
+echoall
+cc -s -O exec.c
+rm -f /usr/bin/exec
+mv a.out /usr/bin/exec
+chmod 705 /usr/bin/exec
+chown bin /usr/bin/exec
+goto loop
+
+: exit
+echoall
+cc -s -O exit.c
+rm -f /usr/bin/exit
+mv a.out /usr/bin/exit
+chmod 705 /usr/bin/exit
+chown bin /usr/bin/exit
+goto loop
+
+: fc
+echoall
+cc -s -O fc.c
+rm -f /usr/bin/fc
+mv a.out /usr/bin/fc
+chmod 705 /usr/bin/fc
+chown bin /usr/bin/fc
+goto loop
+
+: fed1
+echoall
+as fed?.s form[56].s
+strip a.out
+rm -f /usr/bin/fed
+mv a.out /usr/bin/fed
+chmod 705 /usr/bin/fed
+chown bin /usr/bin/fed
+goto loop
+
+: file
+echoall
+cc -s -O file.c
+rm -f /usr/bin/file
+mv a.out /usr/bin/file
+chmod 705 /usr/bin/file
+chown bin /usr/bin/file
+goto loop
+
+: find
+echoall
+cc -s -O find.c -lP
+rm -f /usr/bin/find
+mv a.out /usr/bin/find
+chmod 705 /usr/bin/find
+chown bin /usr/bin/find
+goto loop
+
+: flip
+echoall
+cc -s -O flip.c
+rm -f /usr/bin/flip
+mv a.out /usr/bin/flip
+chmod 705 /usr/bin/flip
+chown bin /usr/bin/flip
+goto loop
+
+: form1
+echoall
+as form?.s
+strip a.out
+rm -f /usr/bin/form
+mv a.out /usr/bin/form
+chmod 705 /usr/bin/form
+chown bin /usr/bin/form
+goto loop
+
+: fsize
+echoall
+cc -s -O fsize.c
+rm -f /usr/bin/fsize
+mv a.out /usr/bin/fsize
+chmod 705 /usr/bin/fsize
+chown bin /usr/bin/fsize
+goto loop
+
+: fwd
+echoall
+as fwd.s
+strip a.out
+rm -f /usr/bin/fwd
+mv a.out /usr/bin/fwd
+chmod 705 /usr/bin/fwd
+chown bin /usr/bin/fwd
+goto loop
+
+: getit
+echoall
+cc -s -O getit.c
+rm -f /etc/getit
+mv a.out /etc/getit
+chmod 700 /etc/getit
+chown bin /etc/getit
+goto loop
+
+: getty
+echoall
+cc -n -s -O getty.c -lP
+mv /etc/getty /etc/tempgetty
+mv a.out /etc/getty
+chmod 1700 /etc/getty
+chown bin /etc/getty
+goto loop
+
+: glob
+echoall
+cc -n -s -O glob.c -lP
+chmod 700 /etc/glob
+/etc/glob
+rm -f /etc/glob
+mv a.out /etc/glob
+chmod 1705 /etc/glob
+chown bin /etc/glob
+goto loop
+
+: goto
+echoall
+cc -s -O goto.c
+rm -f /bin/goto
+mv a.out /bin/goto
+chmod 705 /bin/goto
+chown bin /bin/goto
+goto loop
+
+: grep
+echoall
+cc -s -O grep.c
+rm -f /usr/bin/grep
+mv a.out /usr/bin/grep
+chmod 705 /usr/bin/grep
+chown bin /usr/bin/grep
+goto loop
+
+: gripe
+echoall
+cc -s -O gripe.c
+rm -f /usr/bin/gripe
+mv a.out /usr/bin/gripe
+chmod 705 /usr/bin/gripe
+chown bin /usr/bin/gripe
+goto loop
+
+: gsi
+echoall
+cc -s -O gsi.c
+rm -f /usr/bin/gsi
+mv a.out /usr/bin/gsi
+chmod 705 /usr/bin/gsi
+chown bin /usr/bin/gsi
+goto loop
+
+: icheck
+echoall
+cc -s -O icheck.c
+rm -f /etc/icheck
+mv a.out /etc/icheck
+chmod 700 /etc/icheck
+chown bin /etc/icheck
+goto loop
+
+: iff
+echoall
+cc -s -O if.c
+rm -f /bin/if
+mv a.out /bin/if
+chmod 705 /bin/if
+chown bin /bin/if
+goto loop
+
+: init
+echoall
+cc -n -s -O init.c -lP
+rm -f /etc/init
+mv a.out /etc/init
+chmod 700 /etc/init
+chown bin /etc/init
+goto loop
+
+: ipatch
+echoall
+cc -s -O ipatch.c
+rm -f /etc/ipatch
+mv a.out /etc/ipatch
+chmod 700 /etc/ipatch
+chown bin /etc/ipatch
+goto loop
+
+: kill
+echoall
+cc -s -O kill.c
+rm -f /bin/kill
+mv a.out /bin/kill
+chmod 705 /bin/kill
+chown bin /bin/kill
+goto loop
+
+: lapr
+echoall
+cc -s -O lapr.c
+rm -f /usr/bin/lapr
+mv a.out /usr/bin/lapr
+chmod 705 /usr/bin/lapr
+chown bin /usr/bin/lapr
+goto loop
+
+: ld
+echoall
+cc -n -s -O ld.c
+rm -f /bin/ld
+mv a.out /bin/ld
+chmod 1705 /bin/ld
+chown bin /bin/ld
+goto loop
+
+: list
+echoall
+cc -s -O list.c
+rm -f /usr/bin/list
+mv a.out /usr/bin/list
+chmod 705 /usr/bin/list
+chown bin /usr/bin/list
+goto loop
+
+: ln
+echoall
+cc -s -O ln.c
+rm -f /bin/ln
+mv a.out /bin/ln
+chmod 705 /bin/ln
+chown bin /bin/ln
+goto loop
+
+: log
+echoall
+cc -s -O log.c -lP
+rm -f /usr/bin/send /usr/bin/receive
+rm -f /usr/bin/log
+mv a.out /usr/bin/log
+ln /usr/bin/log /usr/bin/send
+ln /usr/bin/log /usr/bin/receive
+chmod 705 /usr/bin/log
+chown bin /usr/bin/log
+goto loop
+
+: lpd
+echoall
+cc -s -O lpd.c
+rm -f /etc/lpd
+mv a.out /etc/lpd
+chmod 700 /etc/lpd
+chown bin /etc/lpd
+goto loop
+
+: lpr
+echoall
+cc -n -s -O lpr.c -lP
+rm -f /bin/print
+rm -f /usr/bin/lpr
+mv a.out /usr/bin/lpr
+ln /bin/lpr /bin/print
+chmod 705 /bin/lpr
+chown bin /bin/lpr
+goto loop
+
+: ls
+echoall
+cc -n -s -O ls.c -lP
+chmod 700 /bin/ls
+ls /null >/null
+rm -f /bin/ls
+mv a.out /bin/ls
+chmod 1705 /bin/ls
+chown bin /bin/ls
+goto loop
+
+: prstop
+echoall
+as prstop.s
+strip a.out
+rm -f /bin/repeat /bin/restart /bin/relinq
+rm -f /usr/bin/prstop
+mv a.out /usr/bin/prstop
+ln /bin/prstop /bin/restart
+ln /bin/prstop /bin/relinq
+ln /bin/prstop /bin/repeat
+chmod 705 /bin/prstop
+chown bin /bin/prstop
+goto loop

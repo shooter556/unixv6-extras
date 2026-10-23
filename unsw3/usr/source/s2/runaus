@@ -1,0 +1,9 @@
+if $1x = x  echo "command name ?"
+if $1x = x  exit
+if $1 = sh -o $1 = getty -o $1 = init -o $1 = log  goto text
+echoall
+cc -O -s -o $1.c -lP ../libc.a 
+exit
+: text
+echoall
+cc -O -n -s -o $1.c -lP ../libc.a 

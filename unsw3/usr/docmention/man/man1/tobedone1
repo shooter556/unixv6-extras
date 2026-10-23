@@ -1,0 +1,21 @@
+doc.?
+fortran.1
+libr.1
+link.1
+overlay facility
+man8/etc/lpd
+man8/etc/lpdc
+man8/tty indirect tty device ??
+glob8 mods
+chdir8 for etc chdir in new shell
+additions to date, not EST or some such time now
+new nroff.1 doc
+rtpip (I)
+exec (I)
+search order for commands in shell (I)
+new tp doc (I)
+new troff doc (I)
+*.tor.*files etc
+doco for slogo
+run off basicp after jeff fixes
+run of fortran manual after jeff

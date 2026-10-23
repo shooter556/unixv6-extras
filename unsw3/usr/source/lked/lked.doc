@@ -1,0 +1,60 @@
+lked - used to produce shared data programs
+
+syntax:
+
+lked id file1 [args] [files] [libraries]
+
+or
+
+lked
+
+description:
+
+	The shared data region is the text of 'file1'. 'Id' is stored in
+the a.out header and when a program with the shared data magic number (412)
+is executed then the system looks for existing running programs
+with this 'id' and links to the existing shared region, otherwise a new
+one is created from the text area of 'file1'.
+	Data and bss sections of 'file1' are not shared and neither is
+any part of subsequent files, thus 'file1' should normally be first produced
+by using ld -r. 'Args' are optional ld arguments as are 'libraries',
+with the normal ld syntax.
+	Executable output is always left in 'a.out'.
+
+	Two system calls, pp and vv with syntax
+
+	pp(&lock)
+	vv(&lock)
+	int lock;
+
+	handle resource allocation for shared data programs.
+	these correspond to the standard P & V synchronization primitives.
+	lock initially contains a count of the maximum number
+	of processes that can use the resource controlled by lock,
+	at any one time. It is usually 1, thus programs requiring
+	a resource should call pp first to ensure that they have
+	private access to the resource, and afterwards call vv
+	to release it for other processes.
+
+bugs:
+	There is no protection of shared data id's, so usually
+	only the super user should be allowed to use them.
+	i.e. a little care is required - but this
+	generally is not a problem as we have only used
+	shared data for system programs - batch subsystem
+	- data base - etc
+
+	Entry is a little tricky as the system will start 
+executing the program at 0 of the shared data that is already loaded.
+Therefore the first part of the shared data file should contain code
+like
+	.text
+	jmp	start
+	.data
+start:	jsr	pc,_main
+	.text
+	etc....
+	to ensure that all programs using the shared area are
+	entered correctly.
+
+	separate I/D space is NOT supported concurrently with shared data

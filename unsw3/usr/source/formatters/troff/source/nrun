@@ -1,0 +1,14 @@
+echo making suftab
+nas -o suftab suftab.s
+strip suftab
+echo install as /usr/lib/suftab
+
+echo making common routines
+nas -o t.o t.s
+nas -o hytab.o hytab.s
+
+echo making nroff
+ncc -DNROFF -n -s -o nroff -O n[123456789].c n10.c ni.c nii.c ntab.c hytab.o t.o
+
+echo making troff
+ncc -n -s -o troff -O n[12345789].c t6.c t10.c ni.c nii.c tab3.c hytab.o t.o

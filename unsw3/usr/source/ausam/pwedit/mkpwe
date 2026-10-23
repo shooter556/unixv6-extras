@@ -1,0 +1,9 @@
+echoall
+cc -O -o pweditdb pwedit.c lib/*.o -lP
+e - pwedit.c
+g/DEBUG/d
+w pweditndb.c
+q
+cc -O -o pwedit pweditndb.c lib/*.o -lP
+rm *.o
+: done

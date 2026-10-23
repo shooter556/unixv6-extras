@@ -1,0 +1,37 @@
+.th MTDUMP VI 2/10/77
+.sh NAME
+mtdump \*- magtape dump
+.sh SYNOPSIS
+.bd mtdump
+[ -eofs ] [ device ]
+.sh DESCRIPTION
+.it Mtdump
+scans through a magtape and produces a summary of the size of blocks
+and the positions of tape-marks.
+.s3
+Device is the unit on which the tape is loaded.
+If device is simply a digit, then the string "/dev/rmt"
+is prepended to it to obtain the unit.
+The default unit is "/dev/rmt0".
+.s3
+Eofs are the number of tape marks used to represent the end-of-tape.
+The default (industry standard) is 2 tape-marks.
+Unix only uses 1 tape-mark.
+.s3
+The example below will dump a CYBER tape (with all its tape marks)
+on drive 1.
+
+	mtdump -4 1
+
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 14
+/dev/rmt?	for input
+.fi
+.dt
+.sh DIAGNOSTICS
+cant open file; self explanatory.
+.sh AUTHOR
+Craig McGregor (University of New South Wales)
+.sh BUGS

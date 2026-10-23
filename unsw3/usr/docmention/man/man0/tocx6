@@ -1,0 +1,29 @@
+azel(VI) satellite predictions
+bj(VI) the game of black jack
+cal(VI) print calendar
+chess(VI) the game of chess
+col(VI) filter reverse line feeds
+cubic(VI) three dimensional tic-tac-toe
+factor(VI) discover prime factors of a number
+fed(VI) edit form letter memory
+flip(VI) flip a coin (sort of)
+form(VI) form letter generator
+graph(VI) draw a graph
+gsi(VI) interpret extended character set on GSI terminal
+m6(VI) general purpose macroprocessor
+maze(VI) draw a maze
+message(VI) print a message in large letters
+moo(VI) guessing game
+mtdump(VI) magtape dump
+plot: tek, gsip, vt0(VI) graphics filters
+primes(VI) print all primes larger than somewhat
+quiz(VI) test your knowledge
+sky(VI) obtain ephemerides
+sno(VI) Snobol interpreter
+speak(VI) word to voice translator
+spline(VI) interpolate smooth curve
+tbl(VI) format tables for nroff or troff
+tmg(VI) compiler-compiler
+ttt(VI) the game of tic-tac-toe
+units(VI) conversion program
+wump(VI) the game of hunt-the-wumpus

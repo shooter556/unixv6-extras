@@ -1,0 +1,59 @@
+.th PCC I 4/1/77
+.sh NAME
+pcc \*- interpret Pascal carriage control
+.sh SYNOPSIS
+.bd pcc
+[
+\fB\*-grnf\fRl
+] [ file ... ]
+.sh DESCRIPTION
+.it Pcc
+is a filter which interprets Pascal carriage control.
+The first character of each  line to
+.it Pcc
+should be one of the
+following carriage control characters:
+.s3
+.nf
+.dt
+	` '	single space before printing
+	`0'	double space before printing
+	`1'	top of form before printing
+	`+'	no space before printing
+.fi
+.s3
+.i0
+Normally, if the initial character is not a valid control, then a leading
+blank is assumed and the line is right shifted with respect to the
+rest of the output.
+The \fB\*-g\fR (gobble) option causes pcc to, instead, eat non
+valid initial characters, which will therefore not show in the output.
+.s3
+If the \fB\*-f\fR (fold)
+option is given then lines which are longer than 132 columns
+are folded into multiple lines.
+For sensible results when tabs are present, the
+fold column should be divisible by 8.
+The \fBf\fR may be followed by a count to specify
+other widths, i.e.:
+.s3
+.bd "	pcc \*-f80 output"
+.s3
+interprets carriage control for the file output with lines longer than 80
+columns folded, and
+.s3
+.bd "	obj | pcc | lpr"
+.s3
+interprets carriage control for the output of the execution of the pascal object
+and puts the result on the line printer.
+.s3
+The \fB\*-n\fR (no carriage control) option may be used when all that is
+desired is folding.
+.s3
+The \fB\*-r\fR (return) option specifies that the output medium does not
+have carriage return capability.
+This means that `+' carriage control will
+be effected using backspace characters instead of a carriage return character.
+.sh "BUGS"
+Folded lines followed by `+' carriage control
+overprint only the last fold of the line, etc.

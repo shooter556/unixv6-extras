@@ -1,0 +1,16 @@
+A shared data program is no different from a shared text program
+except that the magic number 412 specifies that the shared area is
+read-write. Separate shared datas are distinguished by a char in the
+a.out header unused word. Thus when a shared data program is executed
+it will link to the shared area that matches if it exists otherwise
+it will be established.
+It is however a problem to produce code from c that is in the data
+or non shared segment. Here is where the program 'lked' comes in.
+Its syntax is as follows..
+
+lked id share.o -(ld flags) nonshare1.o nonshare2.o library -lc ..
+
+Thus the first file's text area becomes the shared area with id 'id'
+and the rest of the code is put in the nonshared or data area.
+
+For examples of its use see the file 'pgm.m'.

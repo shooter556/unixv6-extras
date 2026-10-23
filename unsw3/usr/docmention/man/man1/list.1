@@ -1,0 +1,88 @@
+.th LIST I ?/?/76
+.sh NAME
+list \*- ascii source lister
+.sh SYNOPSIS
+.bd list
+[ \fB-\fRoptions ] file [ [ \fB-\fRoptions ] [ file ] ] ...
+.sh DESCRIPTION
+List produces a printed listing of one or more files on standard output.
+The output is separated into pages headed by the file name,
+page number, and the creation date of the file.
+.s3
+List examines each character of the input file
+and prints the 96 ASCII graphics; the ASCII TAB ('\\t')
+and NEWLINE ('\\n') characters are the only control characters
+which "list" recognizes.
+Lines which are longer than the
+specified paper width are truncated and a
+DEL printed as the
+last character.
+If you wish lines to be "folded", use the
+"f" parameter.
+List works as a filter if no input file name is given.
+.s3
+Options (preceded by a `-') apply to all following files
+unless reset between files.
+.s3
+.ft I
+.lp +9 8
+option	meaning
+.ft R
+.s3
+.lp +9 8
+\fBc\fR	format output for CRT presentation.
+Release each page by typing a return.
+Sets "\fB-m\fR0\fBl\fR20".
+.s3
+.lp +9 8
+\fBt\fIn\fR	set tab spacing to \fIn\fR (default 8).
+.s3
+.lp +9 8
+\fBl\fIn\fR	set page length to \fIn\fR lines (default 58 + 2 header lines).
+.s3
+.lp +9 8
+\fBn\fR	do not print line numbers.
+.s3
+.lp +9 8
+\fBw\fIn\fR	set paper width to \fIn\fR columns (default
+80).
+.s3
+.lp +9 8
+\fBm\fIn\fR	set left margin width to \fIn\fR columns
+(default 0)
+.s3
+.lp +9 8
+\fB+\fIn\fR	begin printing at page \fIn\fR.
+.s3
+.lp +9 8
+\fB:\fIn\fR	stop printing after page \fIn\fR.
+.s3
+.lp +9 8
+\fBp\fR	direct output directly to printer ("/dev/lp").
+The spooler \fIlpr\fR (I) should be used for all but very large
+listings.
+.s3
+.lp +9 8
+\fBf\fR	fold output (default mode is truncate).
+.i0
+.dt
+.s3
+To print a file on a CRT terminal with a line
+width of 60, the following command is appropriate:
+
+	list -cw60 filename
+	RETURN	<----- (to release pages)
+
+.sh "SEE ALSO"
+cat(I), cp(I), pr(I)
+.sh DIAGNOSTICS
+none; files not found are ignored
+.sh AUTHOR
+(\ deservedly unknown\ )
+.sh BUGS
+This atrocious program is quite useable
+provided care is taken with the options:
+.lp +9 8
+1.	They are order dependant:- l after c, n after w, m after c;
+.lp +9 8
+2.	w and (m or n) are mutually dependant - so don't use them together!

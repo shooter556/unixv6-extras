@@ -1,0 +1,39 @@
+.th PRSTOP I 1976
+.sh NAME
+prstop, restart, repeat \*- line printer control
+.sh SYNOPSIS
+.bd prstop
+.br
+.bd restart
+.br
+.bd repeat
+.sh DESCRIPTION
+.it Prstop
+will abort the current listing on the printer (if produced by
+.it lpr
+)
+with an appropriate message.
+.s3
+.it Restart
+will
+.it prstop
+the current listing and restart the entire listing from the beginning
+complete with banner page.
+.s3
+.it Repeat
+will cause the listing on the printer to be repeated from the beginning
+after the present copy on the printer has completed.
+.sh "SEE ALSO"
+lpr (I)
+.sh DIAGNOSTICS
+done: when abort is completed.
+.sh BUGS
+Care should be taken that the listing in question does not complete
+before
+.it prstop
+aborts it.
+.it Prstop
+aborts the listing currently
+.ul
+on
+the printer and so pressing stop is a good idea.

@@ -1,0 +1,115 @@
+ar \*- archive and library maintainer
+arcv \*- convert old archive files to new format
+as \*- assembler
+bas \*- basic
+basicp \*- Basic-Plus
+bc \*- arbitrary precision interactive language
+cat \*- concatenate and print
+cc \*- C compiler
+cdb \*- C debugger
+chdir \*- change working directory
+chmod \*- change mode
+cmp \*- compare two files
+comm \*- print lines common to two files
+copy \*- copy contents of a directory tree
+coreit \*- core file analyser
+cp \*- copy
+cpall \*- copy files to a directory
+cref  \*-  make cross reference listing
+date \*- print and set the date
+db \*- debug
+dc \*- desk calculator
+dd \*- convert and copy a file
+ddt \*- dynamic C debugger
+diff \*- differential file comparator
+doc \*- documentation enquiry facility
+dsw  \*-  delete interactively
+du  \*-  summarize disk usage
+echo \*- echo arguments 
+ed \*- text editor
+em \*- editor for mortals
+eqn  \*-  typeset mathematics
+ev \*- expression evaluator
+exit  \*-  terminate command file
+fc \*- Fortran compiler
+file \*- determine file type
+find \*- find files
+fortran \*- fortran IV compiler
+goto  \*-  command transfer
+grep \*- search a file for a pattern
+gripe \*- enter complaints and bug reports
+if \*-  conditional command
+kill \*- terminate a process
+ld  \*-  link editor
+libr \*- fortran librarian
+link \*- fortran linker
+list \*- ascii source lister
+ln  \*-  make a link
+login  \*-  sign onto UNIX
+lpr \*- spool files ready for printing
+ls  \*-  list contents of directory
+macro \*- macro assembler
+mail  \*-  send mail to designated users
+man \*- run off section of UNIX manual
+mas \*- Motorola M6800 assembler
+mc \*- filter which splits output into columns
+mesg  \*-  permit or deny messages
+mkdir  \*-  make a directory
+mv  \*-  move or rename a file
+mvall \*- move files to a directory
+neqn \*- typeset mathematics on terminal
+newgrp \*- log in to a new group
+news \*- news distribution program
+nice \*- run a command at low priority
+nm  \*-  print name list
+nohup \*- run a command immune to hangups
+nroff  \*-  format text
+od  \*-  octal dump
+opr \*- off line print
+p \*- flexible pagination of output
+para \*- improved C paragrapher and syntax checker
+passwd \*- change login password
+pc \*- Pascal compiler (generating interpreter code)
+pcc \*- interpret Pascal carriage control
+pcx \*- Pascal interpreter
+pfe \*- print floating exception
+pr  \*-  print file
+prof \*- display profile data
+prstop, restart, repeat \*- line printer control
+ps \*- process status
+psc \*- Pascal-S compiler/interpreter
+ptx \*- permuted title index
+pwd \*- working directory name
+pxp \*- Pascal execution profiler
+pxref \*- Pascal cross-reference program
+rc \*- Ratfor compiler
+rev \*- reverse lines of a file
+rm  \*- remove (unlink) files
+rmdir  \*-  remove directory
+roff  \*-  format text
+sh  \*-  shell (command interpreter)
+shift \*- adjust Shell arguments
+size \*- size of an object file
+sleep \*- suspend execution for an interval
+slup \*- source librarian and update program
+sort, usort \*- sort or merge files
+speed \*- do lineprinter escapes and overstrikes
+spell \*- find spelling errors
+split \*- split a file into pieces
+strip  \*-  remove symbols and relocation bits
+stty \*- set typewriter options
+tee \*- pipe fitting
+time \*- time a command
+tp  \*-  manipulate DECtape and magtape
+tr \*- transliterate
+trbas \*- translate DEC basic plus source to Unix format
+troff  \*-  format text
+tty \*- get typewriter name
+typo \*- find possible typos
+uniq \*- report repeated lines in a file
+wait \*- await completion of process
+wc \*- word count
+where \*- where in the manual can I find this
+who  \*-  who is on the system
+write  \*-  write to another user
+yacc \*- yet another compiler-compiler

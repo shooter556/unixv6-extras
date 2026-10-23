@@ -1,0 +1,792 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      Berkeley UNIX Pascal
+
+                         PXP___ User____ Manual______
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+This document is intended for use in spring quarter 1977 and reflects
+the state of UNIX Pascal PXP as of April 1, 1977.
+
+
+
+
+
+
+
+
+
+
+
+UNIX Pascal              PXP User Manual                W. N. Joy
+April 1, 1977
+
+
+                 T A B L E   O F   C O N T E N T S
+
+
+ 1 Introduction.........................................  1
+
+     1.1 What is execution profiling ?..................  1
+
+     1.2 What are the uses of profiling ?...............  1
+
+     1.3 References to previous work....................  1
+
+ 2 Execution Profiling..................................  2
+
+     2.1 An example.....................................  2
+
+     2.2 The sample execution profile...................  5
+
+     2.3 Interpreting the execution profile.............  5
+
+     2.4 Getting a profile without modifying a program..  5
+
+     2.5 More selective control - option push and pop...  6
+
+     2.6 Option line selective profiling................  6
+
+     2.7 The m option...................................  7
+
+     2.8 Some other profiling options...................  7
+
+     2.9 Profiling from core files......................  7
+
+     2.10 Another example...............................  8
+
+ 3 Formatting control options...........................  9
+
+ 4 Pretty Printing......................................  9
+
+ 5 Syntax checking...................................... 10
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+UNIX Pascal              PXP User Manual                W. N. Joy
+April 1, 1977
+
+
+1 Introduction
+
+     This writeup is intended to introduce the UNIX  Pascal  user
+     to  the  features of the program pxp.  The reader is assumed
+     to be vaguely familiar with UNIX Pascal.
+
+     This program was written in late December 1976  and  January
+     1977  by William Joy.  It depends heavily on the UNIX Pascal
+     compiler written by the author and Charles Haley  and  based
+     on  an earlier version of the compiler written by Ken Thomp-
+     son.  Faculty advisor for this project was Susan L. Graham.
+
+   1.1 What is execution profiling ?
+
+     An execution profile consists of  a  structured  listing  of
+     (all or part) of a program with information about the number
+     of times each statement in the program  was  executed  in  a
+     particular run of the program.
+
+   1.2 What are the uses of profiling ?
+
+     Several uses can be made of execution profiles.  In  a  pro-
+     gram  which was abnormally terminated due to excessive loop-
+     ing or recursion or by a program fault, the counts  can  fa-
+     cilitate  location of the error.  Zero flow counts mark por-
+     tions of the program which were  not  executed;  during  the
+     early debugging stages they should prompt new test data or a
+     re-examination of the program logic.  The profile is perhaps
+     most  valuable,  however, in drawing attention to the (typi-
+     cally small) portions of the program that dominate execution
+     time for the purpose of source level optimization.
+
+   1.3 References to previous work
+
+     The author was first made aware of  execution  profiling  on
+     reading  the  first  given paper below.  Motivation for this
+     project came later, mostly from suggestions made to the  au-
+     thor  by James Jatczynski and stimulated by his Masters pro-
+     ject where he implemented a tabular form  of  profiling  for
+     the  Pascal-S  system.   The  system is loosely based on the
+     work of E. Satterthwaite and his Algol W debugging system as
+     described in:
+
+          "Debugging Tools for High Level Languages"
+          Software - Practice and Experience
+          Vol. 2, 197-217 (1972)
+
+          "Source Language Debugging Tools"
+          Stanford University Computer Science Department
+          STAN-CS-75-494 May, 1975
+
+
+
+
+
+                               -1-
+
+
+
+
+
+
+UNIX Pascal              PXP User Manual                W. N. Joy
+April 1, 1977
+
+
+2 Execution Profiling
+
+     To obtain an execution profile of the program which  resides
+     in  the  file 'foo.p' one first must compile it with the 'm'
+     option of pc (I) enabled on the command line, i.e.:
+
+                   % pc -m foo.p
+
+     This causes the compiler to place counters at program branch
+     points  to  determine the number of times each statement was
+     executed.  As the counters tend to be few in number and  the
+     data  relatively  inexpensive to gather, counters are placed
+     throughout the entire program text.  When the user  executes
+     the resulting program the Pascal system will write the count
+     information to the file 'pmon.out'.  The user is then  ready
+     to obtain a profile of his program using pxp.
+
+     Profiling by pxp is selective.  That is, not all of  a  pro-
+     gram need be profiled.  Considerable effort has been made to
+     allow the user to extract  only  the  count  information  he
+     wishes.  We discuss each of the several ways of getting pro-
+     file information in turn, after giving a simple example.
+
+   2.1 An example
+
+     The program we wished to profile was in the file foo.p.   We
+     first compiled the program with the command
+
+                   % pc -lm foo.p | lpr
+
+     and produced the listing given  in  figure  1  on  the  line
+     printer.
+
+     We then executed the object by typing
+
+                   % obj
+
+     producing the output given in figure 2, terminating normally
+     and leaving the data file 'pmon.out'.
+
+     We then obtained the execution profile of the program  given
+     in figure 3 using the command
+
+                   % pxp -zt foo.p | lpr
+
+
+
+
+
+
+
+
+
+
+
+                               -2-
+
+
+
+
+
+
+UNIX Pascal              PXP User Manual                W. N. Joy
+April 1, 1977
+
+
+
+UNIX Pascal PC (0.8 Jan 1977)           Thu Mar 24 11:40 1977 "foo.p"
+
+     1  program count(input,output);
+     2  const lim = 3;
+     3  var c: array [1..lim] of integer;
+
+     5  procedure printout(k: integer);
+     6  var i: integer;
+     7  begin
+     8          write(' ');
+     9          for i := 1 to k do write(c[i]: 3);
+    10          writeln;
+    11  end;
+
+    13  procedure enumerate(total, i: integer);
+    14  begin
+    15          if i <= lim then begin
+    16                  c[i] := 0;
+    17                  while total > 0 do begin
+    18                          enumerate(total, i+1);
+    19                          c[i] := c[i] + 1;
+    20                          total := total - 1;
+    21                  end;
+    22                  printout(i);
+    23          end;
+    24  end;
+
+    26  begin
+    27          enumerate(3, 2);
+    28  end.
+
+
+                            Figure 1
+
+
+
+
+
+
+
+   0  0  3
+   0  1  2
+   0  2  1
+   0  3
+
+
+                            Figure 2
+
+
+
+
+
+
+
+                               -3-
+
+
+
+
+
+
+UNIX Pascal              PXP User Manual                W. N. Joy
+April 1, 1977
+
+
+UNIX Pascal PXP (0.2 Feb 1977)          Thu Mar 24 11:40 1977 "foo.p"
+
+    Profiled Thu Mar 24 11:41 1977
+
+     1        1.---|program count(input, output);
+
+     5            4.---|procedure printout(k: integer);
+     5                 |begin
+     8                 |    write(' ');
+     9                 |    for i := 1 to k do
+     9               11.---|    write(c[i]: 3);
+    10                 |    writeln
+    10                 |end { printout };
+
+    13           10.---|procedure enumerate(total, i: integer);
+    13                 |begin
+    15                 |    if i <= lim then begin
+    16                4.---|    c[i] := 0;
+    17                     |    while total > 0 do begin
+    18                    9.---|    enumerate(total, i + 1);
+    19                         |    c[i] := c[i] + 1;
+    20                         |    total := total - 1
+    20                     |    end;
+    22                     |    printout(i)
+    22                 |    end
+    22                 |end { enumerate };
+
+    22        1.---|begin { count }
+    27             |    enumerate(3, 2)
+    27             |end { count }.
+
+UNIX Pascal PXP (0.2 Feb 1977)          Thu Mar 24 11:40 1977 "foo.p"
+
+    Profiled Thu Mar 24 11:41 1977
+
+
+        Line       Count
+
+           1           1        count
+           5           4            printout
+          13          10            enumerate
+
+
+
+                            Figure 3
+
+
+
+
+
+
+
+
+
+
+                               -4-
+
+
+
+
+
+
+UNIX Pascal              PXP User Manual                W. N. Joy
+April 1, 1977
+
+
+   2.2 The sample execution profile
+
+     The 'z' option turned  on  printing  of  the  body  of  each
+     procedure/function in the program, and the 't' option caused
+     the printing of the summary table.
+
+     The header lines of the outputs of pc and pxp  indicate  the
+     version of the compiler and execution profiler in use at the
+     time this example was prepared.  The  time  given  with  the
+     file  name  (also  on the header line) indicates the time of
+     last modification of the program source file (as is given by
+     pr (I) and ls (I) see stat (II)).  This time serves to 'ver-
+     sion stamp' the input program.  pxp also indicates the  time
+     at which the profile data was gathered.
+
+   2.3 Interpreting the execution profile
+
+     To determine the number of time a statement was executed one
+     looks to the left of the statement and finds the correspond-
+     ing vertical bar '|'.  If this vertical bar is labelled with
+     a  count then that count gives the number of time the state-
+     ment was executed.  If the bar is not labelled, look  up  in
+     the  listing  to  find the first '|' which is directly above
+     the original one which has a count and  that  count  is  the
+     answer.
+
+     Thus, in the example above, the write statement in the  pro-
+     cedure  printout  at line 9 was executed 11 times, while the
+     call to printout in enumerate at  line  20  was  executed  4
+     times  (as  given  in the count on the assignment to c[i] at
+     line 16).
+
+     If the program terminated abnormally or contained  non-local
+     goto's  which were executed then the statement counts may be
+     incorrect.  In particular the counts will  be  off  whenever
+     the  'upward  look'  to  get a count passes a suspended call
+     point.
+
+   2.4 Getting a profile without modifying a program
+
+     The simplest situation for getting a profile is to  get  one
+     of  an  existing program without editing it as we did in the
+     example above.  In this example we used the  fact  that  pxp
+     will  only  profile  sections of a program for which the 'z'
+     option is enabled.  Undoubtedly, if this is the  first  time
+     the  program has been profiled, the 'z' option is never men-
+     tioned in such a program.  In this case, one can specify the
+     'z' command line option, i.e.:
+
+                   % pxp -z foo.p
+
+     The effect of the z option is to place a option control com-
+     ment of the form
+
+
+                               -5-
+
+
+
+
+
+
+UNIX Pascal              PXP User Manual                W. N. Joy
+April 1, 1977
+
+
+                                {$z+}
+
+     before the first statement of the program, thus turning  the
+     'z'  option on.  Unless there is other 'z' option control in
+     the program, this produces a profile of the entire program.
+
+   2.5 More selective control - option push and pop
+
+     It is often the case that one wishes not to profile  certain
+     procedures or functions.  A good example is the 'initialize'
+     procedures which are used in many Pascal programs to make up
+     for  the  lack  of data initialization facilities.  What one
+     would like to do is turn off the 'z' option  before  such  a
+     procedure and then restore its old value after the procedure
+     terminates.  This is permitted for not only the  'z'  option
+     but  for  all  on/off  valued  toggles by treating each as a
+     stack and providing the operations push '>' and pop '<'  for
+     them.  Thus before an initialization procedure one might do
+
+                   {$z>- push z option, now off}
+
+     and then after the procedure do
+
+                   {$z< pop old z option value}
+
+     Thus the new legal option sequences  are  '>',  '>-',  '>+',
+     read  'push',  'push and clear', and 'pop and set'. A 'push'
+     (without a set) retains the current setting.
+
+   2.6 Option line selective profiling
+
+     To facilitate the easy selection of  the  procedures  to  be
+     profiled  the  following  convenient  shorthand is provided.
+     Suppose that one  wished  to  profile  only  the  procedures
+     'pass2' and its nested procedures and functions and also the
+     function 'lookup' in an assembler  program.   One  could  do
+     this  by placing special option control comments in the pro-
+     gram text and then later removing them  but  this  would  be
+     tedious.  Thus pxp allows one to say:
+
+                   % pxp -z pass2 lookup assemb.p
+
+     with the effect of a {$z>+} and a {$z<}  comment  bracketing
+     each  of  these  procedures.  This profile will also include
+     one line for each other procedure/function in the program.
+
+     If we are working interactively and wish  feedback  only  on
+     certain  procedures and functions we can suppress the header
+     lines for other procedures and functions using the  'n'  op-
+     tion, i.e. in our example above:
+
+                   % pxp -nz printout foo.p
+
+
+
+                               -6-
+
+
+
+
+
+
+UNIX Pascal              PXP User Manual                W. N. Joy
+April 1, 1977
+
+
+   2.7 The m option
+
+     Finally, if the user has the program embedded with  comments
+     to produce exactly the profile data he desires, enabling the
+     z option around the wanted procedure/function bodies, he may
+     specify only the 'm' option on the command line, i.e.:
+
+                   % pxp -m foo.p
+
+     Note that if the z option is never  enabled  in  foo.p  then
+     only the procedure and function headers will be given.
+
+   2.8 Some other profiling options
+
+     When profiling, pxp normally discards all declaration parts.
+     This can be prevented by enabling the 'd' option flag.
+
+     pxp normally suppresses the bodies of procedures  and  func-
+     tion  which were never called.  The '0' print zero count bo-
+     dies command line option causes the  bodies  of  these  pro-
+     cedures and functions to be printed.
+
+
+   2.9 Profiling from core files
+
+     pxp can be given profile data in two forms.   The  data  can
+     have  been written to the file 'pmon.out' by the Pascal sys-
+     tem after a run of the object, or if the program  terminated
+     abnormally and produced a core image - e.g. if the user ter-
+     minated the process with a quit signal - then pxp can be in-
+     structed to extract the data from a core image file.
+
+     pxp will assume, unless otherwise instructed, that the  pro-
+     file  data is in the file 'pmon.out'.  If the data is in the
+     format  of  a  'pmon.out'  file  but  is  not  in  the  file
+     'pmon.out'  in  the  current directory, then one can specify
+     the location of the profile data as  the  last  argument  to
+     pxp, i.e.
+
+                   % pxp -z foo.p ../pmon.out
+
+     if the profile data file were in the parent directory of the
+     current directory.
+
+     To specify that the profile data is to come  from  a  'core'
+     image file one uses the 'c' option, i.e.:
+
+                   % pxp -zc foo.p
+
+     and if the core file is elsewhere one could likewise say
+
+                   % pxp -zc foo.p /mnt/chuck/funnycore
+
+
+
+                               -7-
+
+
+
+
+
+
+UNIX Pascal              PXP User Manual                W. N. Joy
+April 1, 1977
+
+
+   2.10 Another example
+
+     As an example of another use of  pxp  consider  the  program
+     inf.p.   It  was  run  and seemed to be in a non-terminating
+     loop.  A quit signal was sent to the program  by  hitting  a
+     control backslash causing the message
+
+                   Quit -- Core dumped
+
+     to be printed by the shell.  The command:
+
+                   % pxp -zc inf.p
+
+     then resulted in the output given in figure 4.
+
+
+
+
+
+
+UNIX Pascal PXP (0.2 Jan 1977)          Sun Jan 30 18:20 1977 "inf.p"
+
+    Profiled Sun Jan 30 18:22 1977
+
+     1        1.---|program inf(output);
+
+     4          244.---|function fact(j: integer): integer;
+     4                 |begin
+     6                 |    if i = 1 then
+     6                0.---|    fact := 1
+     6          244.---|    else
+     6              244.---|    fact := j * fact(i - 1)
+     6          244.---|end { fact };
+
+     6        1.---|begin { inf }
+     9             |    for i := 5 to 50 do
+    10            1.---|    writeln(fact(i))
+    10             |end { inf }.
+
+
+                            Figure 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                               -8-
+
+
+
+
+
+
+UNIX Pascal              PXP User Manual                W. N. Joy
+April 1, 1977
+
+
+3 Formatting control options
+
+     Several options to pxp control the way in which it reformats
+     the listing of the program.  We describe each in turn.
+
+     The 'f' option controls the amount  of  parenthesization  of
+     expressions.   Normally,  pxp provides the minimum amount of
+     parenthesization necessary to preserve the structure of  the
+     input text.  If the 'f' option is enabled then pxp will ful-
+     ly parenthesize the input text to show exactly how the  com-
+     piler interprets each expression.  This option defaults off.
+
+     The 'i' option controls the indenting of  nested  procedures
+     and  functions.   When  it  is on, as it is normally, nested
+     procedures are indented to reflect the block structure.
+
+     The '_' underline option causes keywords to be underlined in
+     the  output.   The  'o'  option  causes keywords to be over-
+     struck.  Both default off.
+
+     Finally, the user has control over the basic size which  pxp
+     uses  for  block structure indenting.  The pertinent options
+     are the digits '2', '4', and '8' which cause that number  of
+     "spaces" to be used.  The default is 4.
+
+
+4 Pretty Printing
+
+     pxp may also be used to perform the function  of  a  'pretty
+     printer'.   If none of the 't', 'z', 'y', or 'm' options are
+     given, then pxp will produce a restructured version  of  the
+     input text and put it on the standard output.  Thus to clean
+     up the text in the file ugly.p one could use the command:
+
+                   % pxp ugly.p >pretty.p
+
+     Note that the shell creates the file for output  before  pxp
+     executes,  so  that one must not specify the same name twice
+     in this command, as this will have the effect of  destroying
+     the file.
+
+     Unlike most pretty printers, pxp actually parses  the  input
+     and  demands  that  it  be  a syntactically correct program.
+     This has the advantage that the output reflects  a  walk  of
+     the  same  parse tree that is constructed by the Pascal com-
+     piler pc, so that the pretty print  reflects  the  structure
+     that  the  compiler saw, not what the user thought he wrote.
+     It has the disadvantage that one must have  a  syntactically
+     correct program in order to use pxp.
+
+
+
+
+
+
+                               -9-
+
+
+
+
+
+
+UNIX Pascal              PXP User Manual                W. N. Joy
+April 1, 1977
+
+
+5 Syntax checking
+
+     Finally, it is possible to use pxp as a syntax  checker  for
+     the  first  few  runs of a program.  By using the 'y' option
+     one can specify that the output be the syntactic diagnostics
+     (same  as pc) plus pretty printed listings of the 'units' in
+     which the error occurred reflecting the structure  the  com-
+     piler saw.  This feature of pxp is under development.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                              -10-
+
+
+
+
+
+

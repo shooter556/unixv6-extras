@@ -1,0 +1,330 @@
+	.title	salloc
+	.ident	/v001/
+.hiseg
+
+	global	<.call,f$ret,c$ret,s$ret>
+
+.call:	mov	(sp)+,retadd
+	mov	(sp)+,routn
+	mov	retadd,-(sp)
+	mov	r5,-(sp)	;save old r5
+	mov	routn,r5	;address of routine
+	add	(r5),pc	;how many registers to save
+
+	mov	r4,-(sp)
+	mov	r3,-(sp)
+	mov	r2,-(sp)
+	mov	r1,-(sp)
+	mov	r0,-(sp)
+
+	mov	r5,-(sp)	;save address of routine
+	mov	(r5)+,-(sp)	;words saved
+	neg	(sp)
+	add	#sysreg+6+12,(sp)
+	mov	sp,retadd	;new arg pointer
+	movb	(r5)+,r5	;number of locals
+	beq	1$
+	mov	r5,-(sp)
+	asl	(sp)
+	add	#sysnod,(sp)
+
+2$:	mov	(sp),-(sp)
+	clr	2(sp)
+	sob	r5,2$
+
+1$:	mov	retadd,r5
+	mov	2(r5),-(sp)
+	add	#4,(sp)
+	mov	@(sp)+,pc
+
+f$ret:	sec
+	br	c$ret
+
+s$ret:	clc
+
+c$ret:	bcs	15$
+	inc	(sp)+
+	mov	(sp)+,retval
+15$:	mov	r5,sp
+	rolb	routn+1
+	tst	(sp)+		;discard frame ident.
+	mov	(sp)+,r5	;again pointer to descriptor
+	movb	3(r5),routn	;argument count
+	add	(r5),pc		;register restore
+
+	br	6$
+	br	5$
+	br	4$
+	br	3$
+	br	2$
+	br	1$
+
+6$:	mov	(sp)+,r0
+	mov	(sp)+,r1
+	mov	(sp)+,r2
+	mov	(sp)+,r3
+	mov	(sp)+,r4
+	br	1$
+5$:	mov	(sp)+,r0
+	mov	(sp)+,r1
+	mov	(sp)+,r2
+	mov	(sp)+,r3
+	br	1$
+4$:	mov	(sp)+,r0
+	mov	(sp)+,r1
+	mov	(sp)+,r2
+	br	1$
+3$:	mov	(sp)+,r0
+	mov	(sp)+,r1
+	br	1$
+2$:	mov	(sp)+,r0
+1$:	mov	(sp)+,r5	;old arg counter
+	mov	(sp)+,retadd	;return address
+	
+	clr	-(sp)
+	movb	routn,(sp)
+	asl	(sp)
+	asl	(sp)
+	add	(sp)+,sp
+	rorb	routn+1
+	bcs	14$
+	mov	retval,-(sp)
+	mov	#sysnod+2,-(sp)
+
+14$:	jmp	@retadd
+
+.loseg
+routn:	.blkw
+retval:	.blkw
+retadd:	.blkw
+.hiseg
+
+
+; Lisp storage management
+
+
+	func	node,<c1,c2>,<>,1
+	call	gnode
+	mov	2(sp),r0
+	mov	c1(r5),(r0)
+	mov	c2(r5),2(r0)
+	return
+
+	func	gnode,<>,<>,1
+
+	global	<.nil,freels,atmend>
+	global	<oblist>
+
+2$:	mov	freels,r0
+	beq	1$
+
+;**************************************************
+;**** forced garbage collection if on          ****
+;
+;	tst	trb
+;	beq	20$
+;	call	.gc
+;20$:
+;
+;**************************************************
+
+	mov	(r0),freels
+	mov	.nil,(r0)
+	mov	.nil,2(r0)
+	return	r0
+1$:	call	.gc
+	br	2$
+
+	func	.gc,<>,<>,4
+
+	global	<bitmap,bitend,gcount,freesp,freels>
+	global	<gc.min,sysatm,stkend>
+
+10$:	mov	bitmap,r0	;first clear bit map
+	
+1$:	clr	(r0)+
+	cmp	r0,bitend
+	bne	1$
+	
+	mov	sp,r0		;now trace stack
+2$:	cmp	r0,stkend	;which ends before 'stkend'
+	beq	4$
+	cmpb	1(r0),#1	;avoid sysreg
+	beq	3$
+	cmpb	1(r0),#3	;and syslnk
+	beq	3$
+	movb	(r0),r1		;get byte count
+	beq	3$
+	asr	r1		;to word count
+	tst	(r0)+		;to first word
+5$:	mov	(r0)+,r3
+	calli	trace
+	sob	r1,5$		;for each word
+	br	2$
+3$:	movb	(r0),r1		;just skip this frame
+	add	r1,r0		;byte count
+	tst	(r0)+		;to next frame
+	br	2$
+
+4$:	mov	#sysatm,r0
+	mov	(r0)+,r3
+	calli	trace
+	cmp	r0,#atmend
+	blo	4$+4
+	clr	gcount		;number of nodes collected in this try
+	mov	#freels,r0	;where to start
+	mov	bitmap,r1	;start of bitmap
+	mov	freesp,r3
+
+7$:	mov	#16.,r2		;bits/ word
+
+6$:	asr	(r1)		;need not worry about sign extend
+	bcs	11$		;already marked as used
+
+	mov	r3,(r0)
+	mov	r3,r0
+	clr	(r3)
+	inc	gcount		;another collected
+
+11$:	add	#4,r3
+	sob	r2,6$
+	tst	(r1)+
+	cmp	r1,bitend	;end of map?
+	bne	7$		;no
+
+	cmp	gcount,gc.min	;was enough collected?
+	bge	8$		;yes.
+	calli	getcore	#<64.+2.>*cincr
+				;free cell unit, 2 bytes map
+	bcs	12$		;allocation failure, try to make do
+	add	#64.*cincr,bitmap	;move the map area
+				;free space - bitend updated
+	br	10$
+
+12$:	text	3,<Too few free cells - garbage collect>
+8$:	freturn
+
+
+
+trace:	tst	r3		;ignore zero
+	beq	2$
+	calli	mark
+	bcs	2$
+	bit	#1,(r3)		;check for atom
+	bne	atrace
+	mov	r3,-(sp)
+	mov	(r3),r3
+	calli	trace
+	mov	(sp)+,r3
+	mov	2(r3),r3
+	br	trace
+2$:	reti
+
+atrace:	mov	r0,-(sp)
+	movb	1(r3),r0	;type indicator
+	mov	2(r3),r3	;gnerally,  some type of pointer
+	add	r0,pc
+
+	br	symb
+	br	int
+	br	real
+	br	string
+
+	br	expr
+	br	fexpr
+	br	lexpr
+	br	nexpr
+	br	sexpr
+	br	macro
+
+	br	subr
+	br	fsubr
+	br	lsubr
+	br	nsubr
+	br	ssubr
+
+
+symb:	calli	mark
+	bcc	symb1
+aret:	mov	(sp)+,r0
+	reti
+symb1:	mov	r3,-(sp)
+	mov	(r3),r3
+	calli	trace
+	mov	(sp)+,r3
+	mov	2(r3),r3
+string:	calli	smark
+	br	aret
+
+
+expr:
+fexpr:
+lexpr:
+nexpr:
+macro:
+sexpr:
+
+	calli	trace
+	br	aret
+
+real:
+subr:
+fsubr:
+
+	calli	mark
+
+int:
+nsubr:
+lsubr:
+ssubr:
+
+	br	aret
+
+
+
+mark:	cmp	r3,freesp
+	blo	1$
+	cmp	bitmap,r3
+	blo	1$
+	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	r3,r1
+	sub	freesp,r1
+	ash	#-2,r1
+	bic	#140000,r1
+	clr	r0
+	div	#8.,r0
+	add	bitmap,r0
+	bitb	bits(r1),(r0)
+	bne	2$
+	bisb	bits(r1),(r0)
+	clc
+	br	3$
+
+2$:	sec
+3$:	mov	(sp)+,r1
+	mov	(sp)+,r0
+1$:	reti
+
+smark:	cmp	r3,.nil
+	beq	1$
+	calli	mark
+	mov	(r3),r3
+	cmp	r3,#1
+	bne	smark
+1$:	reti
+
+
+
+.loseg
+
+bits:	.byte	^b00000001
+	.byte	^b00000010
+	.byte	^b00000100
+	.byte	^b00001000
+	.byte	^b00010000
+	.byte	^b00100000
+	.byte	^b01000000
+	.byte	^b10000000
+
+	.end

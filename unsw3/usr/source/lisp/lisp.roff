@@ -1,0 +1,2641 @@
+.de rt
+..
+.sp 25
+.ce
+Lisp-11 Manual
+.sp 3
+.ce
+J. N. Rottman
+.sp 3
+.ce 2
+Princeton University
+September 1975
+.bp
+.nr % 1 -1
+.nr t 6
+.nr b -7
+.de hd
+'sp \\nt
+.ns
+..
+.de fo
+'sp 2
+'bp
+..
+.de pp
+.if e .tl 'Lisp-11'-%-''
+.if o .tl ''-%-'Lisp-11'
+..
+.de pg
+.sp
+.ne 2
+.ti 5
+..
+.wh 0 hd
+.wh -7 fo
+.wh -5 pp
+.ce
+	Contents
+
+.nf
+1. Introduction					2
+
+2. Atoms and lists				3
+   a. Symbolic
+   b. Numeric
+   c. String
+   d. Functional
+   e. Lists and s-expressions
+
+3. Evaluation					7
+   a. lambda______ and label_____
+   b. Function types
+   c. Contexts and binding
+   d. A description of eval____ and apply_____
+   e. Associated functions
+
+4. Conditional expressions			21
+
+5. Predicates					22
+
+6. List functions				25
+   a. Building
+   b. Fragmenting
+   c. Modifying
+   d. Transforming
+   e. Mapping
+   f. Searching
+   g. Defining
+
+7. Numeric functions				32
+   a. Arithmetic
+   b. Logical
+
+8. Program features				36
+
+9. String functions				37
+
+10. Input/output				39
+
+11. Error and garbage control			43
+
+12. Future enhancements				46
+
+13. System distribution				47
+
+14. Function index				48
+.bp
+
+.fi
+.ad
+.tl ''Introduction''
+
+
+	lisp-11_______ is a modification and implementation of
+LISP 1.6, described in the Stanford________ Lisp____ 1.6___ Manual______, SAILON 28.2 .
+
+	The fundamental unit of storage in lisp-11 is the free____ cell____ -
+a four byte entity in memory.  There is no distinction between free storage
+and full-word space;  both are implemented in free cells.  Binary program
+space, a compiler,  and arrays are not yet implemented.
+
+	lisp-11 is designed to be used under the UNIX time-sharing system.
+Command input is from the standard input channel,  and default output is
+to the standard output channel.  The line editing facilities are those
+provided by the operating system,  and a line is not passed to the lisp
+system until the new-line character is typed.
+
+	The UNIX quit____ and interrupt_________ signals have a special meaning under
+lisp.  The quit signal forces a return to the default initialization
+function,  and back-tracing and error catching, if enabled, are disabled.
+The interrupt signal results in a special error condition being raised
+in the interpreter,  and the subsequent application of the standard
+error processing. (chapter 11)
+.bp
+.tl ''Atoms and lists''
+.sp 3
+	The atom____ is the fundamental datum in lisp. In lisp-11 the
+concept of an atom has been considerably extended over that in lisp 1.6
+or lisp 1.5.  Like lisp 1.6, lisp-11 has atoms of symbolic________ and numeric_______
+types.  These are augmented with string______ and functional__________ atoms.
+
+	The evaluation function - the heart of lisp - is defined to be the
+identity on all non-symbolic atoms.   Symbolic atoms are distinguished in that they
+may possess a value_____.  Upon evaluation they yield this value; if they do not have
+a value, it is erroneous to evaluate them.
+
+	Symbolic atoms are identified by their print _____ names_____,
+and by an abuse of language they will frequently be equated with this name.  All symbolic
+names input with the same print name are synonymous; however, facility is provided 
+for generating symbolic atoms which differ from other atoms with the same name.
+
+	A very informal syntax of the language lisp-11 accepts follows:
+
+
+Any character may be ignored_______ on input by preceeding it by
+the ignore______ character._________  Initially , this is a back-slash (\\),
+but this may be changed by calling setch_____.  This is usually used to
+hide line-feeds occuring in inconvenient places.
+
+Any character may be protected_________ by proceeding it with the protect_______
+character_________ - initially, a slash(/). This may also be changed by setch_____.
+Protected characters lose all special meaning. Usually, this
+is used to hide perverse symbols in print names.  On common
+non-delimiters, protection has no effect - "/a/b" is
+equivalent to "ab".
+
+
+A delimiter is any one of the set
+.br
+	{(, ), [, ], <, >, ", ', space, tab, line-feed }
+
+Tab, space, and line-feed (a.k.a. new-line) are equivalent.
+
+A print_____ name____ may be any string of non-delimiters.
+If the print name is syntactically acceptable
+as a number,  but is not intended to be one,
+it must be partially protected, or entered using 
+the $$-artifact.___________ A print name may have between 1 and 32,000 characters.
+
+$$-artifact___________ - any non-empty string of characters of the form:
+.br
+.sp 1
+.ce
+$$?string?
+.sp 1
+will result in string______ being regarded as the print name of a symbolic atom.
+Here '?' is any character not appearing in "string".  In this way peculiar print names
+may be generated.
+
+The null character (ascii 0) is strictly forbidden on input.
+
+Some examples of print names:
+	a		FOO-whiz
+	$$$why not?$	$$#$36.2#
+	a/</>/\		/a/b
+
+Some illegal print names:
+	23		- this will be interpreted
+			- as an integer.
+	ss>s		- a delimiter is embedded.
+
+
+A lisp string______ is any string of non-null characters (in the colloquial sense)
+contained between two double quotes. Inside a string, the double quote
+character is represented by two contiguous double quotes ("")
+
+Some examples of strings:
+	""		- a null string
+	"string"	- a dull string
+	""""""""	- a string with three double
+			  quotes in it.
+
+A lisp integer_______ is any non-null optionally signed string of digits.
+They are interpreted in the current radix (base 8 or base 10, only).
+As in all fixed-point arithmetic operations,  their value is taken
+modulo 2**16.
+
+Some integers:
+	374
+	+1
+	-28
+
+Notes:
+	"-" and "+" are not___ legal numbers.
+	In octal, 8 is interpreted as 10(8) and 9 as 11(8).
+
+A lisp real____ number______ is just like a fortran real number, except that
+no space may seperate the exponent from the "e". (And the "e" must be
+present before an exponent field!)
+
+Some lisp systems may be generated without floating-point atoms.
+These systems will not recognize floating point numbers as numerics.
+
+A real number:
+	23.56e-21
+
+
+A list____ is an atom, or a list dotted______ with a list.
+They may look like:
+	atom, or
+	( list1 ... listn), n>_ 0; or
+	(list1 ... list(n-1)  . listn) , n >_ 2.
+
+There are some convenient abbreviations:
+	"<" and ">" are super_____-parens______. The left angle
+bracket functions just like a left paren.  The right
+angle bracket matches all outstanding  square brackets
+and parens necessary to match the closest unmatched angle bracket.
+An unmatched right angle bracket is syntactically incorrect.
+
+	'list is shorthand for (quote list)
+
+
+Here are some lists:
+	<(a (b c>
+	'(a b c)
+	(a b . c)
+	(a b c)
+	()
+	nil
+	abrownstripedfrog
+
+In many error messages, the word list____ is used to be mean a
+list not consisting of just a single atom.
+	Even worse, in many places list____ is used to mean
+a special list in which the cd..dr'st element is nil___.
+
+Function________ atoms_____:
+
+Function follows form here, so just the syntax follows:
+
+	[f-type list]	,	f-type may be expr____, fexpr_____, lexpr_____,
+						nexpr_____, sexpr_____, or
+						macro._____
+
+	[f-type n1 n2]		f-type may be subr____, or fsubr_____
+				n1 and n2 are integers. 	
+				n1 is the address,  and
+				n2 the number of args.
+
+	[f-type n1]		f-type may be lsubr_____, nsubr_____, ssubr_____
+				n1 is an integer address.
+
+some examples:
+
+[expr (lambda () (print (gensym)))]
+
+[subr 123450 3]
+
+[nsubr 11024]
+
+Some notes on input:
+	After an input error, all input is consumed until
+a bell (control/G) is eaten. Then input resumes.
+	An end-of-file on channel 0 (standard input)
+causes an exit from lisp.
+
+
+	Lisp-11 output is much simpler. Basically, lisp
+outputs items as it would like to read them. 
+
+	Files may have an associated line length (see fmode_____)
+In this case, lisp tries to break output items on delimiter boundaries within
+10 spaces of the margin. If this is not possible, it outputs a
+protected line-feed in the middle of the item.
+
+	There is a mode, setable by setsl_____, that determines
+whether lisp will protect peculiar characters in print-names.
+Normally, this is off.
+
+.bp
+.tl ''Evaluation''
+.sp 3
+	The heart of the lisp system is a function 
+which defines the evaluation__________ of a list.  The description
+of this function  lurks in this section.
+
+	The top level of lisp-11 is equivalent to
+repeated evaluation of:
+	(lambda () (print (*eval (read)) ))
+
+a. lambda______
+
+syntax: (lambda arg-list body)
+
+	A lambda expression indicates the binding _______ of a set of values (the
+arguments to the expression) to the atoms in the argument list.  After this binding
+the body of the lambda expression is evaluated.  
+
+	There must be a 1-1 correspondence of values to arguments. Binding
+entails saving the old values of the atoms comprising the arg-list, and
+setting their new value to the corresponding value in the argument-value
+list.  For more detail or explanation, see Weissman's Lisp____ Primer______, or
+McCarthy's Lisp____ 1.5___ Programmer's____________ Manual.______
+
+	Following evaluation,  the variables are unbound_______ - restored
+to their previous values.
+
+examples:
+
+(lambda () 1)
+.in 16
+- this lambda expression of no arguments always evaluates to the
+constant 1.
+.in 0
+.sp 1
+(lambda (x y) (times x x y y))
+.in 16
+- this lambda expression of 2 arguments evaluates to the product of the
+squares of its arguments.
+.in 0
+
+
+  label_____
+
+syntax:	(label id lambda-expression)
+
+	label_____ binds the symbolic atom id__ to the lambda-expression,
+which it then evaluates.  After the evaluation id__ is unbound.
+	label_____ makes it possible to construct recursive functions with
+temporary names.
+
+.bp
+example:
+	The following defines an expression which reverses the
+elements of a list.
+
+(de reverse (list)
+	((label reverse1
+		(lambda (list m)
+			(cond ((atom list) m)
+				(t (reverse1
+					(cdr list)
+					(cons
+						(car list)
+						 m
+					)
+				)   )
+			)
+		)
+	))
+.br
+)
+
+b. Functional types
+
+	The different functional types,  personified by the different types of
+functional atoms,  specify different ways of associating the arguments
+to a function with the lambda expression in the function.
+
+	These different ways are briefly described here.
+
+.in 8
+1) expr____ - The expr____ is the most basic type of lisp function.  The arguments to
+an expr are evaluated, and then bound 1-1 to the variables in the lambda-list.
+This type of function is universally available in lisp implementations.
+(If they deserve to be called lisp!)
+	de__ is commonly used to define expr's    .
+
+example:
+.in 16
+at the top level,
+
+([expr (lambda (x) (times x x))] 3)
+
+yields 9.
+
+
+.in 8
+2) fexpr_____ - an fexpr_____ specifies that its arguments are to be bound, unevaluated,
+1-1 to the variables in its lambda-list.
+
+example:
+.in 16
+at the top level,
+
+([fexpr (lambda (x y)(cons x y))]  a b)
+
+yields (a . b)
+
+.in 8
+
+3) lexpr_____ - A lexpr_____ passes a list of its evaluated arguments to be bound to the
+one variable in its lambda-list. (List in the sense of the cd..dr'st element
+being nil___)
+
+4) nexpr_____ - A nexpr_____ passes a list of its unevaluated arguments to be bound to the
+one variable in its lambda-list.
+
+
+example:
+.in 16
+
+([lexpr (lambda (x) x)] 'a 'b)
+
+yields (a b)
+
+
+([nexpr (lambda (x) x)] 'a 'b)
+
+yields ((quote a) (quote b))
+
+
+.in 8
+5) sexpr_____ - A sexpr_____  passes two argument values to be bound to its two variables.  The first is a
+list of its unevaluated arguments.  The second value is a
+context_______ integer_______,  describing the context at the time the sexpr was called.  
+The significance of this integer will be discussed in section (c).
+
+
+
+6) macro_____ - A macro passes their actual call as their one argument to be bound.
+The lambda expression is then evaluated,  and usually results is some expanded
+form.  Finally,  this expanded form is again evaluated.
+
+example:
+.in 16
+
+Using macros,  we can define a function conscons,  which 'cons' together
+an arbitrary number of arguments:
+
+(dm conscons (L)
+	(cond 
+		((null (cddr L)) (cadr L))
+		(t (list
+			'cons
+			(cadr L)
+			(cons
+				'conscons
+				(cddr L)
+			)
+		)  )
+	)
+.br
+)
+
+
+Another way to do this is to define a function expand:
+
+(de expand (L FN)
+	(cond
+		((null (cdr L))(car L))
+		(t (list
+			FN
+			(car L)
+			(expand
+				(cdr L)
+				FN
+			)
+		)  )
+	)
+.br
+)
+
+and then define conscons as:
+
+(dm conscons (L)
+	(expand
+		(cdr L)
+		'cons
+	)
+.br
+)
+
+
+.in 8
+
+7) A subr____ is a compiled expr____.
+
+
+8) A fsubr_____ is a compiled fexpr_____.
+
+
+9) A lsubr_____ is a compiled lexpr_____.
+
+
+10) A nsubr_____ is a compiled nexpr._____
+
+
+11) A ssubr_____ is a compiled sexpr_____.
+.bp
+c. Contexts and bindings
+
+
+	The set of all variables and their associated values at a given
+time is called the context_______ at that time.  It is sometimes necessary
+to evaluate an expression in a context other than the present one,
+particularly for functional arguments with free variables.
+
+
+	The functions eval____ and apply_____ accept an optional second or
+third argument,  respectively,  which indicates the context in which they are to
+operate.  The argument is a context_______ integer_______,  and completely
+describes the context of the system at some previous time.  
+
+
+	For functional arguments, function________ is synonymous with
+quote._____  *function_________  should be used when it is necessary to invoke the
+functional argument in its original context. (Extra overhead is associated with this.)
+*function_________ generates a list of the form (funarg______ fn . bind) where bind is a context
+integer.  Later,  when this form is evaluated,  the evaluation will automatically
+be done in the context active when *function_________ was called.
+
+	Associated with a context is the idea of a visible frame.
+It is only valid to evaluate an expression in a previous context if that context is visible_______;
+this is, if it existed at some previous higher level of function call which
+has not yet exited.  For example, the following usage is incorrect:
+
+
+
+	(de screw-the-system ()
+		(prog (a)
+			(setq a (*function 37))
+		)
+	)
+
+
+	(screw-the-system)
+	(eval a)
+
+.bp
+	The second argument to a sexpr_____ (or ssubr_____) is also such a
+context integer.  The use of this argument is illustrated in the following function:
+
+.in 8
+(ds exchange (L S)
+	(prog (Z)
+		(setq Z (eval(car L) S))
+		(apply 'set (list
+			(car L)
+			(eval (cadr L) S))
+		       S
+		)
+		(apply 'set (list
+			(cadr L)
+			Z)
+		       S
+		)
+	)
+.br
+)
+
+if initially L = (a b c d) and M = (1 2 3 4),
+.br
+	(exchange L M)
+.br
+
+would result in:
+.br
+
+L = (1 2 3 4), and M = (a b c d).
+
+Without contexts in the calls to eval____ and apply_____,  quite
+a different result would occur.
+
+.bp
+
+d. A description of eval____ and apply_____
+
+	This description is only for pedagogical purposes.
+In the actual coding,  transfers may be made where recursion is inÕ˛u 0Õ˛buf ¿Õ˛bfreelis  Õ˛bdevsw   Õ˛nblkdev  Õ˛cdevsw   Õ˛nchrdev  Õ˛coremap êÕ˛swapmap  Õ˛rootdir  Õ˛cputype  Õ˛execnt  Õ˛lbolt  Õ˛time  Õ˛timouts  Õ˛mount  Õ˛mpid  Õ˛runin  Õ˛runout  Õ˛runrun  Õ˛curpri  Õ˛maxmem  Õ˛lks  Õ˛rootdev  Õ˛swapdev  Õ˛swplo  Õ˛nswap  Õ˛updlock  Õ˛rablock  Õ˛regloc   Õ˛proc <Õ˛ka6  Õ˛buffers PPÕ˛tmtab  Õ˛httab  œ˛bread  ˛r˛bread –˛Ÿ˛dev  Ÿ˛blkno  i˛ o˛ p˛ ÿ˛rbp  i˛ ˛   ˛  getblk ˛    ˛    	˛  d˛  P˛ ÷˛? ˛   ˛    (˛ $˛  ˛ nd a list of values to which they are to be bound.  Unbind______ is the inverse of bind____.
+
+	Fix bind___ ____ is a function of one argument, a context integer.  It adjusts the
+current context to correspond to that represented by the integer,  and then returns a context integer for the
+current context. Unfix_____ bind____ is the inverse of fix___ bind____.
+
+.bp
+.na
+.ll 100
+function________ apply(fn, args, binding);
+	local_____ rval, current binding;
+
+	current binding := fix bind(binding);
+
+	select______ type(fn) of__
+
+	(symb):
+	(expr):
+		rval := apply(value(fn), args, current bind);
+		break_____;
+
+	(subr):
+		rval := call(value(fn), args);
+		break_____;
+
+	(lexpr):	
+		rval := apply(value(fn), ncons(args), current bind);
+		break_____;
+
+	(lsubr):
+		rval := call(value(fn), ncons(args));
+		break_____;
+
+	(list):	
+		if__ car(fn) = 'label' then____
+			bind(ncons(cadr(fn)), cddr(fn));
+			rval := apply(caddr(fn), args, current bind);
+			unbind();
+			break_____;
+		endif_____;
+
+		if__ car(fn) = 'lambda' then____
+			bind(cadr(fn), args);
+			rval := eval(caddr(fn), args, current bind);
+			unbind();
+			break_____;
+		endif_____;
+
+		if__ car(fn) = 'funarg' then____
+			rval := apply(cadr(fn), args, cddr(fn));
+			break;
+		endif_____;
+
+		rval := apply(eval(fn, current bind), args,
+			current bind);
+		break;
+
+	default_______:
+		error(ERROR IN APPLY);
+
+	end___ select______;
+
+	un fix bind(binding);
+
+	return______ rval;
+
+end___ function________;
+
+.bp
+function________ eval(form, binding);
+	local_____ fn, args, rval;
+
+	current bind := fix bind(binding);
+
+	if__ atom(form) then____
+		rval := value(form);
+		un fix bind(binding);
+		return______ rval;
+	endif_____;
+
+	if__ car(form) = 'funarg' then____
+		rval := eval(cadr(form), cddr(form));
+		un fix bind(binding);
+		return______ rval;
+	endif_____;
+
+	fn := value(car(form));
+	args := cdr(form);
+
+	select______ type(fn) of__
+
+	(list):
+	(expr):
+	(symb):
+		rval := apply(fn, evlis(args), current bind);
+		break_____;
+
+	(int):
+	(real):
+	(string):
+		error(ERROR IN EVAL);
+		break_____;
+
+	(subr):
+		rval := call(fn, evlis(args));
+		break;_____
+
+	(fexpr):
+		rval := apply(fn, args, current bind);
+		break_____;
+
+	(fsubr):
+		rval := call(fn, args);
+		break_____;
+
+	(lexpr):
+		rval := apply(fn, ncons(evlis(args)),
+				current bind);
+		break;_____
+
+	(lsubr):
+		rval := call(fn,ncons(evlis(args)));
+		break_____;
+
+	(nexpr):
+		rval := apply(fn, ncons(args), current bind);
+		break_____;
+
+	(nsubr):
+		rval := call(fn, ncons(args));
+		break_____;
+
+	(sexpr):
+		rval := apply(fn, list(args, current bind),
+			current bind);
+		break_____;
+
+	(ssubr):
+		rval := call(fn, list(args, current bind));
+		break_____;
+
+	(macro):
+		rval := eval(apply(fn, ncons(form), current bind),
+				current bind);
+
+
+	end___ select______;
+
+	un fix bind(binding);
+
+	return______ rval;
+
+end___ function________;
+.ll
+.ad
+.bp
+e. Functions associated with eval____ and apply_____
+
+.de C0
+.mk
+.in 0
+..
+.de C1
+.in 30
+.rt
+..
+.de C2
+.in 40
+.rt
+..
+
+.C0
+(*apply fn args)
+.C1
+subr
+.C2
+applies the argument fn__ to the list of args args____ in
+the current context.
+
+
+.C0
+(*eval form)
+.C1
+subr
+.C2
+evaluates the form____ in the current context.
+
+
+.C0
+(*function fn)
+.C1
+fsubr
+.C2
+returns (funarg______ fn . current context)
+
+
+.C0
+(apply fn args)
+.C0
+(apply fn args c)
+.C1
+lsubr
+.C2
+applies the function fn__ to the list of args____.
+If the third argument is omittted,  the current context is used.
+Otherwise, context c_ is used.  When this is not needed, *apply______ is preferred.
+
+.C0
+(eval form)
+.C0
+(eval form c)
+.C1
+lsubr
+.C2
+the form____ is evaluated. If the third argument is omitted,
+this is done in the current context. Otherwise, it is done in
+context c_. Again, if this is not needed, *eval_____ is preferred.
+
+
+.C0
+(evlis list)
+.C1
+subr
+.C2
+returns (mapcar (function eval) list)
+
+.C0
+(expr list)
+.C1
+subr
+.C2
+returns [expr list____]
+
+
+.C0
+(fexpr list)
+.C1
+subr
+.C2
+returns [fexpr list____].
+
+
+.C0
+(fsubr n m)
+.C1
+subr
+.C2
+returns [fsubr n_ m_].
+
+
+.C0
+(function fn)
+.C1
+fsubr
+.C2
+equivalent to (quote fn__).
+
+
+.bp
+.C0
+(initfn fn)
+.C1
+subr
+.C2
+sets the initialization function to fn__.
+The old initialization function is returned. 
+The lisp system is defined as repeated
+evaluation of (ifn), where ifn is the initialization
+function. The quit____ signal restores the
+original initialization function, which is
+equivalent to (print (eval (read))).
+
+
+.C0
+(label ...
+.C1
+pseudo
+.C2
+see (a)
+
+
+.C0
+(lambda ...
+.C1
+pseudo
+.C2
+see (a)
+
+
+.C0
+(lexpr L)
+.C1
+subr
+.C2
+returns [lexpr L_].
+
+
+.C0
+(lsubr n)
+.C1
+subr
+.C2
+returns [lsubr n_].
+
+
+.C0
+(macro L)
+.C1
+subr
+.C2
+returns [macro L_].
+
+
+.C0
+(nexpr L)
+.C1
+subr
+.C2
+returns [nexpr L_].
+
+
+.C0
+(nsubr n)
+.C1
+subr
+.C2
+returns [nsubr n_].
+
+
+.C0
+(set L1 L2)
+.C1
+subr
+.C2
+L1__ must evaluate to a symbolic atom. L2__ is made its value.
+L2__ is also returned.
+It is streng verboten to assign any value to nil___. It is also
+futile to assign any value to oblist______ (This variable contains the
+current value of the system's oblist)
+
+
+.C0
+(setq L1 L2)
+.C1
+fsubr
+.C2
+returns, with side effects, (set L1__ (eval L2__))
+
+
+.bp
+.C0
+(sexpr L)
+.C1
+subr
+.C2
+returns [sexpr L_].
+
+
+.C0
+(ssubr n)
+.C1
+subr
+.C2
+returns [ssubr n_].
+
+
+
+.C0
+(subr n m)
+.C1
+subr
+.C2
+returns [subr n_ m_].
+
+
+.C0
+(tval L)
+.C1
+subr
+.C2
+returns  (cons (type L_) val L_))
+
+
+.C0
+(type L)
+.C1
+subr
+.C2
+returns the type of L_, from the following choices: {
+symb, int, real, string, expr, subr, fexpr, fsubr, nexpr, nsubr, lexpr,
+lsubr, macro, ssubr, sexpr }
+
+
+.C0
+(unset L)
+.C1
+subr
+.C2
+L_ must evaluate to a symbolic atom,  whose value
+is made undefined. nil___ is returned.
+
+
+.C0
+(val L)
+.C1
+subr
+.C2
+val___ is the id function on strings, ints, and reals.
+For functional atoms it returns the part after "[..."
+Symbolic atoms either yield their value or an error.
+
+
+.C0
+(unsetq L)
+.C1
+fsubr
+.C2
+Obviously, the quoted version of unset_____.
+
+
+.bp
+.in 0
+.tl ''Conditional Expressions''
+
+
+The form of a conditonal expression has been extended over that of
+lisp 1.5. In its most general form, it is:
+
+	(cond
+		(e1,1 e1,2 ... e1,k)
+			||
+		        \\/
+		(en,1 ...    ...   )
+	)
+
+where n >_ 0, and k >_ 1.
+
+
+The ei,1's are considered to be predicates,
+and are evaluated until one is found whose value is not nil.
+If this is ek,1,  then the corresponding ek,2 ... ek,n are evaluated.
+The value of the conditional is ek,n. If none of the ei,1's are non-nil, then
+the value of the conditional is nil. At the top level of a prog, the
+cond is somewhat special.
+
+
+The select______ conditional form from lisp 1.5 has also been implemented.
+The general form is:
+
+	(select q
+		(q1 e1)
+		  ||
+		  \\/
+		(qn en)
+		e
+	)
+
+q_ is evaluated,  and its value is compared with the evaluated values
+of the qi's until one is found which is equal_____.  The value of the selct is then the
+value of the corresponding ei.  If no equality is found, the value of the
+select is e_.
+
+.bp
+.tl ''Predicates''
+
+
+Predicates are functions that return a value from the set
+.br
+
+.ce
+{t_, nil___}
+
+denoting truth or falsity, respectively.
+
+The following are the basic lisp-11 predicates:
+
+.C0
+(*gt a1 a2)
+.br
+(*ge a1 a2)
+.br
+(*eq a1 a2)
+.br
+(*le a1 a2)
+.br
+(*lt a1 a2)
+.br
+(*ne a1 a2)
+.C1
+subrs
+.C2
+t_ is returned if a1 bears the indicated relation to a2.
+These predicates are defined iff a1 and a2 are both numeric, or
+both strings. For strings, the ascii collating sequence is used, and trailing
+blanks are significant. 
+
+.in 0
+examples:
+	(*eq 0.0 0)		yields t_.
+	(*eq "cat" "dog")	yields nil___.
+	(*eq "cat" 0)		is erroneous.
+
+
+.C0
+(eq. a1 ... an)
+.br
+(ge. a1 ... an)
+.br
+(gt. a1 ... an)
+.br
+(ne. a1 ... an)
+.br
+(lt. a1 ... an)
+.br
+(le. a1 ... an)
+.C1
+lsubrs
+.C2
+n_ must be >_ 1.
+If n_ = 1, comparison is with 0 for numeric values, and
+the null string for string values. If n > 1, these are equivalent to
+(and (relx a1 a2) (relx ..) ... (relx an-1 an)),
+where relx____ is the obvious relation.
+
+.in 0
+examples:
+	(gt. 5 4 3 2)		yields t_
+	(gt. 5 6 "dog")		yields nil___
+	(gt. -1)		yields nil___
+
+
+.C0
+(and c1 ... cn)
+.C1
+nsubr
+.C2
+The ci's are evaluated until one is found with the value nil.___
+Then nil is returned as the value of the predicate.  The remaining
+ci's are not evaluated. If none of the ci's evaluate to nil, then
+the value of the predicate is t_.
+.in 0
+
+example:
+	(and)			yields t_
+
+
+.C0
+(atom s)
+.C1
+subr
+.C2
+is true if s is atomic.
+
+
+.C0
+(eq n m)
+.C1
+subr
+.C2
+is true if n and m have the same address. 
+This will be true of interned symbolic atoms with the same print name.
+Otherwise, it is usually false.
+
+
+.C0
+(equal n m)
+.C1
+subr
+.C2
+is true if they would have the same external representation.
+(Except for non-interned symbolic atoms with the same print name -
+these are not___ equal.)
+
+
+.in 0
+examples:
+	(eq 0 0)		yields nil___
+	(eq 'a 'a)		yields t
+	(equal 0 0)		yields t
+
+
+.C0
+(fixp n)
+.C1
+subr
+.C2
+is true if n is of type int___.
+
+
+.C0
+(floatp n)
+.C1
+subr
+.C2
+is true if n is of type float
+
+
+.C0
+(member L1 l2)
+.C1
+subr
+.C2
+is true if L1 is equal_____ to a top level element of the list L2.
+It is equivalent to:
+.br
+(lambda (L1 L2)
+(cond ((atom L2) nil) ((equal L1 (car L2)) t) (t (memeber L1 (cdr L2))))
+(member L1 (cdr L2))))
+
+
+
+.C0
+(memeq L1 l2)
+.C1
+subr
+.C2
+is like member______, but using the predicate eq__ rather than equal_____.
+
+
+.C0
+(or c1 ... cn)
+.C1
+nsubr
+.C2
+The ci's are evaluated until one is found whose value is non-nil.
+Then t is returned as the value of the predicate.  The remaining ci's are not
+evaluated.  If all of the ci's evaluate to nil,  then the value
+of the predicate is nil.
+
+
+.in 0
+example:
+	(or)			yields nil
+
+
+.C0
+(null s)
+.C1
+subr
+.C2
+is true if s is nil.
+
+
+.C0
+(not s)
+.C1
+subr
+.C2
+is true if s is nil.
+
+
+.C0
+(numberp s)
+.C1
+subr
+.C2
+is true if s is of type int___ or float_____.
+
+
+.C0
+(stringp s)
+.C1
+subr
+.C2
+is true if s is of type string______.
+.bp
+.in 0
+.tl ''List Functions''
+
+
+a. S-expression building functions
+
+
+.C0
+(cons x y)
+.C1
+subr
+.C2
+returns (x . y)
+
+
+
+.C0
+(xcons x y)
+.C1
+subr
+.C2
+returns (y . x)
+
+
+.C0
+(ncons x)
+.C1
+subr
+.C2
+returns (cons x nil)
+
+
+.C0
+(list x1 ... xn)
+.C1
+lsubr
+.C2
+returns (cons x1 (cons x2 ... (cons xn nil) ... )).
+(list) yields nil.
+
+
+.C0
+(*append x y)
+.C1
+subr
+.C2
+forms a list of y appended to x, according to the following definition: 
+.br
+(de *append (x y) (cond ((null x) y)
+(t (cons (car x) (*append (cdr x) y)))))
+
+
+.C0
+(append x1 ... xn)
+.C1
+lsubr
+.C2
+returns (*append x1 (*append x2 ... (*append xn-1 xn) ... ))
+.br
+(append) yields nil.
+
+
+.C0
+(quote x)
+.C1
+fsubr
+.C2
+yields x.
+
+
+.C0
+(clist x)
+.C1
+subr
+.C2
+returns x, if x is a list, in the cd...dr'st sense.
+Otherwise, an error results.
+
+
+.C0
+(pair x y)
+.C1
+subr
+.C2
+x and y must be lists with the same length. If x = (x1 ... xn), and
+y = (y1 ... yn), then ((xn . yn) ...(x1 . y1)) is
+returned.
+
+
+.bp
+
+.in 0
+b. S-expression fragmenting functions
+
+
+.C0
+(car L)
+.C1
+subr
+.C2
+if L = (a . b), (car L) yields a_.
+
+
+.C0
+(cdr L)
+.C1
+subr
+.C2
+if L = (a . b), (cdr L) yields b_.
+
+
+.C0
+(c ..[ad].. r L)
+.C1
+pseudo
+.C2
+Any arbitrary combination of a's and d's (Including none) may
+replace the dotted area.  They are special-cased in the interpreter to yield:
+(ca...r L) = (car (c...r L)), 
+(cd...r L) = (cdr (c...r L)), and
+(cr L) = L.
+
+
+.C0
+(last L)
+.C1
+subr
+.C2
+returns the last part of a list, according to the following definition:
+.br
+(de last (L) (cond ((atom (cdr L)) L) (t (last (cdr L)))))
+
+
+.bp
+.in 0
+c. S-expression modifying functions
+
+	The following functions actually modify existing list structures rather
+than creating new ones.  They should be used with extreme care; it is possible
+to create lists that do not have a finite external form.
+
+
+
+.C0
+(rplaca s d)
+.C1
+subr
+.C2
+s_ must be a list; its car becomes the list d.
+
+
+.C0
+(rplacd s d)
+.C1
+subr
+.C2
+s_ must be a list; its cdr becomes the list d_.
+
+
+.in 0
+example:
+	(setq s '(a s))
+	(rplaca s 23)
+
+	results in the variable s_ having the value (23 s)
+
+
+.C0
+(conc x y)
+.C1
+subr
+.C2
+similar to *append_______,  but the last element in the list x is actually
+changed to a pointer to the list y.
+
+
+.C0
+(nconc x1 ... xn)
+.C1
+lsubr
+.C2
+similar to append, but with conc____ used instead of *append_______.
+
+
+.bp
+
+.in 0
+d. S-expression transforming functions
+
+
+.C0
+(length L)
+.C1
+subr
+.C2
+returns the number of top level elements of the list L_
+according to the definition:
+.br
+(de length (L) (cond ((atom L) 0)(t (add1 (length (cdr L))))))
+
+
+.C0
+(reverse L)
+.C1
+subr
+.C2
+returns the reverse of the top level of the list L.
+See (3b) for an equivalent definition.
+
+
+.C0
+(subst x y s)
+.C1
+subr
+.C2
+substitutes the s-expression x for all top-level occurences
+or the s-expression y in s, according to the following definition:
+.br
+(de subst (x y s) (cond
+((equal y s) x)
+((atom s) s)
+(t (cons
+(subst x y (car s))
+(subst x y (cdr s))
+))))
+
+
+.C0
+(copy L)
+.C1
+subr
+.C2
+returns a fresh copy of the s-expression L.  This is useful if L will
+soon be altered (with an s-expression modifying function.)
+
+
+.bp
+
+.in 0
+e. S-expression mapping functions
+
+
+.C0
+(map fn L)
+.C1
+subr
+.C2
+map applies the function fn__ to the list L_ , and successive cdr's of the list L,
+until the list is reduced to nil___. map___ always returns the value nil___.
+An equivalent definition is:
+.br
+(de map (fn L)
+(prog () L1 (cond ((null L) (return nil))) (fn L) (setq L (cdr L)) (go L1)))
+
+.in 0
+example:
+
+	(map 'print '(x y z)) 
+
+	results in:
+
+	(x y z)			printed,
+	(y z)			printed,
+	(z)			printed,
+	nil			returned.
+
+
+
+.C0
+(mapc fn L)
+.C1
+subr
+.C2
+mapc is similar to map___ except that fn__ is applied to the car of L_ at each step,
+rather than L itself.
+
+
+.C0
+(maplist fn L)
+.C1
+subr
+.C2
+maplist applies the function fn__ to the list L and successive cdr's of L until L is reduced to nil.
+The value returned is the list of values returned by the application.
+
+
+.C0
+(mapcar fn L)
+.C1
+subr
+.C2
+similar to maplist except that at each stage fn__ is applied to the car of L_.
+.bp
+.in 0
+
+f. S-expression searching functions
+
+.C0
+(assoc x L)
+.C1
+subr
+.C2
+assoc_____ searches the list of dotted pairs l_ for a pair whose
+car is eq__ to x_. If such a pair is found, it is returned as the
+value of assoc. Otherwise, nil is returned.
+An equivalent definition is:
+.br
+(de assoc (x L) (cond ((null L) nil)
+((eq x (caar L) (car L))
+(t (assoc x (cdr L)))))
+
+
+.C0
+(sassoc x L fn)
+.C1
+subr
+.C2
+sassoc______ searches the list of dotted pairs L_ for one
+whose car is eq__ to x. If such a pair is found, it
+is returned as the value of sassoc. Otherwise, the value of fn__,
+a function of no arguments, is returned.
+
+
+.bp
+
+.in 0
+g. Defining functions
+
+.C0
+(de name args body)
+.C1
+fsubr
+.C2
+de__ assigns to the atomic symbol name____ a value of type
+expr____ with body
+.br
+(list 'lambda args body)
+
+
+.in 0
+example:
+
+	(de f (x) (times x x))
+
+	results in f having the value:
+
+	[expr (lambda (x) (times x x))]
+
+
+.C0
+(df name args body)
+.C1
+fsubr
+.C2
+for fexpr_____'s
+
+
+.C0
+(dl name args body)
+.C1
+fsubr
+.C2
+for lexpr_____'s
+
+
+.C0
+(dn name args body)
+.C1
+fsubr
+.C2
+for nexpr_____'s
+
+
+.C0
+(ds name args body)
+.C1
+fsubr
+.C2
+for sexpr_____'s
+
+
+.C0
+(dm name args body)
+.C1
+fsubr
+.C2
+for macro_____'s
+
+
+.in 0
+.bp
+.tl ''Numeric Functions''
+
+	There are two types of numeric atoms in lisp-11:
+integers and floats.  In some systems floating-point computation
+has been disabled.
+
+
+	Where floating-point computation is allowed, the following
+conversion rules apply:
+
+.in 8
+i. If all operands are integers, the result is an integer.
+
+
+ii. If an integer is specified as an argument in the definition of a function,
+the entier______ of any floating number passed as that argument will be used.
+
+
+iii. In mixed expressions,  all values are converted to floating, and the
+value is floating.
+
+
+iv. Integers may be in the range -32768 to 32767.  They are stored as
+16-bit, two's complement quantities.
+
+
+v. Floats may be roughly in the range 10e-38 to 10e+38. They have about
+six digits of significance, and are stored as 32-bit quantities.
+
+
+vi. Integer overflow is ignored. Integer divide-by-zero is an error.
+
+
+vii. Floating underflow is converted to true zero.
+Floating overflow is an error.
+
+
+.in 0
+
+.bp
+.in 0
+
+a. Arithmetic functions
+
+
+.C0
+(*plus x y)
+.C1
+subr
+.C2
+returns x_ + y_.
+
+
+.C0
+(*times x y)
+.C1
+subr
+.C2
+returns x_ * y_.
+
+
+.C0
+(abs x)
+.C1
+subr
+.C2
+returns |x_|.
+
+
+.C0
+(add1 x)
+.C1
+subr
+.C2
+returns x_ + 1.
+
+
+.C0
+(difference x1 ... xn)
+.C1
+lsubr
+.C2
+returns x1__ - (plus x2__ ... xn__)
+
+
+.C0
+(divide x y)
+.C1
+subr
+.C2
+returns 
+.br
+(cons (quotient x y) (remainder x y))
+
+
+.C0
+(entier x y)
+.C1
+subr
+.C2
+returns:
+.br
+0, for x_ = 0.
+.br
+[x_], for x > 0.
+.br
+-[-x_], for x < 0.
+
+
+.C0
+(float x)
+.C1
+subr
+.C2
+returns x_ + 0.0 .
+
+
+.C0
+(min x1 ... xn)
+.C1
+lsubr
+.C2
+returns min{x1__,...,xn__}.
+
+
+.C0
+(max x1 ... xn)
+.C1
+lsubr
+.C2
+returns max{x1__,...,xn__}.
+
+
+.in 0
+note:
+.in 8
+The value of min___/max___ is the value of the minimum/maximum xi,
+regardless of the conversions necessary for comparison.  These functions
+are also defined for strings in the obvious manner.
+
+
+
+.C0
+(minus x)
+.C1
+subr
+.C2
+returns -x_.
+
+
+.C0
+(plus x1 ... xn)
+.C1
+lsubr
+.C2
+returns :
+.br
+( ... ((x1__ + x2__) + x3__) ...)
+.br
+(plus) =_ 0.
+
+
+.C0
+(quotient x1 ... xn)
+.C1
+lsubr
+.C2
+returns:
+.br
+(( .. (x1__/x2__)/x3__ ...))
+
+
+.C0
+(recip x)
+.C1
+subr
+.C2
+returns 1/x_.
+
+
+.C0
+(remainder x y)
+.C1
+subr
+.C2
+x_ and y_ are converted to integers, and their
+number theoretic remainder is returned.
+
+
+.C0
+(sign x)
+.C1
+subr
+.C2
+returns:
+.br
+0,  if x_ = 0.
+.br
+1,  if x_ > 0.
+.br
+-1, if x_ < 0.
+
+
+.C0
+(sub1 x)
+.C1
+subr
+.C2
+returns x_ - 1
+
+
+.C0
+(times x1 ... xn)
+.C1
+lsubr
+.C2
+returns:
+.br
+(...(x1__ * x2__) * x3__ ...)
+.br
+(times) =_ 1
+
+
+.bp
+.in 0
+
+b. Logical functions
+
+
+	These functions treat their arguments as 16-bit unsigned quantities.
+Floating arguments are converted by taking entier______.
+	All examples assume the radix is 8.
+
+
+.C0
+(land x1 ... xn)
+.C1
+lsubr
+.C2
+returns:
+.br
+x1__ & x2__ & ... & xn__
+.br
+(land) =_ 177777
+
+
+.C0
+(lor x1 ... xn)
+.C1
+lsubr
+.C2
+returns:
+.br
+x1__ | x2__ | ... | xn__
+.br
+(lor) =_ 000000
+
+
+.C0
+(lnot x)
+.C1
+subr
+.C2
+returns ~x_.
+
+
+.C0
+(lxor x1 ... xn)
+.C1
+lsubr
+.C2
+returns:
+.br
+x1__ |- x2__ |- ... | -  xn__
+.br
+(xor) =_ 000000.
+
+
+.C0
+(lsh x1 x2)
+.C1
+.C1
+subr
+.C2
+returns x1__ << x2__.
+
+
+.C0
+(rsh x1 x2)
+.C1
+subr
+.C2
+returns x1__ >> x2__.
+
+
+.C0
+(rol x y)
+.C1
+subr
+.C2
+returns x_ <o y_.
+
+
+.C0
+(ror x y)
+.C1
+subr
+.C2
+returns x_ o> y_.
+
+
+.in 0
+note:
+.in 8
+outstr, prin, and print return the value of their first argument.
+.bp
+.in 0
+.tl ''Program features''
+
+	lisp-11 provides several functions to allow the user to write
+algol-like sequences fo statements.
+
+
+
+
+.C0
+(prog vlist body)
+.C1
+nsubr
+.C2
+see McCarthy________, or Weissman________.
+The pseudo forms go__ and return______ may only appear at the
+top leval, or in a cond at the top level.
+
+
+.C0
+(progn x1 ... xn)
+.C1
+nsubr
+.C2
+x1__ ... xn__ are evaluated. The value returned is that yielded by xn.
+
+
+.C0
+(while p s1 ... sn)
+.C1
+nsubr
+.C2
+p_ is evaluated. If it is false, and this is the first time through, nil is returned.
+If it is false, but was previously true, the last value of sn is the value of the
+while.  If p is true (non-nil), the the si are evaluated, and it all starts again.
+
+
+.C0
+(for i t d s1 ... sn)
+.C1
+nsubr
+.C2
+First i_ is evaluated, and its value discarded.  
+Then t_ is evaluated. If it is nil, nil is returned.
+Otherwise the si are evaluated. Finally t_ is again
+evaluated; if it nil, the value of sn is returned as the value of the for.
+Othwrwise, the process repeats.
+.bp
+.in 0
+.tl ''String functions''
+
+
+	The following index notation will be used:
+s[n:m] is the substring starting at the n'th character of s
+and continuing for m characters.
+Truncation is automatic at the boundaries of the string.
+The first byte in a string is s[1:1].
+
+
+example:
+
+	"cat"[-1:2] = "c"
+
+
+.C0
+(ascii s)
+.C1
+subr
+.C2
+s_ must be a string. The value is the integer value of s[1:1].
+If s[1:1] = "", 0 is returned.
+
+
+.C0
+(char s)
+.C1
+subr
+.C2
+s_ is converted to an integer. A one-byte string is returned whose ascii
+representation is the low-order seven bits of s.
+
+
+.C0
+(concat s1 ... sn)
+.C1
+lsubr
+.C2
+all the si__'s must be strings. The value is their
+concatenation.
+
+
+.C0
+(dupl s n)
+.C1
+subr
+.C2
+s_ must be a string, n_ numeric. The value is s concatenated with
+itself n times. The null string is returned if n <_ 0.
+
+
+.C0
+(index s p n)
+.C1
+subr
+.C2
+the string s_ is searched for the pattern string p_
+starting at position n_. If it is not found, 0 is returned. Otherwise, the index
+of the first byte of the match is returned.
+
+
+.C0
+(size s)
+.C1
+subr
+.C2
+the number of bytes in s_ is returned.
+
+
+.C0
+(substr s n m)
+.C1
+subr
+.C2
+returns s_[n_,m_]
+.bp
+.in 0
+.tl ''Input-Output''
+
+	Lisp-11 provides a basic set of stream oriented input/output
+functions for communicating with the outside world.  Default input
+is from UNIX channel 0, and default output is to UNIX channel 1.
+Other channels may be opened for either input or output up to a system defining
+maximum.  All of the functions indicated here with an optional last
+argument "[n]" will take an integer channel number on which they
+are to perform their i/o function. 
+
+	Input files may be of two types: list or character.  The type need
+not be specified at opening, and can be changed in the middle of a file.
+However, in going from list to character mode initial blanks,
+tabs, or new-lines may be lost.
+
+.C0
+(close n)
+.C1
+subr
+.C2
+channel n is closed. nil is returned. channels 0 and 1
+cannot be closed.
+
+.C0
+(eof n)
+.C1
+subr
+.C2
+t_ is returned if the next read of the same type as that last done
+on channel n will produce an eof. Otherwise, nil is returned.
+
+
+.C0
+(fmode n m)
+.C1
+subr
+.C2
+n_ and m_ must be integers. Channel n is set to mode m.
+Bit 13 in m indicates character mode if set, list mode if
+reset. The low byte, if non-zero, is the line-size.
+
+
+.C0
+(genseed s)
+.C1
+subr
+.C2
+s_ must be a string. It is made the initial segment of all new
+identifiers produced by gensym______.  The previous seed is
+returned.
+
+
+.C0
+(gensym)
+.C1
+subr
+.C2
+A fresh identifier name is returned. It is not intern'ed.
+
+
+.bp
+.C0
+(incon s)
+.C1
+subr
+.C2
+s_ must be a string. It is regarded as the external representation of some
+lisp data, and converted for input.  The converted value is returned.
+
+
+.C0
+(intern x)
+.C1
+subr
+.C2
+x_ must be a symbolic atom. It is intern'ed, and a pointer to its
+unique representation returned. This is automatically done with all
+symbolic atoms read in.
+
+
+.C0
+(mkatom s)
+.C1
+subr
+.C2
+s_ must be a string. An atom is generated with that print name. It is intern'ed.
+
+
+.C0
+(openi s)
+.C1
+subr
+.C2
+s_ must be a string, and is used as a UNIX file name. The file named by s
+is opened for input, and the channel number on which it is open is returned.
+
+
+.C0
+(openo s)
+.C1
+subr
+.C2
+s_ is as in openi, but is opened for output (created!)
+
+
+.C0
+(outcon L)
+.C1
+subr
+.C2
+the output representation of L is returned as a string.
+
+
+.C0
+(outstr s [n])
+.C1
+lsubr
+.C2
+the string s is printed on the specified channel (1 is default).
+Enclosing quotes are not printed, and no new-line is appended.
+
+
+.C0
+(prin L [n])
+.C1
+lsubr
+.C2
+L_ is printed on the specified channel. No new-line is appended.
+
+
+.bp
+.C0
+(print L [n])
+.C1
+lsubr
+.C2
+L_ is printed on the specified channel. A new-line is appended.
+
+
+.C0
+(radix n)
+.C1
+subr
+.C2
+n_ must be 8. or 10. It is made the input-output radix. The old radix is returned.
+
+
+.C0
+(read [n])
+.C1
+lsubr
+.C2
+An s-expression is read from the indicated channel.
+
+
+.C0
+(readch [n])
+.C1
+lsubr
+.C2
+A one-byte string is returned containing the next byte on the indicated channel.
+
+
+.C0
+(remob s1 ... sn)
+.C1
+nsubr
+.C2
+The named symbolic atoms are removed from the oblist.
+
+
+.C0
+(setch s)
+.C1
+subr
+.C2
+The protect character is set to s_[1:1].
+The ignore character is set to s_[2:1].
+
+
+.C0
+(setsl x)
+.C1
+subr
+.C2
+The slashify-mode indicator is set to x. The previous value is returned.
+
+
+.C0
+(save s)
+.C1
+subr
+.C2
+s_ must be a string denoting a file name. All symbolic
+atoms and their values are written onto the named file,
+with the exception of those with subr____ type values.
+They are written in the format:
+.br
+(setq atm 'valueofatm)
+.br
+This may be edited, and then xfile'd, to restore
+a previous workspace.
+In particular, nil may not be assigned to.
+
+.co
+.C0
+(terpri [n])
+.C1
+lsubr
+.C2
+A new-line is output on the specified channel.
+
+
+.C0
+(xfile s)
+.C1
+subr
+.C2
+s_ must be a string denoting a UNIX file name.
+The s-expressions in the file are executed until an error or
+eof occurs.
+
+
+
+.in 0
+note:
+.in 8
+outstr, prin, and print return the value of their first argument.
+.bp
+.in 0
+.tl ''Error control and Garbage collection''
+
+
+..C0
+(*rset x)
+.C1
+subr
+.C2
+Sets the reset_____ flag in the interpreter to x, and returns the old value.
+If the reset_____ flag is nil, when an error occurs, variables are unbound
+and control ascends until a previous errset______ or the top level is reached.
+If the flag is non-nil, variable bindings are frozen, and debug_____ is called.
+When debug returns, bindings are then undone, and control ascends.
+
+
+.C0
+(addr x)
+.C1
+subr
+.C2
+An integer giving the core address of x is returned.
+
+
+.C0
+(backgag x)
+.C1
+subr
+.C2
+x_ must be an integer.  Normally, when an error occurs, a certain amount
+of back-trace information is printed. x_ specifies the number of levels
+to exhume. The old value is returned. The initial value is five.
+
+
+.C0
+(cont)
+.C1
+subr
+.C2
+Nil___ is returned. It permits an exit from debug_____.
+
+
+.C0
+(debug)
+.C1
+subr
+.C2
+debug_____ prints the message "SPECIAL MODE ..."  and then enters an eval loop.
+It exits after hearing from cont____ with value nil.
+
+
+.bp
+.C0
+(deposit n m)
+.C1
+subr
+.C2
+Integer n_ is deposited at address m_.
+
+
+.C0
+(err s)
+.C1
+subr
+.C2
+s_ must be a string. It is treated as an error message.
+If no errset is in effect, it is printed, a backtrace occurs, and control
+returns to the top level of lisp. If an errset is in effect,s is returned
+to it. err___ does not return.
+
+
+.C0
+(errset L f)
+.C1
+fsubr
+.C2
+If f_ evaluates to nil, this is equivalent to:
+.br
+(list (eval L))
+.br
+Otherwise, L is evaluated. If no error occurs, 
+(list (eval L)) is returned. If an error occurs, the string text of the error message
+is returned as the value of errset.
+errset______ saves the previous value of the reset_____ flag and initializes it to nil
+for the evaluation. It also saves and zeros the backgag count for the duration.
+
+.C0
+(examine n)
+.C1
+subr
+.C2
+The contents of core location n is returned.
+
+
+.C0
+(exit n)
+.C1
+subr
+.C2
+Lisp-11 is exited with return code n_.
+
+
+.C0
+(gc)
+.C1
+subr
+.C2
+A garbage collection is forced. nil is returned.
+
+
+.bp
+.C0
+(gc-count)
+.C1
+subr
+.C2
+The number of free cells collected on the last garbage collection
+is returned.
+
+
+.C0
+(gc-min n)
+.C1
+subr
+.C2
+n_ must be an integer. It is stored, and after a garbage collection,
+compared with the number of free cells collected. If fewer than n
+cells were collected, more core is requested from the system. If this
+core is not available, the warning message "TOO FEW FREE CELLS"
+is printed
+.in 0
+.bp
+.tl ''Future enhancements''
+
+	It would now be easy to implement arrays. However,
+the author does not particularly favor lisp arrays, and so they will probably
+not appear.
+
+
+	The author also views a compiler as unnecessary.
+.bp
+.tl ''System distribution''
+
+
+	lisp-11 is written in macro, and is linked using the
+fortran linker.
+
+	Almost all of the functions are in the object library
+lsplib. Their source may be found in the narc file
+libsource.
+
+	New functions may be added by editing lispa.m11.
+The format of a machine-code function may be readily deduced from examining
+some system functions.
+
+	There are conditional assemblies to eliminate floating-point
+code.  
+.bp
+.tl ''Function index''
+
+.na
+.nf
+.mk
+*append		6.a
+*apply		3.e
+*eq		5
+*eval		3.e
+*function	3.e
+*ge		5
+*gt		5
+*le		5
+*lt		5
+*ne		5
+*plus		7.a
+*rset		11
+*times		7.a
+abs		7.a
+add1		7.a
+addr		11
+and		5
+append		6.a
+apply		3.e
+ascii		9
+assoc		6.f
+atom		5
+backgag		11
+car		6.b
+cdr		6.b
+char		9
+clist		6.a
+close		10
+conc		6.c
+concat		9
+cond		4
+cons		6.a
+cont		11
+copy		6.d
+c[a/d...]r	6.b
+de		6.g
+debug		11
+deposit		11
+df		6.g
+difference	7.a
+divide		7.a
+dl		6.g
+dm		6.g
+dn		6.g
+ds		6.g
+dupl		9
+entier		7.a
+eof		10
+eq		5
+.in 40
+.rt
+eq.		5
+equal		5
+err		11
+errset		11
+eval		3.e
+evlis		3.e
+examine		11
+exit		11
+expr		3.e
+fexpr		3.e
+fixp		5
+float		7.a
+floatp		5
+fmode		10
+for		8
+fsubr		3.e
+function	3.e
+gc		11
+gc-count	11
+gc-min		11
+ge.		5
+genseed		10
+gensym		10
+gt.		5
+incon		10
+index		9
+initfn		3.e
+intern		10
+label		3.e
+lambda		3.e
+land		7.b
+last		6.b
+le.		5
+length		6.d
+lexpr		3.e
+list		6.a
+lnot		7.b
+lor		7.b
+lsh		7.b
+lsubr		3.e
+lt.		5
+lxor		7.b
+macro		3.e
+map		6.e
+mapc		6.e
+mapcar		6.e
+maplist		6.e
+max		7.a
+member		5
+.in 0
+.bp
+.mk
+memeq		5
+min		7.a
+minus		7.a
+mkatom		10
+nconc		6.c
+ncons		6.a
+ne.		5
+nexpr		3.e
+not		5
+nsubr		3.e
+null		5
+numberp		5
+openi		10
+openo		10
+or		5
+outcon		10
+outstr		10
+pair		6.a
+plus		7.a
+prin		10
+print		10
+prog		8
+progn		8
+quote		6.a
+quotient	7.a
+radix		10
+read		10
+readch		10
+recip		7.a
+remainder	7.a
+remob		10
+reverse		6.d
+rol		7.b
+ror		7.b
+rplaca		6.c
+rplacd		6.c
+rsh		7.b
+sassoc		6.f
+save		10
+select		4
+set		3.e
+setch		10
+setq		3.e
+setsl		10
+sexpr		3.e
+sign		7.a
+size		9
+ssubr		3.e
+stringp		5
+.in 40
+.rt
+sub1		7.a
+subr		3.e
+subst		6.d
+substr		9
+terpri		10
+times		7.a
+tval		3.e
+type		3.e
+unset		3.e
+unsetq		3.e
+val		3.e
+while		8
+xcons		6.a
+xfile		10
+.in 0
+.bp

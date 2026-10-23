@@ -1,0 +1,307 @@
+.th PSC I 1976
+.sh NAME
+psc \*- Pascal-S compiler/interpreter
+.sh SYNOPSIS
+.bd psc
+[-l] [-tn] file
+.sh DESCRIPTION
+.bd psc
+compiles the Pascal-S (a subset of Pascal (see below)) program
+in "file" and if there are no errors detected, executes
+the program.
+The name "file" must end in ".p" to indicate it is a Pascal
+source program. The following flags may be used:
+.s1
+.lp +9 8
+-\fBl\fR	produces a full program listing on standard output.
+Default is to list only lines that are in error along with the error
+messages.
+.s1
+.lp +9 8
+-\fBt\fIn\fR	\fIn\fR specifies an integer multiple of 1000
+which is the limit on the number of program steps to be executed.
+Default is 10000 program steps (i.e. -\fBt\fR10).
+Specifying -\fBt\fR0
+may be used to inhibit execution.
+.i0
+.dt
+.s3
+The input (output) for the executed program comes from (goes to)
+standard input (output). For example:
+.s1
+	psc x.p <y
+.s1
+will run program "x.p" with input data from file "y".
+.s3
+Pascal-S includes only two kinds of data structures:
+the array and the record (without variants).
+Omitted are the set and the file structures.
+The exceptions are the two standard text files input and output
+which are declared implicitly (but must be listed in the program heading).
+A very essential omission is pointer types and thereby
+all dynamic structures.
+Of course, all packing options (packed records, packed arrays)
+are omitted.
+.s3
+The choice of data types and structures essentially determines the complexity
+of the processing system.
+Statement and control structures contribute but little to it.
+Hence, Pascal-S includes most of Pascal's statement structures
+(compound, conditional, selective, and repetitive statements).
+The only omissions are the
+.bd with
+and the
+.bd goto
+statements.
+The latter was omitted very deliberately because of the principal
+use of Pascal-S in the teaching of systematic design of well-structured
+programs.
+Procedures and functions are included in their full
+generality. The only exception is that procedures and functions cannot 
+be used as parameters.
+.sh "SEE ALSO"
+N. Wirth, "Pascal-S: A Subset and its Implementation",
+Institut fur Inormatik, ETH, Zurich (June 1975).
+Unix Pascal User Manual, Report Appendix and PXP User Manual.
+pc(I), pcx(I), pxp(I), pcc(I), pxref(I).
+.sh DIAGNOSTICS
+The compile time error messages tend to be rather cryptic (especially
+for the novice. One fact that may be useful
+is that the actual error in your program occured
+at or BEFORE the error message.
+The actual error in your program may be 
+some distance back from the error message.
+Commonly an error message will appear at the first token of
+a line when the actual error was at the end of the previous
+line. For example, if you leave a semicolon off the end of a line
+when there is another statement following on the next line,
+an error message will be printed out for that next line.
+.s3
+The following explanations of the error codes may help a little:
+.s1
+.lp +4 4
+0.\ \ The designated identifier has not been declared.
+.lp +4 4
+1.\ \ The indicated identifier is declared more than once in the same scope.
+.lp +4 4
+2.\ \ An identifier is expected.
+.lp +4 4
+3.\ \ Every program must begin with the symbol
+.bd program.
+.lp +4 4
+4.\ \ A closing parenthesis is expected.
+.lp +4 4
+5.\ \ A colon is expected. In declarations, the colon
+is followed by a type.
+.lp +4 4
+6.\ \ At this point, the indicated symbol is incorrectly used.
+The compiler skips this and possibly several following symbols.
+.lp +4 4
+7.\ \ In a formal parameter list each section must begin with an
+identifier or the symbol
+.bd var,
+depending whether the parameter is a value or a variable parameter.
+.lp +4 4
+8.\ \ The symbol 
+.bd of 
+is expected.
+.lp +4 4
+9.\ \ An opening parenthesis is expected.
+.lp +4 4
+10.\ A type definition must begin with an identifier, the symbol
+.bd array
+or the symbol
+.bd record.
+.lp +4 4
+11.\ An opening bracket is expected ([).
+.lp +4 4
+12.\ A closing bracket is expected (]).
+.lp +4 4
+13.\ The symbol .. is expected (no blank between the dots).
+.lp +4 4
+14.\ A semicolon is expected (;).
+.lp +4 4
+15.\ The result of a function must be of type integer, real,
+Boolean, or char.
+.lp +4 4
+16.\ An equal sign is expected. The symbol := is used in assignment
+statements only, not in declarations.
+.lp +4 4
+17.\ The expression following the symbol
+.bd if,
+.bd while,
+or
+.bd until
+must be of type Boolean.
+.lp +4 4
+18.\ The control variable following the symbol
+.bd for
+must be of type integer, char, or Boolean.
+.lp +4 4
+19.\ The expressions which specify the initial and final values
+of the control variable in a for statement must be of the same type
+as the control variable.
+.lp +4 4
+20.\ The parameter "output" must be included in the program
+heading.
+.lp +4 4
+21.\ The indicated number is too large. The maximum number of
+digits allowed is 11; the absolute value must not exceed
+10e32.
+.lp +4 4
+22.\ A dot is expected at the end of the program.
+Check corresponding 
+.bd begin
+and 
+.bd end
+symbols!
+.lp +4 4
+23.\ The expression following the symbol
+.bd case
+must be of type integer, char, or Boolean. (In the latter case,
+an if statement is recommended.)
+.lp +4 4
+24.\ The designated character is not acceptable.
+.lp +4 4
+25.\ In a constant definition, the equal sign must be followed
+by a constant. If an identifier is used, it must denote a constant.
+.lp +4 4
+26.\ The type of an index expression must be identical to the
+index type specified in the array declaration.
+.lp +4 4
+27.\ In an array declaration, the lower bound must not exceed
+the upper bound. They must both be in the permissible range of values.
+Also, their types must be identical, either integers, Boolean values, or
+characters. Real numbers are not acceptable.
+.lp +4 4
+28.\ Every indexed variable must be declared as an array.
+.lp +4 4
+29.\ A type identifier is expected here.
+.lp +4 4
+30.\ This type is not defined. (Recursive type definitions
+are not allowed.)
+.lp +4 4
+31.\ Every variable with a field selector must be declared
+as a record.
+.lp +4 4
+32.\ The operands of the operators 
+.bd not,
+.bd and,
+and
+.bd or
+must be of type Boolean.
+.lp +4 4
+33.\ The specified type of this arithetic expression is illegal.
+Note also that entire arrays cannot occur as operands
+to arithmetic and logical operators.
+.lp +4 4
+34.\ Operands of 
+.bd div
+and
+.bd mod
+must be of type integer.
+.lp +4 4
+35.\ The types of the comparands are incompatible.
+They must be identical, except if one comparand is of type integer and the
+other of type real. Arrays must be compared element by element.
+.lp +4 4
+36.\ The types of the corresponding actual and formal
+parameters must be identical. An exception is made if the formal
+parameter is a value parameter of type real. Then the actual
+parameter may also be of type integer.
+.lp +4 4
+37.\ A variable is expected.
+.lp +4 4
+38.\ A string must contain at least one character.
+.lp +4 4
+39.\ The number of actual parameters must be equal to the number 
+of specified formal parameters.
+.lp +4 4
+40.\ The parameters of the procedure read must be of type
+char, integer, or real.
+.lp +4 4
+41.\ The parameters of the procedure write must be of type
+char, integer, real, or Boolean.
+.lp +4 4
+42.\ If a statement has the form write(x:m:n), then x must
+be an expression of type real.
+.lp +4 4
+43.\ If a statement has the form write(x:n) or write(x:m:n),
+then m and n must be expressions of type integer.
+.lp +4 4
+44.\ No type or procedure identifiers may occur as part of
+an expression.
+.lp +4 4
+45.\ A statement cannot begin with a type or a function identifier.
+An exception is the assignment of a result value to a function.
+In this case, it must be part of the function body.
+.lp +4 4
+46.\ In an assignment x := y , the types of the variable x and 
+the expression y must be identical. An exception is the case
+when x is a real. Then, y may also be of type integer.
+.lp +4 4
+47.\ Every case label must be a constant of the same type
+as the expression in the case clause.
+.lp +4 4
+48.\ The indicated argument of the standard function is of an 
+illegal type.
+.lp +4 4
+49.\ The program requires too much storage.
+.lp +4 4
+50.\ A constant cannot begin with the indicated symbol.
+.lp +4 4
+51.\ The symbol := is expected. (No space between : and =)
+.lp +4 4
+52.\ The symbol
+.bd then
+is expected.
+.lp +4 4
+53.\ The symbol 
+.bd until
+is expected.
+.lp +4 4
+54.\ The symbol
+.bd do
+is expected.
+.lp +4 4
+55.\ The symbol
+.bd to
+(or
+.bd downto)
+is expected.
+.lp +4 4
+56.\ The symbol 
+.bd begin
+is expected.
+.lp +4 4
+57.\ The symbol 
+.bd end
+is expected.
+.lp +4 4
+58.\ A factor must begin with an identifier, a constant, the
+symbol
+.bd not,
+or with a left parenthesis.
+.i0
+.dt
+.sh AUTHOR
+The original author of Pascal-S was N. Wirth (written in Pascal
+for the Cyber).
+This Unix version written in "C" was implemented as a thesis
+project by John O'Neill in 1976.
+.sh BUGS
+.bd psc
+suffers from 7 fatal diseases - all to do with running out of space
+because a program has too many or too much of one of the following:
+.nf
+.s1
+	1. identifiers
+	2. procedures and functions
+	3. real number constants
+	4. arrays
+	5. levels of nesting of procedures
+	6. code for the program
+	7. strings of characters in write statements
+.s1
+.fi
+Real input can be a bit ragged at the limits.

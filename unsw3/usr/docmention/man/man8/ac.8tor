@@ -1,0 +1,71 @@
+.th AC VIII 2/20/74
+.sh NAME
+ac \*- login accounting
+.sh SYNOPSIS
+.bd ac
+[
+.bd \*-w
+wtmp ] [
+.bd \*-p
+] [
+.bd \*-d
+] [
+.bd \*-u
+] people
+.sh DESCRIPTION
+.it Ac
+produces a printout giving
+connect time
+for each user who has logged in
+during the life of the current
+.it wtmp
+file.
+A total is also produced.
+.bd \*-w
+is used to specify an alternate \fIwtmp\fR file.
+.bd \*-p
+prints individual totals; without this option,
+only totals are printed.
+.bd \*-d
+causes a printout for each midnight to midnight
+period.
+.bd \*-u
+prints out a summary of system down time and crashes.
+Any
+.it people
+will limit the
+printout to only the specified login names.
+If no \fIwtmp\fR file is given,
+.it /usr/adm/wtmp
+is used.
+.s3
+The accounting file
+.it /usr/adm/wtmp
+is maintained by
+.it init
+and
+.it login.
+Neither of these programs creates the file,
+so if it does not exist
+no connect-time accounting is done.
+To start accounting, it should be created with length 0.
+On the other hand if the file is left undisturbed it will
+grow without bound, so periodically any information
+desired should be collected and the file truncated.
+.sh FILES
+/usr/adm/wtmp
+.sh "SEE ALSO"
+init (VIII), login (I), wtmp (V).
+.sh AUTHOR
+Mike Tilson modified the program to produce down time accounting.
+.sh BUGS
+"Down time" consists of any time during which the clock was set forward.
+Therefore, if the system time is set forward by mistake,
+some down time will be recorded.
+It will be subtracted off when the system time is set back, but this
+means that it is possible to have, say, a day with 12 hours of 
+"down time" followed by a day with -12 hours of down time.
+A more serious bug is that the clock continues to run when the system is
+up in single-user mode.
+Thus single-user time is counted as "up-time", even though it is no
+good to anyone but a system hack.

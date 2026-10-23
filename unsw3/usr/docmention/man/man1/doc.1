@@ -1,0 +1,53 @@
+.th DOC I June/77
+.sh NAME
+doc \*- documentation enquiry facility
+.sh SYNOPSIS
+doc [command]
+.sh DESCRIPTION
+.it doc
+is used to enquire from the database created by
+.it mod
+(VIII).
+The main use of this database is to document changes and local peculiarities
+for a particular installation.
+.sp
+.it doc
+is designed for interactive use but, since it uses standard input
+and output, it can be used in more cunning ways.
+.sp
+Keying a word produces a list of titles which are
+linked to this word. Keying a title number results in the
+display of the title and its abstract.
+.sp
+As well:
+.sp
+	lk = list keywords;
+.br
+	lt = list all titles;
+.br
+	la = list everything;
+.br
+	carriage return = list commands;
+.br
+	rubout = return to command level;
+.br
+	control D = exit.
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 25
+/usr/pub/keywords
+/usr/pub/keylinks
+/usr/pub/titles
+/usr/pub/abstracts
+.fi
+.dt
+.sh DIAGNOSTICS
+self-explanatory
+.sh "SEE ALSO"
+mod (VIII)
+.sh AUTHOR
+Peter Hewitt (University of New South Wales)
+.sh BUGS
+Obtaining hard copy is messy : commands should allow shell-like
+redirection.

@@ -1,0 +1,581 @@
+	.title tektronix.mac
+	.enabl	abs
+;
+;        standard defs for gt40
+;
+;        cpu
+;
+ps      =  177776
+swr     =  177570
+;
+;        keyboard
+;
+kcsr    =  177560
+kbuf     =  177562
+kvec     =  60
+;
+;        display
+;
+;        set graphic mode instructions
+vtsgch  =  100000
+vtsgsv  =  104000
+vtsglv  =  110000
+vtsgap  =  114000
+vtsggx  =  120000
+vtsggy  =  124000
+vtsgrp  =  130000
+vtint0  =  2000
+vtint1  =  2200
+vtint2  =  2400
+vtint3  =  2600
+vtint4  =  3000
+vtint5  =  3200
+vtint6  =  3400
+vtint7  =  3600
+vtlpof  =  100
+vtlpon  =  140
+vtblof  =  20
+vtblon  =  30
+vtlin0  =  4
+vtlin1  =  5
+vtlin2  =  6
+vtlin3  =  7
+;        useful constants for graphics data
+vtintx  =  40000
+vtnegl  =  20000
+vtnegs   =   100
+vtsmul   =   200
+;        load status register a instructions
+vtlsra   =   170000
+vtlhon   =   200
+vtlhof   =   300
+vtitof   =   40
+vtiton   =   60
+vtsync   =   4
+vtstpi   =   173400
+vtstop   =   173000
+;        load status register b instructions
+vtlsrb   =   174000
+vtginc   =   100
+;        jump and no-operation instructions
+vtjump   =   160000
+vtnop    =   164000
+;        status registers
+vtpc     =   172000
+vtsr     =   172002
+vtxsr    =   172004
+vtysr    =   172006
+;        interupt vectors
+vtstpv   =   320
+vtlpv    =   324
+vttov    =   330
+;
+;
+;
+;
+;	dl11 constants.
+;
+rvec=	300
+rcsr=	175610
+rbuf=	175612
+;
+xvec=	304
+xcsr=	175614
+xbuf=	175616
+;
+	.page
+;   main program
+;
+.=	0
+	jmp	@#start
+;
+	.rept	127.
+	.word	.+2
+	halt
+	.endm
+;
+.=	1000
+;
+stack=	.
+;
+start:	mov	#stack,sp	;init. stack pointer
+	mov	#kbdgo,@#60
+	mov   #340,@#62
+	mov   #340,@#ps
+	mov	#rcvr,@#rvec
+	mov	#340,@#rvec+2
+	mov	#sndr,@#xvec
+	mov	#340,@#xvec+2
+	mov   #dstoph,@#320
+	mov   #340,@#322
+	mov   #dlpenh,@#324
+	mov	#340,@#326
+;
+	jsr	pc,cican	;erase screen=set up registers.
+;
+	mov	#100,@#rcsr		;enable dl11 input
+	mov   #101,@#kcsr         ;enable and pull the keyboard
+	mov	#100,@#xcsr
+	mov   #dlist,dpntr
+	mov   #dsetup,@#vtpc
+	mov   #pfile,cpspot
+;
+; switch register bits.
+;
+;	0	local
+;	1	half-duplex
+;	2	half ascii.
+;
+;
+	clr	rcvcnt
+	mov	#rcvbuf,rcvadi
+	mov	#rcvbuf,rcvado
+	clr	sndcnt
+	mov	#sndbuf,sndadi
+	mov	#sndbuf,sndado
+	clr	@#ps
+	jmp	go
+kbdgo:	mov	r5,-(sp)	;save
+	mov	@#kbuf,r5
+	bic	#^c177,r5	;extract gargage
+;
+;
+;
+	cmp	#cfile,cpspot	;are cross-hairs up?
+	bne	1$		;no.
+	mov	r5,-(sp)
+;
+rx=	r2
+;
+	mov	rx,-(sp)
+	jsr	pc,curget	;send coords.
+	mov	#pfile,cpspot	;turn on prompt
+	mov	(sp)+,rx
+	mov	(sp)+,r5
+	br	10$		;now send char.
+1$:	cmp	#001,r5		;^a = clear screen?
+	bne	2$
+	jsr	pc,cican	;do clear.
+	br	20$
+;
+;
+;
+2$:	bit	#4,@#swr	;switch 2?
+	beq	5$		;don't worry
+	cmp	r5,#'_
+	blos	5$		;"64" range
+	cmp	r5,#177		;del?
+	beq	5$
+	bic	#040,r5		;knock out bit.
+5$:	bit	#1!2,@#swr	;test "echo" bits of switch reg.
+	beq	10$		;no. full duplex
+	jsr	pc,rcvque	;echo it.
+	bit	#1,@#swr	;test "send" bit
+	bne	20$		;local
+				;half duplex
+10$:	jsr	pc,sndque
+20$:	mov	(sp)+,r5
+	rti
+sndque:	cmp	#sndlng-2,sndcnt;buffer full?
+	ble	60$
+	inc	sndcnt		;is sending going on?
+	bne	20$		;yes.
+	movb	r5,@#xbuf	;start up
+	br	30$
+20$:	movb	r5,@sndadi	;put it buffer
+	inc	sndadi
+	cmp	#sndbuf+sndlng,sndadi	;wrap-around?
+	bgt	30$		;no worries.
+	mov	#sndbuf,sndadi
+30$:	rts	pc
+60$:	inc	@#vtsr		;ring bell for overflow
+	.if	df	test
+	halt
+	.endc
+	br	30$		;continue
+sndr:	dec	sndcnt		;how goes it?
+	blt	10$		;last char. buffer empty
+	movb	@sndado,@#xbuf	;send it.
+	inc	sndado		;next
+	cmp	#sndbuf+sndlng,sndado	;wrap-around?
+	bgt	10$		;don't worry
+	mov	#sndbuf,sndado
+10$:	rti
+rcvr:	mov	r5,-(sp)
+	movb	@#rbuf,r5
+	bic	#^c177,r5	;clean it
+	jsr	pc,rcvque	;queue it
+	mov	(sp)+,r5
+	rti
+rcvque:	cmp	#rcvlng-2,rcvcnt
+	ble	30$		;buffer full. ignore chr.
+	movb	r5,@rcvadi	;save it
+	inc	rcvadi
+	cmp	#rcvbuf+rcvlng,rcvadi
+	bgt	10$		;wrap-around?
+	mov	#rcvbuf,rcvadi
+10$:	inc	rcvcnt		;notify of 1 more.
+	bne	20$		;only 1 in buffer?
+	mov	#go1,stack-4	;restart - was waiting hopefully?
+20$:	rts	pc
+30$:	inc	@#vtsr		;ring bell for overflow!
+	.if	df	test
+	halt
+	.endc
+	br	20$		;back we go.
+go:	dec	rcvcnt		;any more chars. in buffr?
+	bge	go1
+	wait
+	br	.-2
+;
+ci=	r0
+;
+go1:	movb	@rcvado,ci	;de-queue
+	inc	rcvado
+	cmp	#rcvbuf+rcvlng,rcvado
+	bgt	10$		;wrap-around?
+	mov	#rcvbuf,rcvado
+10$:	tst	pfulin		;any space on screen?
+	bne	go		;no.
+	jsr	pc,cihand
+	br	go
+	.page
+;
+;
+;
+sndcnt:	.word	0
+sndadi:	.word	0
+sndado:	.word	0
+rcvcnt:	.word	0
+rcvadi:	.word	0
+rcvado:	.word	0
+;
+rcvlng=	20.
+rcvbuf:
+.=	.+rcvlng
+;
+sndlng=	10.
+sndbuf:
+.=	.+sndlng
+;
+
+	.page
+scymax   =   768.	;no. dot lines on screen
+;  tektronix simulator for vr type displays
+;  user must set scymax  - the top of screen
+;
+ci       =   r0
+dp       =   r1
+rx       =   r2
+bp       =   r3
+cihand:
+	tst   ci
+	beq   cihan0
+	cmpb  ci,#030            ;can?
+	beq   cican
+	cmpb  ci,#021            ;dc1?
+	beq   cidc1
+	cmp   dp,dend
+	ble   cihan1
+	cmpb  ci,#001
+	bne   cihan0
+	tst	homef
+	bne	cihan0
+	inc	homef
+	br	cihome
+cihan0:	rts	pc
+cihan1:	cmpb	ci,#001
+	beq	cihome
+	cmp	dp,dmidl
+	ble	dpout
+	mov	#vtnop,dsync
+dpout:	cmpb	ci,#037			;us?
+	beq	cius
+	cmpb	ci,#035			;gs?
+	beq	cigs
+	tst	charon			;in char mode?
+	beq	civec
+	jsr	pc,stochr
+	rts	pc
+civec:	tst	vecyin			;got the y yet?
+	bne	civecx
+	bit	#40,ci
+	beq	civec3
+	bit	#100,ci
+	bne	civec1
+	bic	#140,ci
+	mov	ci,yhi5
+	rts	pc
+civec1:	bic	#140,ci
+	mov	ci,ylo5
+	inc	vecyin
+	rts	pc
+civecx:	bit	#100,ci
+	bne	civec2
+	bit	#40,ci
+	beq	civec3
+	bic	#140,ci
+	mov	ci,xhi5
+	rts	pc
+civec2:	bit	#40,ci
+	bne	civec3
+	bic	#140,ci
+	mov	ci,xlo5
+	jsr	pc,stovec
+	mov	#1,vecint		;now turn on the intensity
+	clr	vecyin
+civec3:	rts	pc			;ignore unexpected characters
+cidc1:	mov	#cfile,cpspot	;cross-hairs on.
+	rts	pc
+cican:	clr	vectyp
+	clr	charon
+	clr	homef
+	mov	#-600.,ciccnt
+	clr	pfulin
+	clr	fspot		;remove blink. line
+	mov	#vtlsra+vtsync,dsync
+	mov	#dfile+2,dp		;reset the dpointer
+	mov	#vtstpi,(dp)		;and stop the display
+cihome:	clr	xnow
+	mov	#scymax-24.,ynow	;a line down from the top of screen
+	mov	#stobuf,bp		;reset the local buffer
+	mov	#vtsgap,(bp)+
+	clr	(bp)+
+	mov	#scymax-24.,(bp)+
+	jsr	pc,stovcs
+	clr	charon
+cius:	clr	vectyp			;vectors are ready
+	mov	#pfile,cpspot		;reset prompt
+	tst	charon			;already?
+	bne	cius1
+	inc	charon
+	mov	#vtstpi,2(dp)
+	mov	#vtsgch+vtint6,(dp)+
+cius1:    rts   pc
+cigs:     clr   vecint             ;first vec is dim
+	clr   vecyin
+	clr	cpspot		;no cursor at all!!!
+	tst   charon             ;chars going?
+	beq   cigs1
+	clr   charon
+	mov   xnow,rx
+	jsr   pc,asr5            ;extract the hi5
+	mov   rx,xhi5            ;and save
+	mov   ynow,rx
+	jsr   pc,asr5            ;etc.
+	mov   rx,yhi5
+cigs1:    rts   pc
+asl5:     asl   rx
+	asl   rx
+	asl   rx
+	asl   rx
+	asl   rx
+	rts   pc
+asr5:     asr   rx
+	asr   rx
+	asr   rx
+	asr   rx
+	asr   rx
+	rts   pc
+	.page
+stochr:   cmp   ci,#15             ;a cr?
+	bne   stoch3
+	clr   xnow
+	br    stoch01
+stoch3:   cmp   ci,#12             ;a lf?
+	bne   stoch4
+	sub   #24.,ynow
+	bpl   stoch01
+pgeful:   inc   pfulin
+	mov   #ffile,fspot	;shove in blinking line
+	br    stoch01
+stoch4:   cmp   ci,#040
+	blt   stoch5
+	cmp   ci,#177		;del?
+	bge   stoch5
+	add   #14.,xnow
+	inc   ciccnt
+	bne   stoch01
+	mov   #vtnop,dsync
+stoch01:  bit   #1,dp
+	beq   stoch1             ;no so npthing clever
+	movb  ci,(dp)+
+	br    stoch5
+stoch1:   mov   #vtstpi,2(dp)
+	clr   (dp)
+	movb  ci,(dp)+
+stoch5:   rts   pc
+pfulin:	.word	0
+;
+;
+stovec:   mov   xhi5,rx
+	jsr   pc,asl5
+	add   xlo5,rx
+	mov   rx,xnew            ;got the new x
+	mov   yhi5,rx
+	jsr   pc,asl5
+	add   ylo5,rx
+	mov   rx,ynew            ;and the y
+	clr   signx
+	mov   xnew,delx
+	sub   xnow,delx
+	bge   stove1
+	inc   signx
+	neg   delx
+stove1:   clr   signy
+	mov   ynew,dely
+	sub   ynow,dely
+	bge   stove2
+	inc   signy
+	neg   dely
+stove2:   mov   #stobuf,bp
+	mov   xnew,xnow
+	mov   ynew,ynow
+	cmp   delx,#100
+	bge   stolng
+	cmp   dely,#100
+	bge   stolng
+stosht:   cmp   vectyp,#2
+	beq   stosh1
+	mov   #vtsgsv+vtint4,(bp)+
+	mov   #2,vectyp
+stosh1:   mov   delx,rx
+	tst   signx
+	beq   stosh2
+	add   #vtnegs,rx
+stosh2:   swab  rx
+	asr   rx                 ;shift up
+	add   dely,rx
+	tst   signy
+	beq   stosh3
+	add   #vtnegs,rx
+stosh3:   tst   vecint             ;intensify?
+	beq   stosh4
+	add   #vtintx,rx
+stosh4:   mov   rx,(bp)+
+	br    stovcs
+stolng:   cmp   vectyp,#1          ;in long mode
+	beq   stoln1
+	mov   #vtsglv+vtint4,(bp)+
+	mov   #1,vectyp
+stoln1:   mov   delx,rx
+	tst   signx
+	beq   stoln2
+	add   #vtnegl,rx
+stoln2:   tst   vecint
+	beq   stoln3
+	add   #vtintx,rx
+stoln3:   mov   rx,(bp)+
+	mov   dely,rx
+	tst   signy
+	beq   stoln4
+	add   #vtnegl,rx
+stoln4:   mov   rx,(bp)+
+;
+;
+stovcs:   mov   bp,rx
+	sub   #stobuf,rx
+	inc   dp
+	bic   #1,dp              ;even out the pointer
+	add   dp,rx
+	mov   rx,dp              ;the new pointr
+	mov   #vtstpi,(rx)
+stovc1:   mov   -(bp),-(rx)
+	cmp   bp,#stobuf
+	bgt   stovc1
+	rts   pc
+stobuf:   .blkw    4                  ;a bit of room
+;
+;
+curget:	mov	cursx,rx
+	mov	rx,r5
+	bic	#^c177,r5
+	bis	#040,r5
+	jsr	pc,sndque
+	jsr	pc,asr5
+	mov	rx,r5
+	bic	#^c177,r5
+	bis	#040,r5
+	jsr	pc,sndque
+	mov	cursy,rx
+	mov	rx,r5
+	bic	#^c177,r5
+	bis	#040,r5
+	jsr	pc,sndque
+	jsr	pc,asr5
+	mov	rx,r5
+	bic	#^c177,r5
+	bis	#040,r5
+	jsr	pc,sndque
+	mov	#015,r5
+	jsr	pc,sndque		;carriage return!
+	rts	pc
+;
+;
+xnow:     0
+xnew:     0
+delx:     0
+signx:    0
+xhi5:     0
+xlo5:     0
+ynow:     0
+ynew:     0
+dely:     0
+signy:    0
+yhi5:     0
+ylo5:     0
+charon:   0
+vecint:   0
+vectyp:   0
+vecyin:   0
+ciccnt:   0
+homef:    0
+	.page
+dstoph:   add   #2,dpntr
+	tst   @dpntr
+	bgt   dstopg
+	blt   dstopr
+	br    dstoph
+dstopr:   mov   #dlist,dpntr
+dstopg:   mov   @dpntr,@#vtpc
+	rti
+dlpenh:   mov   @#vtxsr,cursx
+	bic   #176000,cursx
+	mov   @#vtysr,cursy
+	bic   #176000,cursy
+	inc   @#vtpc
+	rti
+dpntr:    0
+dmidl:    dfile+6000
+dend:     34740
+dlist:    dsetup
+	dfile
+cpspot:	.word	0	;cursor file (if any)
+fspot:    0
+	-1
+;cursor file
+cfile:    vtsgap+vtint6+vtlpon+vtblof+vtlin0
+cursx:    512.,0
+	vtsglv,vtintx+0,740.
+	vtsgap,0
+cursy:    384.,vtsglv,vtintx+990.,0
+	vtstpi
+;prompter file
+pfile:    vtsgch+vtint5+vtlhof+vtblon
+	177                      ;just a blinking splodge
+	vtstpi
+;page full indicator
+ffile:    vtsgap,0,0
+	vtsglv+vtint5+vtlpof+vtblon+vtlin1
+	vtintx+1023.,0
+	vtstpi
+;setup file
+dsetup:   vtsgap+vtint5+vtlhof+vtblof+vtlin0
+	0,744.
+dsync:    vtlsra+vtsync
+	vtstpi
+; display file
+dfile:    vtnop
+	vtstpi
+	.end	start
+

@@ -1,0 +1,21 @@
+cat \*- phototypesetter interface
+cr \*- card reader
+dc \*- DC-11 communications interface
+dh \*- DH-11 communications multiplexer
+dj \*- DJ-11 communications multiplexer
+dn \*- DN-11 ACU interface
+dp \*- DP-11 201 data-phone interface
+hp \*- RH-11/RP04 moving-head disk
+hs \*- RH11/RS03-RS04 fixed-head disk file
+ht \*- RH-11/TU-16 magtape interface
+ht \*- RH-11/TU-16 magtape interface
+kl \*- KL-11 or DL-11 asynchronous interface
+lp \*- line printer
+mem, kmem, null  \*-  core memory
+pc  \*-  PC-11 paper tape reader/punch
+rf \*- RF11/RS11 fixed-head disk file
+rk  \*-  RK-11/RK03 (or RK05) disk
+rp \*- RP-11/RP03 moving-head disk
+tc \*- TC-11/TU56 DECtape
+tm \*- TM-11/TU-10 magtape interface
+tty \*- general typewriter interface

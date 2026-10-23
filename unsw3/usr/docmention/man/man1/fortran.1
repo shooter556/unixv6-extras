@@ -1,0 +1,130 @@
+.th FORTRAN I 12/17/75
+.sh NAME
+fortran \*- fortran IV compiler
+.sh SYNOPSIS
+.bd fortran
+[ flags ] file ...
+.sh DESCRIPTION
+Fortran is a new fortran iv compiler for the UNIX
+time-sharing system.
+Arguments may be either files or flags;
+flags begin with a '-'. The valid flags are:
+.s3
+.ft I
+.lp +9 8
+flag	meaning
+.ft R
+.s3
+.lp +9 8
+-db	Compile statements with a `d' in column 1. 
+Usually they are treated as comments.
+.s3
+.lp +9 8
+-80	Take a full 80 columns of source.
+Usually only
+columns 1-72 are used.
+.s3
+.lp +9 8
+-ls:n	Listing control. The listing file is enabled.
+Its contents are determined by the sum of the
+following modes:
+.br
+.nf
+			0 = list errors
+			1 = list source
+			2 = list storage map
+			4 = list (pseudo) generated code
+.br
+.fi
+E.g. -ls:3 directs that source and storage map
+information be placed on the listing file.
+.s3
+.lp +9 8
+-ot	Print the options-in-effect table
+.s3
+.lp +9 8
+-no	Suppress object code output
+.s3
+.lp +9 8
+-lr:n	Set run-time logical record size to n, 10<_n<_4096
+The default is 136.
+This is only valid if a main
+program is being compiled.
+.s3
+.lp +9 8
+-sn	Suppress run-time code to record statement
+number (isn's)
+.s3
+.lp +9 8
+-i4	Set the default integer precision to 4 bytes.
+.s3
+.lp +9 8
+-nv	Disable vectoring of arrays.
+Since all UNIX systems have hardware multiply,
+array vectoring is usually of minimal advantage.
+.s3
+.lp +9 8
+-wr	Print warning messages
+.s3
+.lp +9 8
+-xs:n	Allocate an extra n Kw of core for the compiler.
+The initial allocation is 6Kw, which is more
+than sufficient for almost all programs.
+.s3
+.lp +9 8
+-st	Print statistics summary at end of compilation
+.s3
+.lp +9 8
+-ck	Generate code to check subscripts at run-time.
+This is a no-op now.
+.s3
+.lp +9 8
+-op	Enable optimization.
+.i0
+.dt
+.s3
+.ul
+File control:
+.s3
+Fortran may have up to 8 input files.
+If an input file
+cannot be opened, the suffix ".for" is appended and another
+attempt is made.
+If no listing file is explicitly specified,
+and the -ls option is not used, no listing file is created.
+Otherwise, the name of the listing file may be explicitly stated
+by:
+.s3
+		-l=filename
+.br
+or,
+		-l=
+.s3
+if the listing is to be produced to the standard output.
+If no
+filename is specified, the name of the first source file with the
+suffix ".lst" is used.
+Similarly, the object file name may be specified
+by
+.s3
+		-o=filename
+.s3
+If no object file is specified, the name of the first source file
+with the suffix ".obj" is used.
+.s3
+.ul
+Example:
+.s3
+The following command line compiles the fortran main program
+in mainprog.for, and the subroutines in sub1.for ... sub3.for,
+places the output in the file tolink.obj, and the listing on the
+standard output file (the keyboard).
+Lots of options are invoked:
+.s3
+%fortran -o=tolink.obj -l= -ls:3 -wr -ck mainprog sub1 sub2 sub3
+.s3
+.sh FILES
+.sh "SEE ALSO"
+.sh DIAGNOSTICS
+.sh AUTHOR
+.sh BUGS

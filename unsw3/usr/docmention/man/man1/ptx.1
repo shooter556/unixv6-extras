@@ -1,0 +1,40 @@
+.th PTX I 12/1/77
+.sh NAME
+ptx \*- permuted title index
+.sh SYNOPSIS
+.bd ptx
+[
+.bd \*-
+]
+file1 [ file2 ]
+.sh DESCRIPTION
+.it Ptx
+generates a permuted index of titles as typified by that in the
+"UNIX Programmers Manual".
+Non-trivial words are picked out of the titles, permuted by rotation
+and sorted alphabeticaly.
+.s3
+Trivial words (if, but, as, etc.) are ignored.
+.s3
+The file \fIfile1\fR contains the titles to be permuted, one per line
+and arbitrarily punctuated (max 200 characters).
+.s3
+Permuted titles appear on standard output.
+.s3
+The ``-'' flag causes
+.it ptx
+to produce 
+.it nroff/troff
+style output on \fIfile2\fR.
+Lines appear as
+.s3
+		.xx "string one" "string two"
+.s3
+and by suitable macro definition, very interesting listings
+can be produced.
+.sh FILES
+/tmp/p.tmp		temporary file
+.sh DIAGNOSTICS
+yes; hopefully self explanatory.
+.sh BUGS
+Lines appear to be limited to 100 characters with the ``-'' flag.

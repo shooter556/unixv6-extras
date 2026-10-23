@@ -1,0 +1,496 @@
+$aas:	.word	point!int6!lpoff!blkoff
+	gtpnt$	30.,600.
+	.word	char
+	.ascii	/BOY, ARE YOU/
+	.even
+	.word	char!int7!lpoff!blkon
+	.ascii	/ INEPT/
+	.even
+	.word	dretn,	0
+$aat:	.word	point!int6!lpoff!blkoff
+	gtpnt$	525.,600.
+	.word	char
+	.ascii	/  YOU HAVE JUST CRASHED/
+	.even
+	.word	point!int6!lpoff!blkoff
+	gtpnt$	525.,570.
+	.word	char
+	.ascii	/INTO THE EDGE OF THE MOON/
+	.even
+	.word	dretn,	0
+$aau:	.word	point!int6!lpoff!blkoff
+	gtpnt$	50.,650.
+	.word	char
+	.ascii	/SORRY, BUT WHEN YOU LOSE TV COVERAGE, YOU ALSO LOSE YOUR FUEL/
+	.even
+	.word	dretn,	0
+$aav:	.word	point!int6!lpoff!blkon
+	gtpnt$	100.,2.
+	.word	char
+	.ascii	/TOO FAST. YOU'RE GOING TO CRASH/
+	.even
+	.word	dretn,	0
+$aaw:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,700.
+	.word	char
+	.ascii	/BETTER START SLOWING IT UP PRETTY SOON/
+	.even
+	.word	dretn,	0
+$aax:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,2.
+	.word	char
+	.ascii	/TAKE IT NICE AND EASY. A PERFECT LANDING IS UNDER 8 FPS/
+	.even
+	.word	dretn,	0
+$aay:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,600.
+	.word	char
+	.ascii	/FANTASTIC, A PERFECT LANDING/
+	.even
+	.word	dretn,	0
+$aaz:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,600.
+	.word	char
+	.ascii	/CONGRATULATIONS ON A GOOD LANDING/
+	.even
+	.word	dretn,	0
+$aba:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,600.
+	.word	char
+	.ascii	/THE LANDING WAS A LITTLE FAST/
+	.even
+	.word	dretn,	0
+$abb:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,600.
+	.word	char
+	.ascii	/THE LANDING WAS TOO FAST AND DAMAGE WAS DONE TO THE SHIP/
+	.even
+	.word	dretn,	0
+$abc:	.word	point!int6!lpoff!blkon
+	gtpnt$	100.,550.
+	.word	char
+	.ascii	/WELL, YOU CERTAINLY BLEW THAT ONE. THERE WERE NO SURVIRORS/
+	.even
+	.word	dretn,	0
+$abd:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,570.
+	.word	char
+	.ascii	/BUT THE ANGLE WAS TOO GREAT AND THE SHIP TIPPED OVER/
+	.even
+$abf:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,540.
+	.word	char
+	.ascii	/SORRY, BUT THERE WERE /
+	.even
+	.word	char!int7!blkon
+	.ascii	/NO/
+	.even
+	.word	char!int6!lpoff!blkoff
+	.ascii	/ SURVIVORS/
+	.even
+	.word	dretn,	0
+$abe:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,570.
+	.word	char
+	.ascii	/BUT THE HORIZONTAL VELOCITY WAS TOO GREAT, AND YOU CRASHED ANYWAY/
+	.even
+	.word	djmp,	$abf
+$abg:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,570.
+	.word	char
+	.ascii	/BUT THE TERRAIN IS TOO ROUGH, AND YOU TIPPED OVER/
+	.even
+	.word	djmp,	$abf
+$abh:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,570.
+	.word	char
+	.ascii	/YOU JUST CRASHED INTO THAT ROCK/
+	.even
+	.word	djmp,	$abf
+$abi:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,570.
+	.word	char
+	.ascii	/YOU JUST CRASHED ON TOP OF AN OLD LUNAR MODULE/
+	.even
+	.word	djmp,	$abf
+$abj:	.word	point!int6!lpoff!blkoff
+	gtpnt$	50.,3.
+	.word	char
+	.ascii	/YOU HAVE JUST VAPORIZED A PREVIOUSLY PLANTED AMERICAN FLAG/
+	.even
+	.word	dretn,	0
+$abk:	.word	point!int6!lpoff!blkoff
+	gtpnt$	100.,570.
+	.word	char
+	.ascii	/NICE WORK. YOU JUST CRASHED INTO A PREVIOUSLY CRASHED SHIP/
+	.even
+	.word	djmp,	$abf
+$abl:	.word	point!int6!lpoff!blkoff
+	gtpnt$	10.,570.
+	.word	char
+	.ascii	/Well, you've just destroyed the only MacDonald's/
+	.even
+	.word	point!int6!lpoff!blkoff
+	gtpnt$	10.,540.
+	.word	char
+	.ascii	/on the moon. What a CLOD./
+	.even
+	.word	dretn,	0
+$abm:	.word	point!int6!lpoff!blkoff
+	gtpnt$	150.,2.
+	.word	char
+	.word	statsa!lplite!ital1
+	.ascii	/TWO CHEESEBURGERS AND A BIG MAC TO GO./
+	.even
+	.word	dretn,	0
+$abn:	.word	point!int6!lpoff!blkoff
+	gtpnt$	50.,2.
+	.word	char
+	.word	statsa!lplite!ital1
+	.ascii	/THAT'S ONE SMALL STEP FOR A MAN, ONE GIANT LEAP FOR MANKIND./
+	.even
+	.word	dretn,	0
+	.word	-15.
+$acc:	.word	point!blkoff	;turn arrow - small left
+	.word	statsa!lplite!ital0
+	gtpnt$	945.,375.
+	.word	longv!int4!lpon!line0
+	gtvec$	-20.,0,i
+$aby:	gtvec$	12.,8.,i
+	gtvec$	-12.,-8.
+	gtvec$	12.,-8.,i
+	.word	dretn,	0
+	.word	-100.
+$ace:	.word	point!blkoff	;turn arrow - large left
+	.word	statsa!lplite!ital0
+	gtpnt$	945.,330.
+	.word	longv!int4!lpon!line0
+	gtvec$	-40.,0,i
+	.word	djmp,	$aby
+	.word	15.
+$acd:	.word	point!blkoff	;turn arrow - small right
+	.word	statsa!lplite!ital0
+	gtpnt$	955.,375.
+	.word	longv!int4!lpon!line0
+	gtvec$	20.,0,i
+$abz:	gtvec$	-12.,8.,i
+	gtvec$	12.,-8.
+	gtvec$	-12.,-8.,i
+	.word	dretn,	0
+	.word	100.
+$acf:	.word	point!blkoff	;turn arror - large right
+	.word	statsa!lplite!ital0
+	gtpnt$	955.,330.
+	.word	longv!int4!lpon!line0
+	gtvec$	40.,0,i
+	.word	djmp,	$abz
+$acg:	.word	point!int3!lpon!blkoff!line0	;thrust display
+	.word	statsa!lplite
+	gtpnt$	947.,700.
+	.word	longv!lpon
+	gtvec$	0,-250.,i
+	gtvec$	3,250.
+	gtvec$	0,-250.,i
+	gtvec$	3,250.
+	gtvec$	0,-250.,i
+	.word	point!lpoff
+$1010=	.+2
+	gtpnt$	940.,0		;thrust cursor
+	.word	longv
+	gtvec$	-43.,0,i
+	gtvec$	-55.,0
+	.word	char
+$aci:	.ascii	/      % /
+	.even
+$1011:	.word	dretn,	0
+$abo:	.word	point!int4!lpoff!blkon
+	gtpnt$	350.,700.
+	.word	char
+	.ascii	/FUEL LOW/
+	.even
+	.word	dretn,	0
+$abp:	.word	point!int3!lpoff!blkoff!line3	;space ship
+	.word	statsa!lplite!ital0
+$1012=	.
+$1013=	.+2
+	gtpnt$	0,0
+	.word	shortv
+	gtrel$	-14.,-8.
+	gtrel$	-6,8.,i
+	gtrel$	4,6,i
+	gtrel$	0,6,i
+	gtrel$	2,2,i
+	gtrel$	2,4,i
+	gtrel$	6,6,i
+	gtrel$	0,4,i
+	gtrel$	4,2,i
+	gtrel$	2,0,i
+	gtrel$	2,-2,i
+	gtrel$	6,-2,i
+	gtrel$	4,-2,i
+	gtrel$	2,-6,i
+	gtrel$	6,-6,i
+	gtrel$	0,-4,i
+	gtrel$	2,-4,i
+	gtrel$	-2,-4,i
+	gtrel$	-2,-10,i
+	.word	dretn,	0
+$acb:	.word	point!int7!lpoff!blkoff!line0	;macdonald's stand
+	.word	statsa!lplite!ital0
+$1014=	.
+$1015=	.+2
+	gtpnt$	0,0
+	.word	shortv
+	gtrel$	18.,0
+	.word	shortv!int4
+	gtrel$	0,30.,i
+	gtrel$	54.,0,i
+	gtrel$	0,-30.,i
+	gtrel$	-54.,0,i
+	.word	shortv!1200!lpoff!blkoff!line0
+	gtrel$	12.,0
+	gtrel$	0,8.,i
+	gtrel$	6,0,i
+	gtrel$	0,-8.,i
+	gtrel$	-19.,0
+	.word	longv
+	gtvec$	-73.,0
+	.word	dcall,	$aca
+	.word	shortv
+	gtrel$	22.,0
+$aca:	.word	shortv!int7!lpoff!blkoff!line0
+	gtrel$	-17.,-3
+	gtrel$	1,10.,i
+	gtrel$	1,9.,i
+	gtrel$	1,6,i
+	gtrel$	1,5,i
+	gtrel$	1,4,i
+	gtrel$	1,2,i
+	gtrel$	1,4,i
+	gtrel$	2,5,i
+	gtrel$	1,1,i
+	gtrel$	2,4,i
+	gtrel$	3,2,i
+	gtrel$	1,1,i
+	gtrel$	2,0,i
+	gtrel$	1,-1,i
+	gtrel$	3,-2,i
+	gtrel$	2,-4,i
+	gtrel$	1,-1,i
+	gtrel$	2,-5,i
+	gtrel$	1,-4,i
+	gtrel$	1,-2,i
+	gtrel$	1,-4,i
+	gtrel$	1,-5,i
+	gtrel$	1,-6,i
+	gtrel$	1,-9.,i
+	gtrel$	1,-10.,i
+	gtrel$	-17.,3
+	.word	dretn,	0
+$abr:	.word	point!int3!lpoff!blkoff	;little astronaut
+$1016=	.
+$1017=	.+2
+	gtpnt$	0,0
+	.word	shortv
+	gtrel$	2,0
+	gtrel$	-2,4,i
+	gtrel$	-4,-4,i
+	gtrel$	4,4
+	gtrel$	0,5,i
+	gtrel$	1,0,i
+	gtrel$	1,1,i
+	gtrel$	0,1,i
+	gtrel$	-1,1,i
+	gtrel$	-2,0,i
+	gtrel$	-1,-1,i
+	gtrel$	0,-1,i
+	gtrel$	1,-1,i
+	gtrel$	1,0,i
+	gtrel$	0,-1
+	gtrel$	5,3,i
+	gtrel$	-5,-5
+	gtrel$	-6,3,i
+	.word	dretn,	0
+$abs:	.word	point!1300!blkoff!line0	;flag
+	.word	statsa!lplite!ital0
+$1020=	.
+$1021=	.+2
+	gtpnt$	0,0
+	.word	shortv
+	gtrel$	0,18.,i
+	.word	longv!int3!lpoff!blkoff!line3
+	gtvec$	16.,0,i
+	gtvec$	0,-8.,i
+	gtvec$	-16.,0,i
+	.word	longv!int1!lpoff!blkoff!line2
+	gtvec$	0,3
+	gtvec$	16.,0,i
+	gtvec$	0,2
+	gtvec$	-16.,0,i
+	.word	dretn,	0
+$abq:	.word	1274
+	.word	170200
+	.word	1274
+	.word	107124
+	.word	1126
+	.word	372
+	.word	1136
+	.word	4362
+	.word	1136
+	.word	12362
+	.word	1136
+	.word	16772
+	.word	1136
+	.word	16406
+	.word	1136
+	.word	12016
+	.word	1136
+	.word	4016
+	.word	1136
+	.word	6
+	.word	1136
+	.word	372
+	.word	1126
+	.word	357
+	.word	1136
+	.word	170357
+	.word	1136
+	.word	170021
+	.word	1136
+	.word	21
+	.word	1136
+	.word	357
+	.word	1274
+	.word	107524
+	.word	1136
+	.word	164340
+	.word	1126
+	.word	21
+	.word	1136
+	.word	164040
+	.word	1274
+	.word	106324
+	.word	1126
+	.word	171357
+	.word	1136
+	.word	167344
+	.word	1126
+	.word	171021
+	.word	1136
+	.word	167034
+	.word	1274
+	.word	107124
+	.word	1126
+	.word	164044
+	.word	1136
+	.word	164034
+	.word	1126
+	.word	164344
+	.word	1136
+	.word	164334
+	.word	1126
+	.word	170375
+	.word	1136
+	.word	165771
+	.word	1136
+	.word	165407
+	.word	1136
+	.word	170003
+	.word	1126
+	.word	0
+	.word	1300
+	.word	161000
+	.word	160341
+	.word	156336
+	.word	153732
+	.word	150724
+	.word	145716
+	.byte	310
+$acn:	.byte	0,	1,	3,	6,	4,	3,	1
+	.byte	-2,	-6,	-7,	-5,	-2
+	.byte	2,	3,	5,	6,	2
+	.byte	1,	-1,	-4,	-6,	-5
+	.byte	-3,	0,	4,	5,	7
+	.byte	4,	0,	-1,	-3,	-1
+$acp:	.byte	-20.,	-16.,	-13.,	-10.,	-7,	-4,	-2
+	.word	1000
+	.word	3404
+	.word	6412
+	.word	12020
+	.word	1274
+	.word	170200
+	.word	1274
+$1022:	.word	0
+	.word	1126
+	.word	165772
+	.word	1136
+$aco:	.word	0
+	.word	1136
+	.word	165773
+	.word	1136
+	.word	0
+	.word	1136
+	.word	165774
+	.word	1136
+	.word	0
+	.word	1136
+	.word	165775
+	.word	1136
+	.word	0
+	.word	1136
+	.word	165776
+	.word	1136
+	.word	0
+	.word	1136
+	.word	165777
+	.word	1136
+	.word	0
+	.word	1136
+	.word	165400
+	.word	1136
+	.word	0
+	.word	1136
+	.word	165401
+	.word	1136
+	.word	0
+	.word	1136
+	.word	165402
+	.word	1136
+	.word	0
+	.word	1136
+	.word	165403
+	.word	1136
+	.word	0
+	.word	1136
+	.word	165404
+	.word	1136
+	.word	0
+	.word	1136
+	.word	165405
+	.word	1136
+	.word	0
+	.word	1136
+	.word	165406
+	.word	1126
+	.word	0
+	.word	1300
+$abt:	.ascii	/00010203040506070809/
+	.ascii	/10111213141516171819/
+	.ascii	/20212223242526272829/
+	.ascii	/30313233343536373839/
+	.ascii	/40414243444546474849/
+	.ascii	/50515253545556575859/
+	.ascii	/60616263646566676869/
+	.ascii	/70717273747576777879/
+	.ascii	/80818283848586878889/
+	.ascii	/90919293949596979899/
+$acj:	.word	1316
+	.word	1316
+	.word	1316
+	.word	1356
+	.word	1356
+	.word	1356
+	.word	1416
+	.word	1416
+	.word	1416
+	.word	1456

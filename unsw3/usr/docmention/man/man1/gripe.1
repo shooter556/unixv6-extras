@@ -1,0 +1,51 @@
+.th GRIPE I 4/22/75
+.sh NAME
+gripe \*- enter complaints and bug reports
+.sh SYNOPSIS
+.bd gripe
+[ option ]
+.sh DESCRIPTION
+.it Gripe
+is used to send a complaint to the gripe file.
+.it Gripe
+with no option sends the standard input to the gripe file
+just like mail does.
+The legal options are:
+.ft I
+.s3
+.lp +8 7
+option	meaning
+.ft R
+.s3
+.lp +8 7
+s	send a complaint.
+.s3
+.lp +8 7
+p	print the gripe file.
+.s3
+.lp +8 7
+o	print the file of old gripes.
+.s3
+.lp +8 7
+r	print the gripe reply file.
+.i0
+.dt
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 30
+/usr/gripe/mailbox	the gripe file
+/usr/gripe/mbox	the old gripe file
+/bin/cat	to print files
+/bin/mail	to update the files
+.fi
+.dt
+.sh "SEE ALSO"
+cat (I), mail (I)
+.sh AUTHOR
+Mike Tilson
+.sh BUGS
+Nothing wrong with the program, but no one is responsible
+for reading or acting upon user complaints at the present time.
+Users should read the complaints from  time to time to see
+if they might feel like doing the work to fix the problems.

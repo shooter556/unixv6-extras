@@ -1,0 +1,3 @@
+ld -n /lib/crt0.o *.o -lc -la -lp -la -lc
+mv a.out $1
+chmod 755 $1

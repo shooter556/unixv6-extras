@@ -1,0 +1,275 @@
+.th ODB I 1/26/76
+.sh NAME
+odb - on-line debugger
+.sh SYNOPSIS
+odb name [symfile]
+.sh DESCRIPTION
+odb is a QMC grown symbolic debugging system which operates in raw
+mode.
+If 'symfile' is given, the symbol table is obtained from it, otherwise
+it is obtained
+from the file being debugged. If the file being debugged does not
+contain a symbol table, odb can still be used, however without
+symbolic referencing.
+.sp 1
+odb uses RAW mode. When it is started it will print '*' as the
+command level prompt character. A CTRL-D at command level will
+return to shell. A '#' will erase the last typed character
+like in cooked mode, the Rub-Out will erase the whole line.
+.sp 1
+The format for odb's requests is an address followed by a command
+character.  Addresses are expressions and are formed from the
+following :
+.br
+.in+15
+.ti-3
+1) The symbol '.' which indicates the current pointer of odb.
+.ti-3
+.br
+2) A name whose value is obtained from the symbol table.
+.br
+.ti-3
+3) An octal number. If a number contains an 8 or 9, result will
+be unpredictable.
+.br
+.ti-3
+4) A decimal number which consists of the digits 0-9 followed by
+a decimal point.
+.br
+.ti-3
+5) Arithmetic operators + and - to combine the operands.
+.br
+.ti-3
+6) A "@" before an expression forms an expression whose value is
+the number in the word addressed by the first expression.
+.ti-3
+.br
+7) Expressions are evaluated left to right.
+.br
+.ti-3
+8) ASCII value of any character if preceded by an apostrophe.
+.br
+.ti-3
+9) ASCII value of two characters if preceded by a quotation mark
+.br
+.ti-3
+10) Tabs and spaces may be used freely.
+.in-15
+.sp 1
+Commands :
+.br
+.in+15
+.ti-5
+k/   open the word at location k, if odd address only the byte
+is opened.
+.br
+.ti-5
+ /   reopen the last opened location.
+.br
+.ti-5
+.sp 1
+a1,a2/ 	>filename (cr/lf)
+.br
+successive words, between addresses a1 and a2, are typed,
+on the specified file. ">" is typed by odb. cr/lf must
+terminate the command. If no file name is specified, the
+output will be sent to the terminal. A Rub-Out during the
+display causes a return to 'odb'.
+.br
+.ti-5
+k\\   open the byte at location k.
+.br
+.ti-5
+ \\   reopen the last opened byte.
+.br
+.ti-5
+.sp 1
+a1,a2\\ >filename (cr/lf)
+.br
+similar to "a1,a2/", but bytes will be displayed. 
+.br
+.ti-5
+lf   open the next sequential location.
+.br
+.ti-5
+^    open the previous location.
+.br
+If opened location was a byte, the lf or the ^ opens the next
+byte.
+.br
+.ti-5
+cr   close open location and wait at command level.
+.br
+.ti-5
+<    contents of opened word is indexed by contents of PC, and
+that location is opened. It only operates on words,
+(useful for assembler programs).
+.br
+.ti-5
+>    contents of opened word is taken as a relative branch
+instruction and referenced location is opened. Only
+operates on words,(useful for assembler programs).
+.br
+.ti-5
+*    contents of the opened word is the address of the next
+location that is opened.  Only operates on words.
+.br
+.ti-5
+=    the value of the expression preceding the command is
+calculated and typed. If no expression is typed the
+current value of the location pointer is displayed.
+This command does not effect the value of the ".".
+.br
+.ti-5
+:    instruction type-in command. See below for details.
+.br
+.ti-5
+(ACC)t(CH)
+.br
+where CH is any command character, causes 'odb' to type a ">"
+on the next line. The user may then type a filename followed
+by (cr/lf) to type-out the Symbol Table, if exists, to the file
+or just a (cr/lf) if the Table is to go to the terminal.
+A Rub-Out during the display causes a return to 'odb'.
+.br
+.ti-5
+!cr  will result in the display of the registers.
+.br
+.ti-5
+!r   open register r, where r may be either a general register (0-7)
+or the program status register (s).
+.br
+.ti-5
+%    the control is transferred to UNIX. The remainder of
+the line is interpreted as a command by UNIX.
+.br
+.ti-5
+^D (control+D)
+.br
+quits the debugger.
+.in-15
+.sp 1
+Modifications to the opened location can be made before a lf, cr,
+^, <, > or * is typed. Any legal expression may be typed to
+modify an opened location.
+.sp 1
+Instruction Type-IN :
+.br
+After a location has been opened ":" command may be followed
+with an instruction and a (cr/lf) to deposit the instruction
+there. After the ":" command 'odb' temporarily uses cooked
+mode. Therefore '#' & '@' must be treated accordingly.
+All the instruction modes are accepted. However, in register
+mode use r6 (or %6) for 'sp' & r7 (or %7) for 'pc'.
+.sp 1
+Breakpoints :
+.br
+A breakpoint may be set at any instruction. Up to 9 breakpoints
+may be set, at any one time, numbered 0 through 8.
+.in+15
+.br
+.ti-8
+k;b	will set the next 'available' breakpoint at location k.
+.br
+.ti-8
+k;nb	will set the breakpoint 'n' at location k.
+.br
+.ti-8
+;b	will remove all breakpoints.
+.br
+.ti-8
+;nb	will remove the 'n-th' breakpoint.
+.br
+.ti-15
+e.g.
+.sp 1
+.ti-8
+*200;b	sets breakpoint 0 at location 200.
+.br
+.ti-8
+*400;b	sets breakpoint 1 at location 400.
+.br
+.ti-8
+*500;1b	resets breakpoint 1.
+.br
+.ti-8
+*;0b	removes the 0-th breakpoint.
+.br
+.in-15
+.sp 1
+The command !b/ opens the location containing the address of
+breakpoint 0. Internally 3 locations are reserved for each
+breakpoint. The first holds the address of the breakpoint,
+next one holds it's contents and the third one holds the
+repeat count for that breakpoint. After typing !b/ the other
+breakpoints may be inspected by typing Line-Feeds. However
+their contents may not be modified in the usual manner. The
+commands mentioned above, should be used to set, change or
+remove breakpoints.
+.br
+.sp 1
+Running The Program :
+.br
+.sp 1
+Odb uses cooked mode during the execution.
+.br
+.in+15
+.ti-8
+k;g	command is used to start execution at location k.
+If k is omitted, the start address of the program is obtained
+from the file's header.
+Following "k;g" arguments may be given to execute the file.
+.br
+.ti-8
+k;p	command is used to continue execution after having halted.
+If k is present, it specifies the number of times the breakpoint
+is to be encountered before program execution is suspended. If k
+is omitted, the execution stops when next breakpoint is encountered.
+.br
+.ti-8
+;t	will terminate the traced process.
+.br
+.in-15
+.sp 1
+When a breakpoint is encountered, execution stops and odb prints
+Bn;addr (where n is the breakpoint number and addr is the address
+of the breakpoint.).
+.br
+The execution of the program will also stop if any signal generated,
+odb will announce the reason.
+.br
+When the program is in a stop state, the registers and the locations
+may be examined and modified, if desired. However, any alterations
+made to the locations will be to the core image of the running
+process. Thus the original file being debugged will not be affected.
+.br
+.sp 1
+Type-out Modes:
+.br
+odb's  original type-out mode is octal. However this,at any time,
+can be changed to any one of the following modes :
+.in+15
+.br
+.ti-8
+(ACC)d  changes the current mode to decimal.
+.br
+.ti-8
+(ACC)c  changes the current mode to character.
+.br
+.ti-8
+(ACC)o  changes the current mode to octal.
+.br
+.ti-8
+(ACC)i  mode is changed to intruction.  The addressed
+locations will be interpreted as PDP11 instructions.
+.in-15
+.sp 1
+If any of the above commands is immediately folllowed by a ';',
+while a location is open, the contents of the open location is
+re-displayed in the new mode.
+.sh DIAGNOSTICS
+? for incorrect selection of a command or an illegal memory
+reference.
+.sh "SEE ALSO"
+db(I), cdb(I), core(V), a.out(V)
+.sh BUGS

@@ -1,0 +1,46 @@
+.th P I MAR/76
+.sh NAME
+p \*- flexible pagination of output
+.sh SYNOPSIS
+.bd p
+[ \fB-m\fR ]
+[ \fB+m\fR ]
+[ \fB-s\fR ]
+"pattern"
+.bd -r
+.bd -t
+.bd -c
+file ...
+.sh DESCRIPTION
+.it P
+reads from its input, breaking on 18 line pages and removing
+underlined words and form feeds. If no files are given then the standard
+input is read; if more than one file is given then the filename is given
+before the file is printed. Between pages it reads a carriage return
+from the terminal in no echo. If delete is hit while printing
+a file, then
+.it p
+prints the last filename, and the page/line# last read. The meanings
+of the various options are: 
+.ft I
+.lp +8 7
+option	meaning
+.ft R
+.s3
+.lp +8 7
+\fB-n\fR	Set pagesize to n. Default is 18.
+.s3
+.lp +8 7
+\fB+m\fR[l]	Skip \fBm\fR pages. If 'l' is given, \fBm\fR lines.
+.s3
+.lp +8 7
+\fB-r\fR	Don't escape frog's, formfeeds and underlines.
+.s3
+.lp +8 7
+\fB-c\fR	Continuous form.
+.s3
+.lp +8 7
+\fB-s\fR	Skip until pattern GLOB(VIII) is matched.
+.i0
+.dt
+.sh BUGS

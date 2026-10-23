@@ -1,0 +1,87 @@
+THE USE OF THE MACRO MONITOR._____________________________
+
+
+	The first line of the program should contain 
+
+		.GLOBL GETC,PUTC,EXIT,RDUMP
+
+	At the end of the program a   ".end" is required. E.G.
+
+		jmp	exit
+		.end
+
+
+	All buffers are initialized e.t.c. so execution is simple.
+
+
+GETC:_____	
+
+	Returns the next character on standard input in R0, on EOF a zero 
+	will be returned. If the program fails to detect this and continues 
+	to read an error will be generated.
+	USE:
+
+		JSR	PC,GETC
+
+PUTC:_____
+
+	Puts the character in R0 onto the standard output.  Unprintable
+	characters are printed as '?'.  Linelength and Page overflows are
+	detected and generate errors.
+	USE:
+
+		JSR	PC,PUTC
+
+EXIT:_____
+
+	Flushes the buffer and terminates execution.
+	USE:
+
+		JSR	PC,EXIT
+	OR
+		JMP	EXIT
+
+RDUMP:______
+
+	Gives a dump of the current values of the registers. No values
+	are changed.
+	USE:
+		JSR	PC,RDUMP
+
+TRACING_______
+
+	Two kinds of tracing are provided.  flow tracing and location
+	tracing to whit. Program tracing enables the user to examine
+	the death throes of his program. a dump is provided after-
+	wards which contains a listing of jumps from and jumps to.
+	the user may also trace a particular location, and every time
+	its value changes a record is kept which is dumped after
+	program termination.
+
+PTON____
+PTOFF_____
+
+	Turn program tracing on and off. records are kept
+	of ons and offs. a buffer of fifty items is provided. attempts
+	to excede it cause errors. each jump is one entry, as is each 
+	on-off.
+	use:
+
+
+		jsr	pc,pton
+
+		jsr	pc,ptoff
+
+LTRACE______
+
+	trace a particular address, addr. sic.
+
+		jsr	r5,ltrace
+		.word	addr
+
+	addr must be inside the users area, and must be even.
+	an address of 177777 turns off location tracing.
+	a hundred word buffer is available for location tracing
+	and attempts to excede it will be rejected, (program failure).
+	fifty entries can be made, but turn ons count as two entries.
+

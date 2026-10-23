@@ -1,0 +1,31 @@
+.th TLIMIT II 4/2/77
+.sh NAME
+tlimit \*- set process time limit
+.sh SYNOPSIS
+(tlimit = 39.; not in assembler)
+.br
+(new time limit, in seconds, in r0)
+.br
+.ft B
+sys tlimit
+.br
+.ft R
+(seconds remaining, to old limit, in r0)
+.s3
+.ft B
+tlimit(nsec);
+.ft R
+.sh DESCRIPTION
+.it Tlimit
+sets a limit on the sum of system and user times.
+On expiration of the limit a signal 16 is generated.
+A limit of zero will disable time limit checking.
+The interval is passed to children across forks.
+.it Tlimit
+returns a word (in r0) containing the seconds remaining to expiration
+of the previous time limit.
+.sh "SEE ALSO"
+signal (II)
+.sh DIAGNOSTICS
+.sh AUTHOR
+CHris Maltby (University of New South Wales)

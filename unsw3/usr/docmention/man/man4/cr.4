@@ -1,0 +1,187 @@
+.th CR IV 7/12/77
+.sh NAME
+cr \*- card reader interface
+.sh DESCRIPTION
+.it Cr
+provides two devices:
+.s3
+.lp +10 4
+1.	ASCII (well not quite) card reader (/dev/crN), and
+.lp +10 4
+2.	binary card reader (/dev/crbN).
+.i0
+.dt
+.s3
+.ul
+ASCII Device
+returns one character
+for each column of the card and a newline character at the
+end of the card (81 characters for an 80 column card).
+The punch codes used conform to those used on the Cyber under
+the UNSW Kronos operating system.
+.s3
+A number of special punchings are used in this system:
+.s3
+.ft I
+.lp +10 7
+code	meaning
+.ft R
+.s3
+.lp +10 7
+eor	end of record (punch 7-8-9) returns cntrl/r character (\022).
+.s3
+.lp +10 7
+eof	end of file (punch 6-7-9)
+returns cntrl/f character(\06).
+.s3
+.lp +10 7
+eoi	end of information (punch 6-7-8-9) indicates a Unix end of file.
+No character is returned but an end of file indication
+is returned and the rest of the card is ignored.
+Another read by a program after the end fo file has been
+read will read the card following the end of information card
+without closing and reopening the device (kludgy but useful
+for spoolers).
+.s3
+.lp +10 7
+cnvt	convert character set (punch 5-7-9) in column one.
+If column two is blank then converts to O26 punch mode
+and if column two is '9' then converts to O29 punch mode.
+The convert card itself is not returned.
+It
+only effects those cards following up to the next convert
+card or end of information.
+The default mode is O29.
+.i0
+.dt
+.s3
+.ul
+Card Codes for 029 Punch
+.s3
+.nf
+	    punching in rows 1 - 7
+	none 1   2   3   4   5   6   7
+.s3
+	' ','1','2','3','4','5','6','7',	/*		*/
+	'8','`',':','#','@','\'','=','"',	/*	8	*/
+	'9',inv,inv,inv,inv,inv,inv,inv,	/*	9	*/
+	inv,inv,inv,inv,inv,inv,inv,cntrl/r,	/*      9 8	*/
+	'0','/','s','t','u','v','w','x',	/*    0		*/
+	'y','^','\\',',','%','_','>','?',	/*    0   8	*/
+	'z',inv,inv,inv,inv,inv,inv,inv,	/*    0 9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,	/*    0 9 8	*/
+	'-','j','k','l','m','n','o','p',	/* 11		*/
+	'q','|',']','$','*',')',';','^',	/* 11     8	*/
+	'r',inv,inv,inv,inv,inv,inv,inv,	/* 11   9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,	/* 11   9 8	*/
+	'}','~','S','T','U','V','W','X',	/* 11 0		*/
+	'Y',inv,inv,inv,inv,inv,inv,inv,	/* 11 0   8	*/
+	'Z',inv,inv,inv,inv,inv,inv,inv,	/* 11 0 9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,	/* 11 0 9 8	*/
+	'&','a','b','c','d','e','f','g',   /*   12		*/
+	'h',inv,'[','.','<','(','+','!',   /*   12        8	*/
+	'i',inv,inv,inv,inv,inv,inv,inv,   /*   12      9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12      9 8	*/
+	'{','A','B','C','D','E','F','G',   /*   12    0		*/
+	'H',inv,inv,inv,inv,inv,inv,inv,   /*   12    0   8	*/
+	'I',inv,inv,inv,inv,inv,inv,inv,   /*   12    0 9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12    0 9 8	*/
+	inv,'J','K','L','M','N','O','P',   /*   12 11		*/
+	'Q',inv,inv,inv,inv,inv,inv,inv,   /*   12 11     8	*/
+	'R',inv,inv,inv,inv,inv,inv,inv,   /*   12 11   9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12 11   9 8	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12 11 0		*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12 11 0   8	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12 11 0 9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12 11 0 9 8	*/
+.s3
+.ne 10
+.ul
+Card Codes for 026 Punch
+.s3
+	    punching in rows 1 - 7
+	none 1   2   3   4   5   6   7
+.s3
+	' ','1','2','3','4','5','6','7',	/*		*/
+	'8','`',':','=','\'','@','%','[',	/*	8	*/
+	'9',inv,inv,inv,inv,inv,inv,inv,	/*	9	*/
+	inv,inv,inv,inv,inv,inv,inv,cntrl/r,	/*      9 8	*/
+	'0','/','s','t','u','v','w','x',	/*    0		*/
+	'y','^',']',',','(','`','"','&',	/*    0   8	*/
+	'z',inv,inv,inv,inv,inv,inv,inv,	/*    0 9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,	/*    0 9 8	*/
+	'-','j','k','l','m','n','o','p',	/* 11		*/
+	'q','|',':','$','*','^','#','>',	/* 11     8	*/
+	'r',inv,inv,inv,inv,inv,inv,inv,	/* 11   9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,	/* 11   9 8	*/
+	'!','~','S','T','U','V','W','X',	/* 11 0		*/
+	'Y',inv,inv,inv,inv,inv,inv,inv,	/* 11 0   8	*/
+	'Z',inv,inv,inv,inv,inv,inv,inv,	/* 11 0 9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,	/* 11 0 9 8	*/
+	'+','a','b','c','d','e','f','g',   /*   12		*/
+	'h',inv,'?','.',')','?','^',';',   /*   12        8	*/
+	'i',inv,inv,inv,inv,inv,inv,inv,   /*   12      9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12      9 8	*/
+	'<','A','B','C','D','E','F','G',   /*   12    0		*/
+	'H',inv,inv,inv,inv,inv,inv,inv,   /*   12    0   8	*/
+	'I',inv,inv,inv,inv,inv,inv,inv,   /*   12    0 9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12    0 9 8	*/
+	inv,'J','K','L','M','N','O','P',   /*   12 11		*/
+	'Q',inv,inv,inv,inv,inv,inv,inv,   /*   12 11     8	*/
+	'R',inv,inv,inv,inv,inv,inv,inv,   /*   12 11   9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12 11   9 8	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12 11 0		*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12 11 0   8	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12 11 0 9	*/
+	inv,inv,inv,inv,inv,inv,inv,inv,   /*   12 11 0 9 8	*/
+.fi
+.s3
+.ul
+Binary device
+returns one word for each column (no newline).
+An 80 column card returns 160 bytes of information.
+The low order 12 bits of the word contain the binary 12 rows
+of the card (bottom row 9 of card = least significant bit).
+.s3
+There are two versions of the card reader device handler for 
+the two types of card reader available at UNSW:
+.s3
+.lp +10 4
+1.	standard DEC unbuffered (column-by-column), and
+.lp +10 4
+2.	non-standard UNSW buffered (card-by-card).
+.i0
+.dt
+.sh DIAGNOSTICS
+In ASCII mode all columns are checked for validity -
+at most one punching in rows 1 through 7
+or a special control character and a valid
+code according to the appropriate code table (O26 or O29)
+above.
+An invalid column will lead to a message
+.s3
+	cr\fIn\fR invalid - reread last card
+.s3
+This commonly occurs if a card is upside down.
+.s3
+On unbuffered card readers a column may
+be missed leading to the following diagnostic
+.s3
+	cr\fIn\fR timing - reread last card
+.sh BUGS
+UNSW ASCII card codes are definitely unique.
+.br
+Binary mode should perhaps pack 4 columns into 3 words
+as do some other systems.
+This is not likely to be changed (ever).
+.br
+Certain ancient versions of the handler truncated
+trailing blanks from the card in true Kronos fashion.
+This was definitely a "no-no" for certain local uses
+and has been rectified.
+.br
+A filter exists for removing
+trailing blanks and adding tabs so that files
+read from the card reader may be compressed.
+.sh AUTHOR
+Ian Hayes (University of New South Wales)

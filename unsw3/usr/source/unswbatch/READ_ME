@@ -1,0 +1,129 @@
+This directory contains a version of the UNSW Export & Batch system.
+It is basicly the same as others which may appear elsewhere, but I know it
+works...
+For information about using shared data read file 'sddesc'.
+
+The batch system lives in a directory known as "/spool/batch".
+On our system this is a link to "/tmp", but in the past we have made
+"/spool" an entire rk05 (2000 blocks anyway). It should be easy enough
+to change this. This directory contains all the commands needed to control
+the batch system and normally has mode 711 owner root. We have a user 'oper'
+who logs into this directory. There is a subdirectory called '.work' where
+other programs and scratch files live.
+
+This version (level 6 UNIX) relies on the SHARED_DATA mod to the system.
+The queue area is part of this shared region, and p & v semaphores are
+provided. There are several distinct queues for the various types of job
+at their various stages. The local batch side is fairly straight forward.
+A local job at the card reader is distinguished by a '%' as its first character.
+The next card selects a local processor to execute the job. The 'crd' process
+places the rest of the deck into a file and puts it in the appropriate
+queue. If a card with the punching 7-8-9 is encountered (KRONOS EOR) then
+the remainder of the deck is put in another file which will be available
+to the job as standard input. The end of a deck is a card with punch 6-7-8-9
+(KRONOS EOI) which returns 0 to the read.
+When the job completes it is requeued into the the print queue and the
+'print' process will dispose of it somehow.
+
+
+All other jobs are assumed to be for cyber and after checking the syntax
+of the job card they are placed in the for cyber queue. The 'jtd' process
+takes them out of this queue and transmits them to the cyber, interspersed
+with the appropriate export commands. When the job has been sent it's queue
+entry is put in the 'at cyber' queue. The 'spl' process meanwhile has been
+waiting for outputs to appear from the cyber, and when one arrives it
+finds out the job name (by scanning the banner page of the job) and then
+searches for it in the 'at cyber' queue. The output is then collected in
+a file and finally given to the 'print' process for printing.
+
+There are two other processes associated with batch, 'Ear' and 'monitor'.
+'Ear' listens to replies to commands and all the other rubbish that is
+sent by the cyber and filters out the crap. It prints the remaining messages
+on the controling terminal. 'Monitor' merely waits for all the above
+processes to terminate and then checkpoints the queues and exits.
+
+The program 'tell' sends commands to the cyber. It is normally linked
+to all the cyber commands eg. 'l' 'q' 'b' etc. When executed it sends
+its arguments to the cyber as commands, in the correct form. I.e.
+executing 'q' with argument 'o' will give the status of the cyber output
+queue.
+
+The batch system can be started in four modes. If the batch program
+is started as 'batch' then all functions will operate. If started as 'local'
+then the cyber talking processes do not run and no jobs are sent or received.
+If an argument is given no cyber jobs will be accepted from the reader or
+from submit. 'Submit' acts as a pseudo card reader and accepts
+jobs in the same format. (Lines must be shorter than 80 characters)
+
+DIRECTORIES:
+
+auxil		Contains other useful source.
+
+original	Contains source from the original system. Mostly
+		superceded by local changes to our Quebec E/I.
+
+FILES:
+
+all.m		A command file for a complete generation of the batch system.
+
+ass.c		The Macro job daemon.
+
+batch.c		The batch system startup program. It reinits the queues and
+		reads in the old checkpoint file. The parent process of all
+		the daemons and talkers.
+
+batch.h		Relevant defines etc. What the shared area looks like.
+
+cancel.c	Used to cancel or restart jobs on the reader or printer.
+
+crd.c		The card reader process.
+
+dq.s		Prints the queue display.
+
+ear.c		Listens to replies from cyber. Also recognises that
+		Kronos has crashed and logs batch in again.
+
+for.c		The fortran daemon.
+
+ja.c		The statistics managing program.
+
+jtd.c		Sends cards to the cyber.
+
+list.c		Listing daemon.
+
+macsup.mac	The support routines for student macro jobs.
+
+monitor.c	The god of time. Waits for all others to die.
+
+nocyber.c	Toggles acceptance of cyber jobs at card reader.
+
+pas.c		The pascal daemon.
+
+pgm.m		A command file to compile any piece of the batch system.
+		It does the lot. You must see it to believe it.
+
+print.c		Interfaces with 'lpr' to do output printing.
+
+purge.c		Remove a job from any queue.
+
+sdump.c		Core dump analyzer for student macro.
+
+spl.c		Receives the cyber print outputs, and spools them.
+
+stop.c		Shut the batch system down.
+
+submit.c	A Pseudo card reader from a file.
+
+tell.s		For the purpose of sending commands to cyber.
+
+text.o		The shared data area.
+
+text1.s		Code for the shared area and common routines.
+
+text2.c		Likewise.
+
+transfer	Program to transfer shared data binaries.
+
+txt.m		Procedure to make the shared area.
+
+xref.m		Cross-referencer.

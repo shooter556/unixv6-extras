@@ -1,0 +1,6 @@
+echoall
+as roff?.s
+ld -s a.out -l
+rm -f /usr/bin/roff
+mv a.out /usr/bin/roff
+chown root /usr/bin/roff

@@ -1,0 +1,31 @@
+.th MESSAGE VI 1/1/76
+.sh NAME
+message \*- print a message in large letters
+.sh SYNOPSIS
+.bd Message
+.br
+(lines of text)
+.br
+(seperated by new lines)
+.br
+(eleven chars per line)
+.br
+(five lines per page)
+.sh DESCRIPTION
+.it Message
+constructs a message on standard output, using
+a large character set (each of size 12 x 12 chars.).
+Font size allows five lines per page, eleven characters per line.
+.s3
+A <NEW PAGE> prompt begins the message, and all subsequent
+new pages.
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 14
+/etc/letters	large letters
+.fi
+.dt
+.sh AUTHOR
+Keith Titmuss (University of New South Wales)
+.sh BUGS

@@ -1,0 +1,123 @@
+.th HT IV 8/76
+.sh NAME
+ht \*- RH-11/TU-16 magtape interface
+.sh DESCRIPTION
+The special files
+.it "/dev/mt0, /dev/ht0,"
+etc. refer to the TU-16 magtape.  Raw and cooked interfaces with
+various options are provided as follows:
+.s3
+.lp +7 4
+1.  An
+.it r
+prefix indicates the raw device; no
+.it r
+means cooked.  See below.
+.lp +7 4
+2.  An
+.it n
+prefix indicates a no-rewind device.  This facility allows
+multi-file tapes to be read and written.  See below.
+.lp +7 4
+3.  An
+.it mt
+means 800 BPI; an
+.it ht
+means 1600 BPI.
+.lp +7 4
+4.  The digit is the slave select, currently limited to the range
+0 to 3 by the driver.
+.s3
+.i0
+Thus,
+.it /dev/mt0
+is cooked, normal-rewind, 800 BPI slave 0, and
+.it rnht0
+is raw, no-rewind, 1600 BPI slave 0.  On our system the only slave is 0.
+.s3
+In the discussion below, the word
+.it device
+will be used to refer to the special file in question.
+.s3
+When opened for reading or writing, the tape is assumed to be positioned as 
+desired.  When a device is closed, a double tape mark
+(alias double filemark) is written
+if the device was open for writing.  Then if the device in question is
+normal-rewind, the tape is rewound.  If it is no-rewind and the device
+was open for writing, the tape is positioned before the second tape
+mark just written.  Finally, if the device is no-rewind but was not
+open for writing, the tape is positioned after the next tape mark
+following the data just read.
+What all this means is that
+.sp 1
+.ce 3
+cat /dev/null >/dev/mt0
+dd if=f1 of=/dev/nmt0  
+dd if=f2 of=/dev/mt0   
+.sp 1
+rewinds the tape, then writes f1, a tape mark, f2, and a double tape
+mark, and leaves the tape rewound, and that
+.sp 1
+.ce 2
+cat /dev/rnmt0 >g1     
+cat /dev/mt0 >g2       
+.s3
+immediately thereafter makes g1 and g2 copies of f1 and f2 (almost)
+and leaves the tape rewound.
+.s3
+A standard tape consists of a series of tape files ("files" in the
+magtape sense, not the Unix sense) separated by tape marks and 
+ended by a pair of tape marks.  A cooked tape special file allows
+one to treat portions of such a tape much like any other file.  Seeks and variable-sized
+or intermixed reads and writes work.  Writing, however, must not involve skipping
+beyond the current end-of-tape, and any write truncates the tape
+beyond where the write occurred.  A tape mark
+is returned as an error from a cooked read,
+and the tape is left positioned before the
+tape mark so that no-rewind devices work as expected
+when a close is done.  Such devices
+can be used to position to a specific file on the tape by opening for
+read and closing the device a number of times.  Note that once opened,
+a cooked device will only permit reading between the position when
+opened and the next tape mark.
+.s3
+The raw interface must be used to handle non-standard tapes.  Each
+.it read
+or
+.it write
+call reads or writes the next tape record.  Written records are always
+the length requested (remember that there is a minimum length
+for NRZI records).
+A read normally returns an entire tape record; however, records
+longer than the request length
+are truncated without fanfare and the extra bytes discarded,
+so take care!  The buffer should consist of an integral number of words;
+both base and length must be even.  A tape mark is returned as a zero-length
+read, i.e., an end-of-file.  The tape is left positioned beyond it, so
+the next read will return the first record of the next file.
+.sp 1
+.ce
+cat /dev/rnht0 >junk
+.sp 1
+copies up to the next tape mark and leaves the tape positioned
+after it.
+.sh FILES
+/dev/mt?, /dev/nmt?, /dev/rmt?, /dev/rnmt?,
+.br
+/dev/ht?, /dev/nht?, /dev/rht?, /dev/rnht?
+.sh "SEE ALSO"
+tp(I)
+.sh BUGS
+Raw I/O should provide positioning and tape-mark-writing functions.
+EOT is not handled in any reasonable or predictable way.
+Varied and useful error codes should be returned.
+.s3
+The driver only handles one TM02
+and probably has buggy multi-slave handling.
+However, no one seems
+to have more than one transport, much less two TM02's.
+.sh AUTHOR
+Larry Wehr, Piscataway Labs.
+.s3
+New error handling and miscellaneous embellishments by Rob Mathews,
+EE dept., Stanford.

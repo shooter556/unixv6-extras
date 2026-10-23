@@ -1,0 +1,1167 @@
+.po 20
+.ll 80
+.pl 88
+.nr % 1 -1
+.nr t 6
+.nr b -7
+.de PP
+.sp 1
+.ti 5
+..
+.de C0
+.mk
+.in 0
+..
+.de C1
+.rt
+.in 20
+..
+.de C2
+.rt
+.in 40
+..
+.de X1
+.br
+.mk
+.in 5
+..
+.de X2
+.br
+.rt
+.in 10
+..
+.de X3
+.br
+.rt
+.in 22
+..
+.de X4
+.br
+.in 40
+..
+.de SI
+.in +6
+.br
+..
+.de UI
+.in -6
+.br
+..
+.de XI
+.br
+.ti -3
+..
+.de hd
+'sp \\nt
+.ns
+..
+.de fo
+'sp 2
+'bp
+..
+.de pp
+.tl 'Fortran guide'-%-''
+..
+.wh 0 hd
+.wh -7 fo
+.wh -5 pp
+.ce
+A Guide to the UNIX Fortran System
+.sp 2
+.ce
+Jeff Rottman
+.ce
+Revised July 1977
+.sp 2
+.PP
+This guide describes the UNIX fortran system.
+The system was adapted
+from a fortran  system distributed by Digital Equipment Corporation
+for use under the RT-11 operating system.
+Most aspects of the system have not changed, and only
+the differences and modifications are described here. For basic details the
+\fIPDP-11 Fortran Language Reference Manual (dec-11-lflra-a-d)\fR
+should be consulted.
+.sp 6
+.ce
+.ul
+Contents
+.br
+.sp 2
+.ta 15 65
+	1. Language changes	2
+.sp 	1
+	2. Pause statement	2
+.sp 	1
+	3. Shareable segments	2
+.sp 	1
+	4. Subroutine linkage	3
+.sp 	1
+	5. Run-time memory	3
+.sp 	1
+	6. Device assignments	4
+.sp 	1
+	7. Fortran i/o	4
+.sp 	1
+	8. System i/o subroutines	5
+.sp 	1
+	9. Arguments to the main program	7
+.sp 	1
+	10. Random numbers	7
+.sp 	1
+	11. Exiting to the system	8
+.sp 	1
+	12. Bit operations	8
+.sp 	1
+	13. Catching errors	8
+.sp 	1
+	14. Dynamic arrays	8
+.sp 	1
+	15. System library	9
+.sp 	1
+	16. Documented flaws	10
+.sp 	1
+	17. Run-time errors	11
+.bp
+1. Changes in the language accepted.
+.PP
+The fortran compiler accepts programs in upper and lower case.
+Except in hollerith constants  all upper case characters are converted to lower case.
+.sp 1
+ a. Data statements
+.PP
+The class of data statements that are accepted by the
+compiler has been extended.  The skeletal syntax of the
+data statement has remained unchanged.
+.PP
+As before, integer constants may only be assigned to
+integers, reals to reals, doubles to doubles, complexes to
+complexes, and logicals to logicals.  However, there are two
+classes of universal constants.
+.PP
+The first class comprises bit oriented data:
+octal, binary, and hexadecimal constants.   The constant may
+have as many significant bits as there are bits in the data
+item to which it is being assigned.  The top bit (bit 15)
+of the first word is most significant;  the bottom bit (bit 0)
+of the last word in the data item is least significant.  Users
+should note that particular care must therefore be taken in assigning
+these data items to variables of integer*4 type.  For example,
+the data-statement:
+.sp 1
+.ti 10
+data i4/o177777/
+.br
+.sp 1
+where i4 is an integer*4 variable, would result in i4
+printing as zero. (The bits are justified into the second word
+of the variable,  which is currently ignored by the math routines.)
+.PP
+The syntax for these constants is:
+.br
+.ta 10 18 24
+	z.....	-	hexadecimal
+.br
+	o.....	-	octal
+.br
+	".....	-	octal
+.br
+	b.....	- 	binary
+.PP
+The second class of universal constants consists of
+hollerith data, i.e., data between single quotes (') or following
+an 'nh' specification.  Previously,  the data in one such specification
+could only be used for one element of an array,  or one simple
+or subscripted variable.   Now, in cases of an array,  bytes will
+be taken from the string until the hollerith constant is exhausted,
+filling contiguous bytes in the arrays storage area.  Unused
+characters in a hollerith constant are ignored,  and such a constant may
+not be split between two distinct variables.
+.sp 1
+examples:
+.sp 1
+.ta 8
+.br
+	real*4 r(4)
+.br
+	data r/'this is a string'/
+.sp 1
+leaves r(1)='this', r(2)=' is ', r(3)='a st', and r(4)='ring'.
+.sp 1
+	integer i1,i2
+.br
+	data i1,i2/'word#1','word#2'/
+.sp 1
+leaves i1='wo', i2='wo'.
+.PP
+Finally, if trailing values for an array are not specified,  they are
+assumed to be zero.
+.sp 1
+.sp 1
+ b. Encode/decode
+.PP
+The \fIerr\fR parameter may be specified on encodes and decodes. The
+buffer may be a simple or subscripted variable, or an array.
+.sp 2
+2.  The pause statement
+.PP
+The syntactic form of the pause statement is unchanged.
+At execution time,  when a pause statement is encountered,  the message,  if
+any,  is displayed.  The fortran task then forks and invokes the shell as a child
+process.  When the shell terminates (i.e. receives a control-d),  the fortran
+task is re-activated.
+.sp 1
+.sp 1
+3. Shareable text segments
+.PP
+The fortran compiler and run-time system both distinguish between
+shareable "pure" code and non-shareable "dirty" code.  The former is
+located in the concatenated psect ".text.",  and the later in the blank
+psect,  and the common blocks.  When the fortran program is linked,  these
+two pieces are separated into a shareable segment and and private
+segment.  In general,  those writing assembly code to interface to fortran
+should not place non-shareable code in the .text. psect.
+.sp 1
+.sp 1
+4. Subroutine linkage
+.PP
+Subroutine are called with the instruction
+.ta 8 16
+.br
+	jsr	pc,routine
+.sp 1
+At entry to the routine,  r5 must point to an argument list of
+the following form:
+.ta 10 16
+.br
+	r5	number of arguments
+.br
+		address of first argument
+.br
+		.
+.br
+		.
+.br
+		address of n'th argument
+.sp 1
+Return from a subroutine is via an "rts pc".  No registers are
+expected to be preserved across a subroutine call,  except,  of course,
+for the stack pointer.  Integer functions return their value in r0;
+real functions in r0.r1; and double and complex functions in r0...r3.
+.sp 1
+.sp 1
+.ne 34
+.sp 1
+5. Run-time memory organization:
+.na
+.br
+.nf
+.sp 1
+.sp 1
+.ta 8 16 24 32 40
+		------------------------
+low core	|  shareable threaded	|
+		|      code   		|
+			--------
+		|  shareable ots	|
+		|	code		|
+		-------------------------
+		| data storage		|
+		| ots scratch area	|
+		-------------------------
+		| common blocks		|
+		-------------------------
+		| line buffer		|
+		-------------------------
+		| dynamic		|
+		|   array allocation	|
+		-------------------------
+		| dynamic i/o		|
+		|   allocation		|
+		-------------------------
+		            ||
+			    \\/
+			    .
+			    .
+.sp 1
+		|	stack		|
+		-------------------------
+.br
+high core
+.sp 1
+.ad
+.fi
+.in 6
+shareable code is in .psect '.text.'
+.br
+data store is in .psect '.data.'
+.br
+blank common is in .psect '.$$$$.'
+.br
+named common 'xxxxxx' is in .psect 'xxxxxx'
+.in 0
+.sp 1
+.PP
+The line-buffer is allocated at run-time, and
+uses
+\fI$lrecl\fR+6 bytes.
+\fI$lrecl\fR may be specified at the compilation
+of the main program,  and defaults to 132.
+.PP
+For details of the dynamic array allocation region,  see section 14.
+.PP
+Each open file uses about 520 bytes in the dynamic i/o region.
+.sp 1
+.sp 1
+6. Device assignments
+.PP
+Fortran channel 5 is initially assigned to the standard input.
+Fortran channel 6 is initially assigned to the standard output.
+Both of these may be changed by setfil,  after they have been endfile'ed.
+Legal fortran channel numbers range between 1 and 99 inclusive.  The
+default file name for channel \fIxx\fR is \fIfortxx\fR.
+.sp 1
+.sp 1
+.ta 8 20 40
+	read	f,list	is equivalent to
+.br
+	read(1,f)	list
+.sp 1
+	accept	f,list	is equivalent to
+.br
+	read(5,f)	list
+.sp 1
+	type	f,list	is equivalent to
+.br
+	write(6,f)	list
+.sp 1
+	print	f,list	is equivalent to
+.br
+	write(7,f)	list
+.sp 1
+.sp 1
+7. Modes of fortran i/o
+.sp 1
+.PP
+Unix fortran supports three basic types of i/o: binary,  ascii,  and random.
+.sp 1
+.sp 1
+.sp 1
+i. Ascii i/o
+.br
+.PP
+All ascii i/o in fortran is directed via format statements.
+Each file on which ascii i/o is being performed may
+be set to either ascii special mode or ascii normal mode.
+In special mode,  no extra bytes are added to those
+produced by the format statement; i.e., no carriage
+control conversions are performed,  and
+no line-feed is appended to the end of a record.  Normal ascii
+i/o has two sub-modes:  carriage control, and
+no carriage-control.  In carriage control submode
+the first byte of a record is interpreted as
+a carriage control character according to the following
+table:
+.sp 1
+.ta 5 10
+	+	do not advance 
+.br
+	SP	advance 1 line (space)
+.br
+	0	advance 2 lines
+.br
+	1	advance 1 page
+.br
+	$	advance 1 line, simulate a "$" format item
+.sp 1
+.sp 1
+.PP
+Unless a "$" format item was encountered in the format statement,
+the record is ended by a carriage-return.   In
+non-carriage-control submode,  all records
+are terminated by new-lines.
+Non-carriage control submode is the default.
+.PP
+On ascii input,  only normal no-carriage control is allowed.  An input
+record is terminated by a new-line.
+.PP
+UNIX fortran supports \fIabrupt field termination\fR
+on input.  The acceptable terminators are tab, comma, and null.
+For further details, see the rt-11 manual.
+.sp 1
+.sp 1
+.sp 1
+ii. Binary i/o
+.PP
+Again there are two modes:  normal and special.  
+Normal mode conforms to fortran
+standards,  and each binary read or
+write involves a binary record containing
+a known number of bytes.  
+In binary special mode, exactly the number of bytes
+required for the i/o statement are transmitted.  
+This is essentially a raw
+i/o interface to the system.
+.sp 1
+.sp 1
+.sp 1
+Notes:
+.in 10
+.sp 1
+.ti 8
+1. Ascii and binary i/o may be mixed on the same file.
+.sp 1
+.ti 8
+2. Input and output may not be mixed on a file without an intervening
+endfile or rewind.
+.sp 1
+.ti 8
+3. It is possible to open an output file in append mode. 
+See the description of the status bits.
+.sp 1
+.ti 8
+4. Backspaces are permitted only on channels open 
+in normal (ascii/binary ) mode.  The type of
+backspace (ascii/binary) is determined 
+by the type of the last i/o operation on that file.
+.sp 1
+.ti 8
+5. One cannot backspace past the beginning of a file.
+.sp 1
+.ti 8
+6. There is a flush bit 
+which may be set on output files, causing the
+buffer to be purged at the end of every i/o operation.  
+This bit is
+initially set on all channels connected to character devices (terminals,
+for example), and reset on all other channels.
+If this bit is not set, output is buffered into 512 byte blocks.
+.sp 1
+.in 0
+.sp 1
+.sp 1
+iii. Random i/o
+.PP
+There are two major changes from the rt-11 definition of random-access file i/o.
+Under UNIX the recordsize parameter in the \fIdefine file\fR
+statement specifies the
+size of the record in \fIbytes\fR, not words.
+Also, the maximum 
+number of records parameter in the define file statement is ignored,
+since it 
+is unnecessary. Reading a random-access file
+past the last record results in an \fIend\fR condition.  Record sizes
+that are multiples of 512 bytes are most efficient.
+.PP
+Normally, when a random-access file is to be opened,
+a check is made to see if the
+file already exists. If it does, the existing file is used.
+A bit may be set in the status word of a random-access
+file forcing
+creation of a new file on open.
+.PP
+A bit may also be set in the stats word specifying that the file is
+read-only.
+Otherwise, the file is assumed to be read/write, and write permission
+is needed on the file for the open to succeed.
+.sp 1
+.sp 1
+.sp 1
+.sp 1
+Notes on all file i/o:
+.in 10
+.ti 8
+.sp 1
+1. There is a UNIX limitation on the number of files that may be simultaneously open.
+A file is opened upon execution of the first i/o request to that file,
+or on calling the
+system subroutine \fIopens\fR.
+A file is closed either by a \fIrewind\fR or \fIendfile\fR
+statement.
+The rewind statement neither resets the status word
+nor file name for the channel; the
+endfile resets both of these.
+.ti 8
+.sp 1
+2. There is a status bit to delete a file on endfile'ing it.  
+This is useful for scratch files.
+All files are endfile'ed by normal program termination,  or  by
+fatal fortran error conditions.
+Files are not endfile'ed on program termination by 
+non-fortran fatal errors (hangup,
+interrupt, quit, etc.)
+In these cases the last block of a sequential output file
+may not have been written, and the most recently modified block of a random-access
+file may not be correct.
+.in 0
+.sp 1
+.sp 1
+8. System i/o subroutines
+.sp 1
+.PP
+There are a number of fortran callable subroutines to facilitate the i/o interface.
+Many of them deal with the status word of a file,  which is detailed below:
+.ne 46
+.na
+.sp 1
+.X1
+\fIBit\fR
+.X2
+\fIName\fR
+.X3
+\fIMeaning\fR
+.sp 1
+.X1
+15
+.X2
+input
+.X3
+sequential -
+.SI
+.XI
+set: file is input
+.XI
+reset: file is output
+.UI
+random files -
+.SI
+.XI
+set: file is read-only
+.XI
+reset: file is read-write
+.UI
+.sp 1
+.X1
+14
+.X2
+random
+.X3
+all -
+.SI
+.XI
+set: file is random access
+.XI
+reset: file sequential access
+.UI
+.sp 1
+.X1
+13
+.X2
+create
+.X3
+random -
+.SI
+.XI
+set: force creation of file
+.XI
+reset: open existing file,
+if possible
+.UI
+.sp 1
+.X1
+12
+.X2
+append
+.X3
+sequential -
+.SI
+.XI
+set: if files exists on output,
+append to it.
+.XI
+reset: create output file
+.UI
+.sp 1
+.X1
+11
+.X2
+carctl
+.X3
+sequential ascii -
+.SI
+.XI
+set: first byte of record is
+carriage control
+.XI
+reset: terminate record with
+new-line
+.UI
+.sp 1
+.X1
+10
+.X2
+ascspc
+.X3
+.SI
+.XI
+set: ascii special mode
+.XI
+reset: ascii normal mode
+.UI
+.sp 1
+.X1
+9
+.X2
+binspc
+.X3
+sequential -
+.SI
+.XI
+set: binary special mode
+.XI
+reset: binary normal mode
+.UI
+.sp 1
+.X1
+8
+.X2
+lstbin
+.X3
+sequential -
+.SI
+.XI
+set: last i/o access binary
+.XI
+reset: last i/o access ascii
+.UI
+.sp 1
+.X1
+7
+.X2
+flush
+.X3
+sequential -
+.SI
+.XI
+set: purge buffer after every output operation
+.XI
+reset: buffer output to 512 bytes
+.UI
+.sp 1
+.X1
+6
+.X2
+delete
+.X3
+all -
+.SI
+.XI
+set: delete file on endfile
+.UI
+.sp
+.X1
+5
+.X2
+open
+.X3
+all -
+.SI
+.XI
+set: file is open
+.UI
+.sp 1
+.X1
+4
+.X2
+rgood
+.X3
+sequential -
+.SI
+.XI
+backspace is possible on file
+.UI
+.sp 1
+.sp 1
+.in 0
+.ad
+.PP
+\fIlstbin, rgood, random\fR, and \fIopen\fR are read-only on
+mode changes.
+\fIRandom\fR is set by define file,  and reset by endfile.
+\fIInput\fR may be set by the user explicitly,  or by the
+first sequential i/o operation being a read operation.
+\fIAppend\fR and \fIcreate\fR may not be changed while the file
+is open.
+.sp 1
+.sp 4
+.ta 5 15
+i.	call opens(n,f)
+.br
+	integer n,f
+.PP
+\fIOpens\fR forces an open on fortran channel number n.  This
+is necessary to allow calls to \fIsettty\fR and \fIgettty\fR on that
+channel. \fBf\fR is a flag,  and should be non-zero if the file
+is to be opened for output.
+.sp 1
+.sp 1
+ii.	call setfil(n,h [ ,m] )
+.br
+	integer n,m
+.br
+	logical*1 h(.)
+.PP
+\fISetfil\fR allows any unix filename to be associated with a 
+fortran unit number. 
+the channel must not be open.
+\fBm\fR, if
+present, is used as the status word for the channel.
+\fBh\fR
+must be a null-terminated string of characters comprising
+the filename. It should be noted that the compiler automatically
+null-terminates any text enclosed in single
+quotes as a subroutine argument.
+.sp 1
+example:	call setfil(2,'../turner/somefile')
+.sp 1
+.sp 1
+iii.	call argfil(n, k [,m] )
+.br
+	integer n,k,m
+.PP
+\fIArgfil\fR is like \fIsetfil\fR except that the k'th argument to
+the main program is used as the file name.  Remember
+that the 1\fIst\fR argument,  by convention,  is the name of
+the program being run.  Therefore,  \fBk\fR should almost
+always be >_ 2.
+.sp 1
+.sp 1
+.sp 1
+iv.	call setmod(n,m)
+.br
+	integer n,m
+.PP
+\fISetmod\fR sets the status word of channel \fBn\fR to \fBm\fR.
+.sp 1
+.sp 1
+v.	call gettty(n,i)
+.br
+	call settty(n,i)
+.br
+	integer n,i(4)
+.PP
+\fIGettty\fR places the three words from a UNIX \fIgtty\fR request on
+channel \fBn\fR in \fBi\fR(1),\fBi\fR(2), and \fBi\fR(3). \fBi\fR(4) is set to the 
+fortran status word of channel \fBn\fR.
+.PP
+\fISettty\fR takes the three words necessary for a UNIX \fIstty\fR
+request on channel \fBn \fRfrom \fBi\fR(1), \fBi\fR(2), and \fBi\fR(3).  The
+fortran status for channel \fBn\fR is taken from  \fBi\fR(4).
+.PP
+It is the user's responsibility to ensure that it is
+meaningful to do a gtty/stty request on the given
+channel.
+.sp 4
+9. Arguments to the main program
+.sp 1
+i.	n = iargc(x)
+.PP
+\fIIargc\fR(dummy) returns the number of arguments to the main 
+program.
+.sp 1
+.sp 1
+ii.	call getarg(n,a,m)
+.br
+	integer n,m
+.br
+	logical*1 a(m)
+.PP
+\fIGetarg\fR places the \fBn\fR'th argument to the main program
+into the \fBm\fR-byte array \fBa\fR, null-padded and justified from
+\fBa\fR(1).
+.PP
+The first argument is traditionally the name by which the
+program was invoked.
+.sp 1
+.sp 1
+.sp 1
+10. Random number generators
+.PP
+The random number generator can be called as a
+subroutine \fIrandu\fR,  or an intrinsic function,  \fIran\fR.
+.PP
+The subroutine call is as follows:
+.sp 1
+	call randu(i1,i2,x)
+.PP
+where \fBi1,i2\fR are previously defined integer variables and
+\fBx\fR is the real number returned in the interval (0,1).
+\fBI1\fR and \fBi2\fR should initially be set to 0.   The functional
+call is:
+.sp 1
+	x = ran(i1,i2)
+.sp 1
+.sp 1
+11. Exiting to the system
+.PP
+i.	call exit
+.PP
+call exit is equivalent to \fIstop\fR.
+.sp 1
+.sp 1
+12. Bit operations
+.sp 1
+i.	i1 = ibic(i2,i3)
+.sp 1
+		i1 = ~i2 & i3
+.sp 1
+ii.	i1 = iand(i2,i3)
+.sp 1
+		i1 = i2 & i3
+.sp 1
+iii.	i1 = ior(i2,i3)
+.sp 1
+		i1 = i2 | i3
+.sp 1
+iv.	i1 = ixor(i2,i3)
+.sp 1
+		i1 = i2 ^ i3 (exclusive or)
+.sp 1
+v.	i1 = inot(i2)
+.sp 1
+		i1 = ~i2
+.sp 1
+.PP
+All of the above operate on integers as 16 bit
+logical quantities.
+.sp 1
+.sp 1
+.PP
+vi.	call bool(s1,s2,dest,b,n)
+.sp 1
+.PP
+\fBs1\fR, \fBs2\fR, and \fBdest\fR are arrays of
+\fBn\fR bytes.
+\fBB\fR is a bit pattern
+which describes how the destination bit is to be formed from the
+corresponding source bits.
+Let \fBb\fR be the binary
+integer \fIwxyz\fR.  Then we have:
+.sp 1
+.ta 5 10 15 20
+	\fBs1	s2	dest\fR
+.br
+	0	0	\fIw\fR
+.br
+	0	1	\fIx\fR
+.br
+	1	0	\fIy\fR
+.br
+	1	1	\fIz\fR
+.sp 1
+.PP
+example:
+.br
+	call bool(r1,r2,r1,"1,100)
+.br
+\fIand\fR's the 100 bytes in
+r1 with those in r2,  leaving the result in r1.
+.sp 3
+13. Catching errors
+.sp 1
+i.	call seterr(ierrno,icount)
+.PP
+\fISeterr\fR determines the action to be taken when error
+\fBierrno\fR occurs according to \fBicount\fR:
+.sp 1
+.ta 10 20
+.br
+	\fBicount	action\fR
+.br
+	0	ignore the error
+.br
+	-1	ignore the error but log it
+.br
+	1	error is fatal
+.in 20
+.ti 10
+\fIn\fR	The first \fIn-1\fR occurances of the error are
+noted. The \fIn\fR'th is fatal.
+.in 0
+.sp 1
+.sp 1
+14. Dynamic array facility
+.PP
+Array storage allocated at compile time in fortran programs
+is static,  frequently causing wasted space.  A facility to
+dynamically obtain storage space at run-time has been added to
+the UNIX fortran system,  and is interfaced through the
+following four subroutines:
+.sp 1
+.ta 10 20
+.sp 1
+i.	i = icore(n)
+.PP
+\fBn\fR is the number of bytes of dynamic storage required.
+\fBi\fR is an integer, which is assigned a pointer to the
+dynamically acquired storage region containing \fBn\fR bytes.
+The region always starts on a word boundary.
+.PP
+If \fBn\fR bytes of storage are not available,  the program terminates with
+the fatal error message \fBOUT OF CORE\fR.
+.sp 1
+.sp 1
+ii.	call free(i)
+.PP
+\fBi\fR is an integer previously returned by icore.  The block of storage
+to which \fBi\fR points is de-allocated.  It is disastrous to free a block not returned
+by icore.
+.sp 1
+.sp 1
+iii.	j = iaddr(z)
+.PP
+\fBz\fR is a variable or array of any type. \fIiaddr\fR returns the
+address of \fBz\fR.
+.sp 1
+.sp 1
+iv.	call dcall(s,kw,a0,...,an)
+.PP
+\fBs\fR is an externally declared name.
+\fBkw\fR is a key integer,  with bits \fIb0,...,b14\fR associated with
+arguments \fBa0,...,a14\fR.
+The subroutine \fBs\fR is called with arguments \fBa0\fR,...,\fBan\fR. However, if
+bit \fIbi\fR is set, the \fIvalue\fR of argument \fBai\fR is passed as an address
+to the subroutine. Thus it is possible to directly
+address dynamically
+gotten core in a fortran subroutine.
+.sp 1
+example:
+.sp 1
+.in 8
+.na
+.nf
+external sub1
+	...
+call dcall(sub1,1,icore(4*i*j*k),i,j,k)
+	...
+end
+.sp 1
+subroutine sub1(a,i,j,k)
+dimension a(i,j,k)
+	...
+end
+.sp 1
+.in 0
+.ad
+.fi
+.PP
+Storage allocation is done using a best-fit algorithm,  with the
+coalescing of adjacent blocks of storage,  and the release of free storage
+lying at the end of the array-allocation region.
+.PP
+The dynamic array allocator interacts with the i/o
+system, and is therefore subject to the same "recursive i/o"
+restrictions.
+.sp 3
+15. System library
+.PP
+A fortran interface to the UNIX system similar to that available in
+C may be found in \fI/lib/syslib\fR.
+.br
+.PP
+The following integer functions take their
+arguments in the same order and return the same results
+as the correspondingly named C routines:
+.sp
+.ta 10 20 30 40 50 60
+	ichdir	ichmod	ichown	iclose	icreat	icsw
+.br
+	idup	ifork	ifstat	igtgid	igtpid	igtuid
+.br
+	igtty	ikill	ilink	imknod	imount	inice
+.br
+	iopen	ipipe	iprofl	iptrace	iread	iseek
+.br
+	istgid	istuid	isig	istat	istty	iumount
+.br
+	iulink	iwait	iwrite	istime
+.PP
+The following subroutines perform like the C routines of the
+same name:
+.sp
+	time	times	sync	sleep	
+.PP
+The following special calls are available:
+.sp
+	call exec(name, arg, ... )
+.br
+	integer function isys(name, arg, ...)
+.PP
+\fIExec\fR executes the named program with the given arguments.
+Recall that the first argument is traditionally the program's
+name.
+\fIExec\fR only returns on an error condition.
+\fISys\fR performs a fork/exec/wait sequence on the named program
+and its arguments. Return is 0 on success; -1 on error.
+.PP
+The integer function \fIierrno\fR returns the error value which in
+C could be found in the global cell \fIerrno\fR.
+.PP
+The following routines perform 32-bit integer arithmetic.
+In the following \fIi\fR, \fIj\fR, and \fIk\fR are
+two-word integer arrays (and must declared as such, or as items taking
+the same abount of storage), and \fIn\fR is a standard integer.
+.sp
+	dpdecode(a, n, i)
+.br
+	dpencode(a, n, i)
+.br
+	dpadd(i, j, k)
+.br
+	dpsub(i, j, k)
+.br
+	dpmul(i, j, k)
+.br
+	dpdiv(i, j, k)
+.br
+	idpcmp(i, j)
+.PP
+\fIDpdecode\fR converts the ascii string \fIa\fR of \fIn\fR bytes
+into a signed 32-bit integer \fIi\fR.
+\fIDpencode\fR converts the signed 32-bit integer \fIi\fR to an
+ascii string in \fIa\fR; the resulting number of bytes is returned
+in \fIn\fR.
+\fIDpadd\fR, \fIdpsub\fR, \fIdpmul\fR, and \fIdpdiv\fR perform the
+arithmetic operations suggested by their name on their first two
+arguments, and leave the result in the third.
+\fIIdpcmp\fR compares its arguments, and returns 0 if they are equal,
+1 if the first is greater than the second, and -1 if the second is greater
+than the first.
+.PP
+All of these routines will produce the fortran error \fIInteger Overflow\fR
+if the limit of 32-bit significance is exceeded. \fIDpdiv\fR can also cause
+a zero divide error.
+.sp 3
+16. Documented irritants
+.sp 1
+.PP
+The parameters of a \fIdo\fR may be expressions, but only
+if the expressions are integer valued.  No error message is
+given for non-integer valued expressions, but erroneous
+results will occur at run-time.
+.PP
+Variables of type \fIinteger*4\fR are allocated 32 bits of
+storage, but computation is only accurate to 16 bits.
+.PP
+The optimizer contains known and intractible bugs.
+.bp
+17. Error messages
+.sp 1
+.de ER
+.ta 10 24
+.in 0
+.sp 1
+\\$1	\\$2	\\$3
+.in 20
+..
+.ER \fBNumber\fR \fBType\fR \fBMessage\fR
+.ER 1 fatal "INTEGER OVERFLOW"
+During an arithmetic operation an integer's value exceeded 32767 in magnitude.
+.ER 2 fatal "INTEGER DIVIDE BY ZERO"
+During an integer mode arithmetic operation an attempt was made to divide by zero.
+.ER 3 fatal "COMPILER GENERATED ERROR"
+A statement was executed in which the fortran compiler had reported an error.
+.ER 4 warn "COMPUTED GOTO OUT OF RANGE"
+The integer variable or expression in a computed goto was less than 1 or greater than
+the number of statement labels in the goto list.  Control passes to the next statement.
+.ER 5 fatal "INPUT CONVERSION ERROR"
+During a formatted input conversion an illegal character was detected in an input field.
+The value of the field is set to zero.
+If an \fIerr\fR label has been specified, transfer will be made to it.
+.ER 6 ignore "OUTPUT CONVERSION ERROR"
+During an output operation the value of a number could not be placed in the field of specified
+width without a loss of precision.  The field is filled with *'s.
+If an \fIerr\fR label has been specified, transfer will be made to it.
+.ER 7 fatal "FLOATING OVERFLOW"
+During an arithmetic operation the value of a real number  exceeded the
+largest value that can be represented.  The number is set to zero.
+.ER 8 ignore "FLOATING UNDERFLOW"
+During an arithmetic operation a real number became smaller than the smallest
+representable real number,   and is set to zero.
+.ER 9 fatal "FLOATING ZERO DIVIDE"
+During an arithmetic operation an attempt was made to divide by zero.  The result is set
+to zero.
+.ER 10 count3 "SQRT OF NEGATIVE NUMBER"
+An attempt was made to take the square root of a negative number.
+The square root of the magnitude is returned.
+.ER 11 fatal "UNDEFINED EXPONENTIAL"
+An attempt was made to perform an illegal exponentiation operator.
+.ER 12 fatal "DOMAIN ERROR ON LOG"
+An attempt was made to take the logarithm of a negative number.
+Zero is returned.
+.ER 13 fatal "WRONG NUMBER OF ARGS"
+A system subroutine was called with the wrong number of arguments.
+.ER 14 fatal "READ AFTER WRITE"
+A read access followed a write on a sequential file without an intervening rewind or endfile.
+.ER 15 fatal "WRITE AFTER READ"
+A write access followed a read on a sequential file without an intervening rewind or endfile
+.ER 16 fatal "SEQUENTIAL ACCESS TO RANDOM FILE"
+A random access file was accessed in a sequential manner
+.ER 17 fatal "RECURSIVE I/O"
+An expression in the i/o list of a read or write statement has caused the initiation 
+of another read or write operation.
+.ER 18 fatal "BAD CHANNEL NUMBER"
+A i/o operation was attempted with a channel not in the range of 1 to 99.
+.ER 19 fatal "OUT OF CORE"
+The system has exhausted the core available for buffers and so forth.
+.ER 20 fatal "BAD OPEN"
+A fortran file could not be opened;  either the file did not exist,  or some necessary
+permissions were lacking,  or a random file could not support seeks.
+.ER 21 fatal "REWIND TO RANDOM FILE"
+An attempt was made to rewind a random access file.
+.ER 22 fatal "UNFORMATTED READ OVERFLOWS RECORD"
+During normal mode binary input,  more bytes were requested than were present
+in the input record.
+.ER 23 fatal "I/O ERROR"
+During an i/o operation an error occured which could have been caught with
+an
+\fIerr=\fR label.
+.ER 24 fatal "EOF ON I/O"
+During an i/o operation,  the end of a file was reached,  and no \fIend=\fR was active.
+.ER 25 fatal "SETFIL ON OPEN FILE"
+An attempt was made to call setfil with a channel number that was already open.
+.ER 26 fatal "CANNOT BACKSPACE FILE"
+An attempt was made to backspace a file which could not be backspaced.
+.ER 27 fatal "NO DEFINE FILE"
+Random access i/o was attempted on a file for which there was no previous define file.
+.ER 28 fatal "WRITE TO READ-ONLY FILE"
+An attempt was made to write to a read-only random access file
+.ER 29 fatal "RANDOM RECORD SIZE EXCEEDED"
+The number of bytes in a random read or write exceeded the record size of the random file.
+.ER 30 fatal "DEFINE FILE ON OPEN FILE"
+A define file was attempted on an already open fortran channel number.
+.ER 31 fatal "LINE TOO BIG"
+A formatted ascii input line overflowed the line buffer.
+.ER 32 fatal "MORE THAN 1 RECORD IN ENCODE/DECODE"
+Encode and Decode will only operate on single records.
+.ER 33 fatal "INFINITE FORMAT LOOP"
+The format associated with an i/o statement that includes an i/o list has no field 
+descriptors to use in transferring those variables.
+.ER 34 fatal "FORMAT CONVERSION ERROR"
+An attempt was made to output a real variable with an integer field descriptor or an
+integer variable with a real field descriptor.
+.ER 37 fatal "CANNOT PAUSE"
+The fortran program was not able to fork;  all process slots are probably temporarily
+exhausted.
+.ER 38 fatal "ILLEGAL INSTRUCTION"
+An illegal instruction interrupt has occured.
+This can happen when the
+wrong floating point library is used.
+.ER 39 fatal "BUS ERROR"
+A bus error interrupt has occured.  Alignment problems with equivalenced logical*1
+variables can cause this.
+.ER 40 fatal "NOT OPEN ON GET/SET TTY"
+Gettty/settty require that the fortran channel be open.
+.ER 41 fatal "BAD OBJECT TIME FORMAT"
+A syntax error was discovered in an object time format
+.ER 42 fatal "SEGMENTATION VIOLATION"
+A UNIX segmentation violation was discovered. A probable
+cause is an array reference out-of-bounds.
+.in 0
+.PP
+Core may be saved at run-time by not including the text of the error messages.
+This may be done by including the module "$short" from the fortran library when linking;
+e.g.,
+.ti 8
+link main "-i:$short" -f4
+.sp 1

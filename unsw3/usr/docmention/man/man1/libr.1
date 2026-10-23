@@ -1,0 +1,113 @@
+.th LIBR I 12/17/75
+.sh NAME
+libr \*- fortran librarian
+.sh SYNOPSIS
+.bd libr
+libfile -k1 n11 n12 ...
+n1k ...
+-kn ...
+.sh DESCRIPTION
+.it Libr
+is a program to build and maintain libraries of object modules
+to be used with
+.it link
+(I).
+.s3
+An object module in a library is included in the out file
+iff it satisfies an undefined reference at the time it is encountered
+(With some
+exceptions for -i: and -e: ). Therefore, the order of modules in a library is
+important.
+.s3
+All commands except append (-a ) require that the file designated "libfile"
+already exit.
+The append command will create the library file if it does
+not exist.
+The action of
+.it libr
+is governed by the keys, which are
+interpreted in left-to-right order.
+The entire command line is checked for
+correctness, and then executed.
+.s3
+In a library, all modules are identified by their module name.
+Assembly language programs get their module name from a ".title" directive.
+In fortran subprograms the module name is the name of the subroutine declared
+in it.
+.s3
+There are no default extensions.
+.s3
+The keys are:
+.s3
+.ft I
+.lp +9 8
+key	meaning
+.ft R
+.s3
+.lp +9 8
+-l	List the contents of the library as it will appear at the completion
+of the
+.it libr
+command
+.s3
+.lp +9 8
+-g mod syms
+.br
+As noted above,
+a module is included into an outfile from a library only if
+it "declares" a yet-undefined global symbol.
+Initially, a module declares
+all those global symbols which are assigned values within it.
+The -g command allows one to eliminate declarations from a module.
+.s3
+.lp +9 8
+-d mods	Delete the named modules from the library
+.s3
+.lp +9 8
+-i mod files
+.br
+Place the modules in the named files into the library before the
+given module.
+.s3
+.lp +9 8
+-r files
+.br
+Replace the modules in the library with those in the files having the
+same module name.
+.s3
+.lp +9 8
+-a files
+.br
+Append the modules in the named files to the library.
+Create the library if it does
+not exist.
+.s3
+.lp +9 8
+-c	Generate a cross-reference
+.i0
+.dt
+.s3
+.ul
+Example:
+.s3
+A fortran user wants to create a library of six graphics
+subroutines in the object files graph1.obj ...
+graph6.obj.
+First, a library is created:
+.s3
+		libr graphlib -a graph1.obj ...
+graph6.obj
+.s3
+If, later, it is necessary to replace one of the subroutines, say #4,
+this can be done as:
+.s3
+		libr graphlib -r graph4.obj
+.s3
+.sh FILES
+.nf
+.if t .ta 1.2i
+.if n .ta 14
+libr1.tmp	scratch file
+.fi
+.dt
+.sh BUGS

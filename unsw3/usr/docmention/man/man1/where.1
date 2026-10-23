@@ -1,0 +1,31 @@
+.th WHERE I 5/05/76
+.sh NAME
+where \*- where in the manual can I find this
+.sh SYNOPSIS
+.bd where
+pattern
+.sh DESCRIPTION
+.it Where
+searches the tables of contents with the pattern
+given, and prints any
+lines in which that pattern is found.
+This allows a documentation
+enquiry without previous knowledge of the exact name, or
+section of a command.
+The pattern is a
+.it grep
+pattern, which in turn derives from
+.it ed
+patterns.
+See
+.it ed
+(I)
+for a description of that.
+This command is currently implemented as a shell file.
+.sh FILES
+/sys/man/man/man0/tocx1 through tocx9: the tables of contents
+.sh "SEE ALSO"
+grep(I)
+.sh AUTHOR
+Martin Tuori
+.sh BUGS

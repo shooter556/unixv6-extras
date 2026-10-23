@@ -1,0 +1,42 @@
+.th talloc I August/75
+.sh NAME
+talloc \*- manage ownership of mag tapes
+.sh SYNOPSIS
+talloc [option] [tapename]
+.sh DESCRIPTION
+This program maintains a file of free and allocated mag tapes.
+If you need a mag tape, you may use this program to give you the name
+of an available tape.  The program will record the fact that you own the
+tape.  The various forms of the command follow:
+.sp
+talloc -- Will print the name of a free tape, if one is available, and will
+prompt you for a comment on the use of the tape.
+.sp
+talloc tapename -- Will allocate the requested tapename to you if no one else
+owns it.  If you already own it, it will prompt you for a change in the
+comment associated with the tape.
+.sp
+talloc -f tapename -- Will free "tapename" for whoever wants it.
+.sp
+talloc -p[u] -- Will print the tape file sorted by tapename, unless the "u"
+is appended, in which case the sorting is by username.
+.sp 2
+This program enforces only one access at a time to the tape file, so
+you may be told to try again later.  The program runs as user "bin", which user
+also owns the tape file.
+If you are logged on as the root, you are allowed to allocate and free
+anyones tapes, so be careful.
+.sh FILES
+/usr/adm/tfile - The file of tapes
+.br
+/usr/adm/tfilelck - The file used to enforce single access at a time
+.br
+/usr/adm/newtfile - Temporarily created to hold the updated tfile
+.sh AUTHOR
+Mike Tilson
+.sh DIAGNOSTICS
+Numerous
+.sh BUGS
+It needs to have the entire tape file in core, which will cause trouble
+if we ever get a whole lot of tapes someday.  (It should handle
+50 or 60 just fine now.)

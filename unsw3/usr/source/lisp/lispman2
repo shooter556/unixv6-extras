@@ -1,0 +1,1366 @@
+.na
+.ll 100
+function________ apply(fn, args, binding);
+	local_____ rval, current binding;
+
+	current binding := fix bind(binding);
+
+	select______ type(fn) of__
+
+	(symb):
+	(expr):
+		rval := apply(value(fn), args, current bind);
+		break_____;
+
+	(subr):
+		rval := call(value(fn), args);
+		break_____;
+
+	(lexpr):	
+		rval := apply(value(fn), ncons(args), current bind);
+		break_____;
+
+	(lsubr):
+		rval := call(value(fn), ncons(args));
+		break_____;
+
+	(list):	
+		if__ car(fn) = 'label' then____
+			bind(ncons(cadr(fn)), cddr(fn));
+			rval := apply(caddr(fn), args, current bind);
+			unbind();
+			break_____;
+		endif_____;
+
+		if__ car(fn) = 'lambda' then____
+			bind(cadr(fn), args);
+			rval := eval(caddr(fn), args, current bind);
+			unbind();
+			break_____;
+		endif_____;
+
+		if__ car(fn) = 'funarg' then____
+			rval := apply(cadr(fn), args, cddr(fn));
+			break;
+		endif_____;
+
+		rval := apply(eval(fn, current bind), args,
+			current bind);
+		break;
+
+	default_______:
+		error(ERROR IN APPLY);
+
+	end___ select______;
+
+	un fix bind(binding);
+
+	return______ rval;
+
+end___ function________;
+
+.bp
+function________ eval(form, binding);
+	local_____ fn, args, rval;
+
+	current bind := fix bind(binding);
+
+	if__ atom(form) then____
+		rval := value(form);
+		un fix bind(binding);
+		return______ rval;
+	endif_____;
+
+	if__ car(form) = 'funarg' then____
+		rval := eval(cadr(form), cddr(form));
+		un fix bind(binding);
+		return______ rval;
+	endif_____;
+
+	fn := value(car(form));
+	args := cdr(form);
+
+	select______ type(fn) of__
+
+	(list):
+	(expr):
+	(symb):
+		rval := apply(fn, evlis(args), current bind);
+		break_____;
+
+	(int):
+	(real):
+	(string):
+		error(ERROR IN EVAL);
+		break_____;
+
+	(subr):
+		rval := call(fn, evlis(args));
+		break;_____
+
+	(fexpr):
+		rval := apply(fn, args, current bind);
+		break_____;
+
+	(fsubr):
+		rval := call(fn, args);
+		break_____;
+
+	(lexpr):
+		rval := apply(fn, ncons(evlis(args)),
+				current bind);
+		break;_____
+
+	(lsubr):
+		rval := call(fn,ncons(evlis(args)));
+		break_____;
+
+	(nexpr):
+		rval := apply(fn, ncons(args), current bind);
+		break_____;
+
+	(nsubr):
+		rval := call(fn, ncons(args));
+		break_____;
+
+	(sexpr):
+		rval := apply(fn, list(args, current bind),
+			current bind);
+		break_____;
+
+	(ssubr):
+		rval := call(fn, list(args, current bind));
+		break_____;
+
+	(macro):
+		rval := eval(apply(fn, ncons(form), current bind),
+				current bind);
+
+
+	end___ select______;
+
+	un fix bind(binding);
+
+	return______ rval;
+
+end___ function________;
+.ll
+.ad
+.bp
+e. Functions associated with eval____ and apply_____
+
+.de C0
+.mk
+.in 0
+..
+.de C1
+.in 30
+.rt
+..
+.de C2
+.in 40
+.rt
+..
+
+.C0
+(*apply fn args)
+.C1
+subr
+.C2
+applies the argument fn__ to the list of args args____ in
+the current context.
+
+
+.C0
+(*eval form)
+.C1
+subr
+.C2
+evaluates the form____ in the current context.
+
+
+.C0
+(*function fn)
+.C1
+fsubr
+.C2
+returns (funarg______ fn . current context)
+
+
+.C0
+(apply fn args)
+.C0
+(apply fn args c)
+.C1
+lsubr
+.C2
+applies the function fn__ to the list of args____.
+If the third argument is omittted,  the current context is used.
+Otherwise, context c_ is used.  When this is not needed, *apply______ is preferred.
+
+.C0
+(eval form)
+.C0
+(eval form c)
+.C1
+lsubr
+.C2
+the form____ is evaluated. If the third argument is omitted,
+this is done in the current context. Otherwise, it is done in
+context c_. Again, if this is not needed, *eval_____ is preferred.
+
+
+.C0
+(evlis list)
+.C1
+subr
+.C2
+returns (mapcar (function eval) list)
+
+.C0
+(expr list)
+.C1
+subr
+.C2
+returns [expr list____]
+
+
+.C0
+(fexpr list)
+.C1
+subr
+.C2
+returns [fexpr list____].
+
+
+.C0
+(fsubr n m)
+.C1
+subr
+.C2
+returns [fsubr n_ m_].
+
+
+.C0
+(function fn)
+.C1
+fsubr
+.C2
+equivalent to (quote fn__).
+
+
+.bp
+.C0
+(initfn fn)
+.C1
+subr
+.C2
+sets the initialization function to fn__.
+The old initialization function is returned. 
+The lisp system is defined as repeated
+evaluation of (ifn), where ifn is the initialization
+function. The quit____ signal restores the
+original initialization function, which is
+equivalent to (print (eval (read))).
+
+
+.C0
+(label ...
+.C1
+pseudo
+.C2
+see (a)
+
+
+.C0
+(lambda ...
+.C1
+pseudo
+.C2
+see (a)
+
+
+.C0
+(lexpr L)
+.C1
+subr
+.C2
+returns [lexpr L_].
+
+
+.C0
+(lsubr n)
+.C1
+subr
+.C2
+returns [lsubr n_].
+
+
+.C0
+(macro L)
+.C1
+subr
+.C2
+returns [macro L_].
+
+
+.C0
+(nexpr L)
+.C1
+subr
+.C2
+returns [nexpr L_].
+
+
+.C0
+(nsubr n)
+.C1
+subr
+.C2
+returns [nsubr n_].
+
+
+.C0
+(set L1 L2)
+.C1
+subr
+.C2
+L1__ must evaluate to a symbolic atom. L2__ is made its value.
+L2__ is also returned.
+It is streng verboten to assign any value to nil___. It is also
+futile to assign any value to oblist______ (This variable contains the
+current value of the system's oblist)
+
+
+.C0
+(setq L1 L2)
+.C1
+fsubr
+.C2
+returns, with side effects, (set L1__ (eval L2__))
+
+
+.bp
+.C0
+(sexpr L)
+.C1
+subr
+.C2
+returns [sexpr L_].
+
+
+.C0
+(ssubr n)
+.C1
+subr
+.C2
+returns [ssubr n_].
+
+
+
+.C0
+(subr n m)
+.C1
+subr
+.C2
+returns [subr n_ m_].
+
+
+.C0
+(tval L)
+.C1
+subr
+.C2
+returns  (cons (type L_) val L_))
+
+
+.C0
+(type L)
+.C1
+subr
+.C2
+returns the type of L_, from the following choices: {
+symb, int, real, string, expr, subr, fexpr, fsubr, nexpr, nsubr, lexpr,
+lsubr, macro, ssubr, sexpr }
+
+
+.C0
+(unset L)
+.C1
+subr
+.C2
+L_ must evaluate to a symbolic atom,  whose value
+is made undefined. nil___ is returned.
+
+
+.C0
+(val L)
+.C1
+subr
+.C2
+val___ is the id function on strings, ints, and reals.
+For functional atoms it returns the part after "[..."
+Symbolic atoms either yield their value or an error.
+
+
+.C0
+(unsetq L)
+.C1
+fsubr
+.C2
+Obviously, the quoted version of unset_____.
+
+
+.bp
+.in 0
+.tl ''Conditional Expressions''
+
+
+The form of a conditonal expression has been extended over that of
+lisp 1.5. In its most general form, it is:
+
+	(cond
+		(e1,1 e1,2 ... e1,k)
+			||
+		        \\/
+		(en,1 ...    ...   )
+	)
+
+where n >_ 0, and k >_ 1.
+
+
+The ei,1's are considered to be predicates,
+and are evaluated until one is found whose value is not nil.
+If this is ek,1,  then the corresponding ek,2 ... ek,n are evaluated.
+The value of the conditional is ek,n. If none of the ei,1's are non-nil, then
+the value of the conditional is nil. At the top level of a prog, the
+cond is somewhat special.
+
+
+The select______ conditional form from lisp 1.5 has also been implemented.
+The general form is:
+
+	(select q
+		(q1 e1)
+		  ||
+		  \\/
+		(qn en)
+		e
+	)
+
+q_ is evaluated,  and its value is compared with the evaluated values
+of the qi's until one is found which is equal_____.  The value of the selct is then the
+value of the corresponding ei.  If no equality is found, the value of the
+select is e_.
+
+.bp
+.tl ''Predicates''
+
+
+Predicates are functions that return a value from the set
+.br
+
+.ce
+{t_, nil___}
+
+denoting truth or falsity, respectively.
+
+The following are the basic lisp-11 predicates:
+
+.C0
+(*gt a1 a2)
+.br
+(*ge a1 a2)
+.br
+(*eq a1 a2)
+.br
+(*le a1 a2)
+.br
+(*lt a1 a2)
+.br
+(*ne a1 a2)
+.C1
+subrs
+.C2
+t_ is returned if a1 bears the indicated relation to a2.
+These predicates are defined iff a1 and a2 are both numeric, or
+both strings. For strings, the ascii collating sequence is used, and trailing
+blanks are significant. 
+
+.in 0
+examples:
+	(*eq 0.0 0)		yields t_.
+	(*eq "cat" "dog")	yields nil___.
+	(*eq "cat" 0)		is erroneous.
+
+
+.C0
+(eq. a1 ... an)
+.br
+(ge. a1 ... an)
+.br
+(gt. a1 ... an)
+.br
+(ne. a1 ... an)
+.br
+(lt. a1 ... an)
+.br
+(le. a1 ... an)
+.C1
+lsubrs
+.C2
+n_ must be >_ 1.
+If n_ = 1, comparison is with 0 for numeric values, and
+the null string for string values. If n > 1, these are equivalent to
+(and (relx a1 a2) (relx ..) ... (relx an-1 an)),
+where relx____ is the obvious relation.
+
+.in 0
+examples:
+	(gt. 5 4 3 2)		yields t_
+	(gt. 5 6 "dog")		yields nil___
+	(gt. -1)		yields nil___
+
+
+.C0
+(and c1 ... cn)
+.C1
+nsubr
+.C2
+The ci's are evaluated until one is found with the value nil.___
+Then nil is returned as the value of the predicate.  The remaining
+ci's are not evaluated. If none of the ci's evaluate to nil, then
+the value of the predicate is t_.
+.in 0
+
+example:
+	(and)			yields t_
+
+
+.C0
+(atom s)
+.C1
+subr
+.C2
+is true if s is atomic.
+
+
+.C0
+(eq n m)
+.C1
+subr
+.C2
+is true if n and m have the same address. 
+This will be true of interned symbolic atoms with the same print name.
+Otherwise, it is usually false.
+
+
+.C0
+(equal n m)
+.C1
+subr
+.C2
+is true if they would have the same external representation.
+(Except for non-interned symbolic atoms with the same print name -
+these are not___ equal.)
+
+
+.in 0
+examples:
+	(eq 0 0)		yields nil___
+	(eq 'a 'a)		yields t
+	(equal 0 0)		yields t
+
+
+.C0
+(fixp n)
+.C1
+subr
+.C2
+is true if n is of type int___.
+
+
+.C0
+(floatp n)
+.C1
+subr
+.C2
+is true if n is of type float
+
+
+.C0
+(member L1 l2)
+.C1
+subr
+.C2
+is true if L1 is equal_____ to a top level element of the list L2.
+It is equivalent to:
+.br
+(lambda (L1 L2)
+(cond ((atom L2) nil) ((equal L1 (car L2)) t) (t (memeber L1 (cdr L2))))
+(member L1 (cdr L2))))
+
+
+
+.C0
+(memeq L1 l2)
+.C1
+subr
+.C2
+is like member______, but using the predicate eq__ rather than equal_____.
+
+
+.C0
+(or c1 ... cn)
+.C1
+nsubr
+.C2
+The ci's are evaluated until one is found whose value is non-nil.
+Then t is returned as the value of the predicate.  The remaining ci's are not
+evaluated.  If all of the ci's evaluate to nil,  then the value
+of the predicate is nil.
+
+
+.in 0
+example:
+	(or)			yields nil
+
+
+.C0
+(null s)
+.C1
+subr
+.C2
+is true if s is nil.
+
+
+.C0
+(not s)
+.C1
+subr
+.C2
+is true if s is nil.
+
+
+.C0
+(numberp s)
+.C1
+subr
+.C2
+is true if s is of type int___ or float_____.
+
+
+.C0
+(stringp s)
+.C1
+subr
+.C2
+is true if s is of type string______.
+.bp
+.in 0
+.tl ''List Functions''
+
+
+a. S-expression building functions
+
+
+.C0
+(cons x y)
+.C1
+subr
+.C2
+returns (x . y)
+
+
+
+.C0
+(xcons x y)
+.C1
+subr
+.C2
+returns (y . x)
+
+
+.C0
+(ncons x)
+.C1
+subr
+.C2
+returns (cons x nil)
+
+
+.C0
+(list x1 ... xn)
+.C1
+lsubr
+.C2
+returns (cons x1 (cons x2 ... (cons xn nil) ... )).
+(list) yields nil.
+
+
+.C0
+(*append x y)
+.C1
+subr
+.C2
+forms a list of y appended to x, according to the following definition: 
+.br
+(de *append (x y) (cond ((null x) y)
+(t (cons (car x) (*append (cdr x) y)))))
+
+
+.C0
+(append x1 ... xn)
+.C1
+lsubr
+.C2
+returns (*append x1 (*append x2 ... (*append xn-1 xn) ... ))
+.br
+(append) yields nil.
+
+
+.C0
+(quote x)
+.C1
+fsubr
+.C2
+yields x.
+
+
+.C0
+(clist x)
+.C1
+subr
+.C2
+returns x, if x is a list, in the cd...dr'st sense.
+Otherwise, an error results.
+
+
+.C0
+(pair x y)
+.C1
+subr
+.C2
+x and y must be lists with the same length. If x = (x1 ... xn), and
+y = (y1 ... yn), then ((xn . yn) ...(x1 . y1)) is
+returned.
+
+
+.bp
+
+.in 0
+b. S-expression fragmenting functions
+
+
+.C0
+(car L)
+.C1
+subr
+.C2
+if L = (a . b), (car L) yields a_.
+
+
+.C0
+(cdr L)
+.C1
+subr
+.C2
+if L = (a . b), (cdr L) yields b_.
+
+
+.C0
+(c ..[ad].. r L)
+.C1
+pseudo
+.C2
+Any arbitrary combination of a's and d's (Including none) may
+replace the dotted area.  They are special-cased in the interpreter to yield:
+(ca...r L) = (car (c...r L)), 
+(cd...r L) = (cdr (c...r L)), and
+(cr L) = L.
+
+
+.C0
+(last L)
+.C1
+subr
+.C2
+returns the last part of a list, according to the following definition:
+.br
+(de last (L) (cond ((atom (cdr L)) L) (t (last (cdr L)))))
+
+
+.bp
+.in 0
+c. S-expression modifying functions
+
+	The following functions actually modify existing list structures rather
+than creating new ones.  They should be used with extreme care; it is possible
+to create lists that do not have a finite external form.
+
+
+
+.C0
+(rplaca s d)
+.C1
+subr
+.C2
+s_ must be a list; its car becomes the list d.
+
+
+.C0
+(rplacd s d)
+.C1
+subr
+.C2
+s_ must be a list; its cdr becomes the list d_.
+
+
+.in 0
+example:
+	(setq s '(a s))
+	(rplaca s 23)
+
+	results in the variable s_ having the value (23 s)
+
+
+.C0
+(conc x y)
+.C1
+subr
+.C2
+similar to *append_______,  but the last element in the list x is actually
+changed to a pointer to the list y.
+
+
+.C0
+(nconc x1 ... xn)
+.C1
+lsubr
+.C2
+similar to append, but with conc____ used instead of *append_______.
+
+
+.bp
+
+.in 0
+d. S-expression transforming functions
+
+
+.C0
+(length L)
+.C1
+subr
+.C2
+returns the number of top level elements of the list L_
+according to the definition:
+.br
+(de length (L) (cond ((atom L) 0)(t (add1 (length (cdr L))))))
+
+
+.C0
+(reverse L)
+.C1
+subr
+.C2
+returns the reverse of the top level of the list L.
+See (3b) for an equivalent definition.
+
+
+.C0
+(subst x y s)
+.C1
+subr
+.C2
+substitutes the s-expression x for all top-level occurences
+or the s-expression y in s, according to the following definition:
+.br
+(de subst (x y s) (cond
+((equal y s) x)
+((atom s) s)
+(t (cons
+(subst x y (car s))
+(subst x y (cdr s))
+))))
+
+
+.C0
+(copy L)
+.C1
+subr
+.C2
+returns a fresh copy of the s-expression L.  This is useful if L will
+soon be altered (with an s-expression modifying function.)
+
+
+.bp
+
+.in 0
+e. S-expression mapping functions
+
+
+.C0
+(map fn L)
+.C1
+subr
+.C2
+map applies the function fn__ to the list L_ , and successive cdr's of the list L,
+until the list is reduced to nil___. map___ always returns the value nil___.
+An equivalent definition is:
+.br
+(de map (fn L)
+(prog () L1 (cond ((null L) (return nil))) (fn L) (setq L (cdr L)) (go L1)))
+
+.in 0
+example:
+
+	(map 'print '(x y z)) 
+
+	results in:
+
+	(x y z)			printed,
+	(y z)			printed,
+	(z)			printed,
+	nil			returned.
+
+
+
+.C0
+(mapc fn L)
+.C1
+subr
+.C2
+mapc is similar to map___ except that fn__ is applied to the car of L_ at each step,
+rather than L itself.
+
+
+.C0
+(maplist fn L)
+.C1
+subr
+.C2
+maplist applies the function fn__ to the list L and successive cdr's of L until L is reduced to nil.
+The value returned is the list of values returned by the application.
+
+
+.C0
+(mapcar fn L)
+.C1
+subr
+.C2
+similar to maplist except that at each stage fn__ is applied to the car of L_.
+.bp
+.in 0
+
+f. S-expression searching functions
+
+.C0
+(assoc x L)
+.C1
+subr
+.C2
+assoc_____ searches the list of dotted pairs l_ for a pair whose
+car is eq__ to x_. If such a pair is found, it is returned as the
+value of assoc. Otherwise, nil is returned.
+An equivalent definition is:
+.br
+(de assoc (x L) (cond ((null L) nil)
+((eq x (caar L) (car L))
+(t (assoc x (cdr L)))))
+
+
+.C0
+(sassoc x L fn)
+.C1
+subr
+.C2
+sassoc______ searches the list of dotted pairs L_ for one
+whose car is eq__ to x. If such a pair is found, it
+is returned as the value of sassoc. Otherwise, the value of fn__,
+a function of no arguments, is returned.
+
+
+.bp
+
+.in 0
+g. Defining functions
+
+.C0
+(de name args body)
+.C1
+fsubr
+.C2
+de__ assigns to the atomic symbol name____ a value of type
+expr____ with body
+.br
+(list 'lambda args body)
+
+
+.in 0
+example:
+
+	(de f (x) (times x x))
+
+	results in f having the value:
+
+	[expr (lambda (x) (times x x))]
+
+
+.C0
+(df name args body)
+.C1
+fsubr
+.C2
+for fexpr_____'s
+
+
+.C0
+(dl name args body)
+.C1
+fsubr
+.C2
+for lexpr_____'s
+
+
+.C0
+(dn name args body)
+.C1
+fsubr
+.C2
+for nexpr_____'s
+
+
+.C0
+(ds name args body)
+.C1
+fsubr
+.C2
+for sexpr_____'s
+
+
+.C0
+(dm name args body)
+.C1
+fsubr
+.C2
+for macro_____'s
+
+
+.in 0
+.bp
+.tl ''Numeric Functions''
+
+	There are two types of numeric atoms in lisp-11:
+integers and floats.  In some systems floating-point computation
+has been disabled.
+
+
+	Where floating-point computation is allowed, the following
+conversion rules apply:
+
+.in 8
+i. If all operands are integers, the result is an integer.
+
+
+ii. If an integer is specified as an argument in the definition of a function,
+the entier______ of any floating number passed as that argument will be used.
+
+
+iii. In mixed expressions,  all values are converted to floating, and the
+value is floating.
+
+
+iv. Integers may be in the range -32768 to 32767.  They are stored as
+16-bit, two's complement quantities.
+
+
+v. Floats may be roughly in the range 10e-38 to 10e+38. They have about
+six digits of significance, and are stored as 32-bit quantities.
+
+
+vi. Integer overflow is ignored. Integer divide-by-zero is an error.
+
+
+vii. Floating underflow is converted to true zero.
+Floating overflow is an error.
+
+
+.in 0
+
+.bp
+.in 0
+
+a. Arithmetic functions
+
+
+.C0
+(*plus x y)
+.C1
+subr
+.C2
+returns x_ + y_.
+
+
+.C0
+(*times x y)
+.C1
+subr
+.C2
+returns x_ * y_.
+
+
+.C0
+(abs x)
+.C1
+subr
+.C2
+returns |x_|.
+
+
+.C0
+(add1 x)
+.C1
+subr
+.C2
+returns x_ + 1.
+
+
+.C0
+(difference x1 ... xn)
+.C1
+lsubr
+.C2
+returns x1__ - (plus x2__ ... xn__)
+
+
+.C0
+(divide x y)
+.C1
+subr
+.C2
+returns 
+.br
+(cons (quotient x y) (remainder x y))
+
+
+.C0
+(entier x y)
+.C1
+subr
+.C2
+returns:
+.br
+0, for x_ = 0.
+.br
+[x_], for x > 0.
+.br
+-[-x_], for x < 0.
+
+
+.C0
+(float x)
+.C1
+subr
+.C2
+returns x_ + 0.0 .
+
+
+.C0
+(min x1 ... xn)
+.C1
+lsubr
+.C2
+returns min{x1__,...,xn__}.
+
+
+.C0
+(max x1 ... xn)
+.C1
+lsubr
+.C2
+returns max{x1__,...,xn__}.
+
+
+.in 0
+note:
+.in 8
+The value of min___/max___ is the value of the minimum/maximum xi,
+regardless of the conversions necessary for comparison.  These functions
+are also defined for strings in the obvious manner.
+
+
+
+.C0
+(minus x)
+.C1
+subr
+.C2
+returns -x_.
+
+
+.C0
+(plus x1 ... xn)
+.C1
+lsubr
+.C2
+returns :
+.br
+( ... ((x1__ + x2__) + x3__) ...)
+.br
+(plus) =_ 0.
+
+
+.C0
+(quotient x1 ... xn)
+.C1
+lsubr
+.C2
+returns:
+.br
+(( .. (x1__/x2__)/x3__ ...))
+
+
+.C0
+(recip x)
+.C1
+subr
+.C2
+returns 1/x_.
+
+
+.C0
+(remainder x y)
+.C1
+subr
+.C2
+x_ and y_ are converted to integers, and their
+number theoretic remainder is returned.
+
+
+.C0
+(sign x)
+.C1
+subr
+.C2
+returns:
+.br
+0,  if x_ = 0.
+.br
+1,  if x_ > 0.
+.br
+-1, if x_ < 0.
+
+
+.C0
+(sub1 x)
+.C1
+subr
+.C2
+returns x_ - 1
+
+
+.C0
+(times x1 ... xn)
+.C1
+lsubr
+.C2
+returns:
+.br
+(...(x1__ * x2__) * x3__ ...)
+.br
+(times) =_ 1
+
+
+.bp
+.in 0
+
+b. Logical functions
+
+
+	These functions treat their arguments as 16-bit unsigned quantities.
+Floating arguments are converted by taking entier______.
+	All examples assume the radix is 8.
+
+
+.C0
+(land x1 ... xn)
+.C1
+lsubr
+.C2
+returns:
+.br
+x1__ & x2__ & ... & xn__
+.br
+(land) =_ 177777
+
+
+.C0
+(lor x1 ... xn)
+.C1
+lsubr
+.C2
+returns:
+.br
+x1__ | x2__ | ... | xn__
+.br
+(lor) =_ 000000
+
+
+.C0
+(lnot x)
+.C1
+subr
+.C2
+returns ~x_.
+
+
+.C0
+(lxor x1 ... xn)
+.C1
+lsubr
+.C2
+returns:
+.br
+x1__ |- x2__ |- ... | -  xn__
+.br
+(xor) =_ 000000.
+
+
+.C0
+(lsh x1 x2)
+.C1
+.C1
+subr
+.C2
+returns x1__ << x2__.
+
+
+.C0
+(rsh x1 x2)
+.C1
+subr
+.C2
+returns x1__ >> x2__.
+
+
+.C0
+(rol x y)
+.C1
+subr
+.C2
+returns x_ <o y_.
+
+
+.C0
+(ror x y)
+.C1
+subr
+.C2
+returns x_ o> y_.
+
+
+.in 0
+note:
+.in 8
+outstr, prin, and print return the value of their first argument.
+.bp

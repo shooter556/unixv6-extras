@@ -1,0 +1,4007 @@
+------ bufx.h
+0a1,10
+> /*
+>  * Allocation of buffer headers
+>  */
+> 
+> struct	buf	buf[NBUF];
+> 
+> /*
+>  * Head of the available list for buffers
+>  */
+> struct	buf bfreelist;
+------ filex.h
+0a1,4
+> /*
+>  * Allocation for the file table.
+>  */
+> struct	file file[NFILE];
+------ inodex.h
+0a1,4
+> /*
+>  * Allocation of the inode table
+>  */
+> struct	inode inode[NINODE];
+------ procx.h
+0a1,5
+> /*
+>  * Allocation of the proc table
+>  */
+> 
+> struct	proc proc[NPROC];
+------ textx.h
+0a1,5
+> /*
+>  * Allocation of the text table
+>  */
+> 
+> struct	text text[NTEXT];
+------ userx.h
+0a1,5
+> /*
+>  * Allocation of the user structure.
+>  */
+> 
+> struct	user u;
+------ buf.h
+35c35
+< } buf[NBUF];
+---
+> };
+59,64d58
+<  * This is the head of the queue of available
+<  * buffers-- all unused except for the 2 list heads.
+<  */
+< struct	buf bfreelist;
+< 
+< /*
+75c69
+< #define	B_RELOC	0200	/* no longer used */
+---
+> #define	B_AGE	0200	/* delayed write for correct aging */
+------ conf.h
+30,39d29
+<  * Nblkdev is the number of entries
+<  * (rows) in the block switch. It is
+<  * set in binit/bio.c by making
+<  * a pass over the switch.
+<  * Used in bounds checking on major
+<  * device numbers.
+<  */
+< int	nblkdev;
+< 
+< /*
+50,55d39
+< 
+< /*
+<  * Number of character switch entries.
+<  * Set by cinit/tty.c
+<  */
+< int	nchrdev;
+------ conf/data.s
+1,2c1,2
+< / l45.o needs to be in data space
+< / to get l45.o; as data.s l.s
+---
+> / as data.s l40.s
+> / to get l45.o
+------ conf/m40.s
+27c27
+< .globl	_runrun, _swtch
+---
+> .globl	_runrun, _qswtch
+48c48
+< 	jsr	pc,_swtch
+---
+> 	jsr	pc,_qswtch
+108c108
+< 	bic	$100,PS		/ spl 5
+---
+> 	bic	$40,PS		/ spl 6
+147c147
+< 	bic	$100,PS		/ spl 5
+---
+> 	bic	$40,PS		/ spl 6
+529c529
+< .globl	_idle
+---
+> .globl	_idle, _waitloc
+533a534
+> _waitloc:
+711a713,717
+> 
+> / Set loc. 0 to trap to system, in case of
+> / hardware glitch
+> 	mov	$trap,0
+> 	mov	$br7+15.,2
+------ conf/m45.s
+76a77,80
+> / Set loc. 0 to trap to system, in case of
+> / hardware glitch
+> 	mov	$trap,0		/ in case of bad trap through 0
+> 	mov	$340+15.,2	/ high pri, trap type 15
+125a130
+> 	mov	$3,*$MSCR		/ Disable UNIBUS traps, non-fatal traps
+128,129c133,134
+< 	mov	$_etext,r0
+< 	mov	$_edata,r1
+---
+> 	mov	$_etext+100,r2
+> 	mov	$_edata+100,r1
+133c138
+< 	mtpi	-(r0)
+---
+> 	mtpi	-(r2)
+151a157,187
+> / Turn off write permission on kernel text
+> / Take stuff above data out of address space
+> 
+> 	mov	$KISD0,r0
+> 1:
+> 	mov	$77402,(r0)+
+> 	cmp	r0,$KISD7
+> 	blo	1b
+> 
+> 	mov	$_end+63.,r0
+> 	ash	$-6,r0
+> 	bic	$!1777,r0
+> 	mov	$KDSD0,r1
+> 1:
+> 	cmp	r0,$200
+> 	bge	2f
+> 	dec	r0
+> 	bge	4f
+> 	clr	(r1)
+> 	br	3f
+> 4:
+> 	movb	r0,1(r1)
+> 	br	3f
+> 2:
+> 	movb	$177,1(r1)
+> 3:
+> 	tst	(r1)+
+> 	sub	$200,r0
+> 	cmp	r1,$KDSD5
+> 	blos	1b
+> 
+199c235
+< .globl	_runrun, _swtch
+---
+> .globl	_runrun, _qswtch
+224c260
+< 	jsr	pc,_swtch
+---
+> 	jsr	pc,_qswtch
+336c372
+< 	spl	5
+---
+> 	spl	6
+374c410
+< 	spl	5
+---
+> 	spl	6
+621c657
+< .globl	_idle
+---
+> .globl	_idle, _waitloc
+625a662
+> _waitloc:
+801a839
+> KISD7	= 172316
+805a844
+> KDSD5	= 172332
+810a850
+> MSCR	= 017777746	/ 11/70 memory control register
+------ conf/mkconf.c
+------ conf/sysfix.c
+10a11
+> long	itol();
+11a13
+> long	ltxtsiz;
+12a15
+> long	ldatsiz;
+43a47
+> 	ltxtsiz = itol(0, txtsiz);
+44a49
+> 	ldatsiz = itol(0, datsiz);
+65,69c70,72
+< 	seek(tbuf[0], 020+txtsiz, 0);
+< 	seek(rbuf[0], 020+txtsiz, 0);
+< 	seek(rbuf[0], txtsiz, 1);
+< 	seek(rbuf[0], datsiz, 1);
+< 	s = datsiz >> 1;
+---
+> 	lseek(tbuf[0], 020+ltxtsiz, 0);
+> 	lseek(rbuf[0], 020+ltxtsiz+ltxtsiz+ldatsiz, 0);
+> 	s = (datsiz >> 1) & 077777;
+83,84c86
+< 	seek(rbuf[0], 020+txtsiz, 0);
+< 	seek(rbuf[0], datsiz, 1);
+---
+> 	lseek(rbuf[0], 020+ltxtsiz+ldatsiz, 0);
+86c88
+< 	s = txtsiz >> 1;
+---
+> 	s = (txtsiz >> 1) & 077777;
+99,102c101
+< 	seek(tbuf[0], 020+txtsiz, 0);
+< 	seek(tbuf[0], txtsiz, 1);
+< 	seek(tbuf[0], datsiz, 1);
+< 	seek(tbuf[0], datsiz, 1);
+---
+> 	lseek(tbuf[0], 020+ltxtsiz+ltxtsiz+ldatsiz+ldatsiz, 0);
+------ dmr/bio.c
+6a7
+> #include "../userx.h"
+7a9
+> #include "../bufx.h"
+10a13
+> #include "../procx.h"
+22c25,26
+< struct	buf	swbuf;
+---
+> struct	buf	swbuf1;
+> struct	buf	swbuf2;
+116c120
+< 	rbp->b_flags =& ~(B_READ | B_DONE | B_ERROR | B_DELWRI);
+---
+> 	rbp->b_flags =& ~(B_READ | B_DONE | B_ERROR | B_DELWRI | B_AGE);
+122c126,128
+< 	} else if ((flag&B_DELWRI)==0)
+---
+> 	} else
+> 	if (flag & B_DELWRI)
+> 		rbp->b_flags =| B_AGE; else
+181d186
+< 	backp = &bfreelist.av_back;
+184,188c189,202
+< 	rbp->b_flags =& ~(B_WANTED|B_BUSY|B_ASYNC);
+< 	(*backp)->av_forw = rbp;
+< 	rbp->av_back = *backp;
+< 	*backp = rbp;
+< 	rbp->av_forw = &bfreelist;
+---
+> 	if(rbp->b_flags & B_AGE) {
+> 		backp = &bfreelist.av_forw;
+> 		(*backp)->av_back = rbp;
+> 		rbp->av_forw = *backp;
+> 		*backp = rbp;
+> 		rbp->av_back = &bfreelist;
+> 	} else {
+> 		backp = &bfreelist.av_back;
+> 		(*backp)->av_forw = rbp;
+> 		rbp->av_back = *backp;
+> 		*backp = rbp;
+> 		rbp->av_forw = &bfreelist;
+> 	}
+> 	rbp->b_flags =& ~(B_WANTED|B_BUSY|B_ASYNC|B_AGE);
+215c229
+<  * (e.g. during exec, for the user arglist) getblk can be called
+---
+>  * getblk can be called
+240c254
+< 				sleep(bp, PRIBIO);
+---
+> 				sleep(bp, PRIBIO+1);
+252c266
+< 		sleep(&bfreelist, PRIBIO);
+---
+> 		sleep(&bfreelist, PRIBIO+1);
+263c277
+< 	bp->b_flags = B_BUSY | B_RELOC;
+---
+> 	bp->b_flags = B_BUSY;
+452a467
+> 
+464c479
+< 		sleep(&maplock, PSWP);
+---
+> 		sleep(&maplock, PSWP+1);
+493c508
+< 	register int *fp;
+---
+> 	register struct buf *bp;
+495c510,513
+< 	fp = &swbuf.b_flags;
+---
+> 	bp = &swbuf1;
+> 	if(bp->b_flags & B_BUSY)
+> 		if((swbuf2.b_flags&B_WANTED) == 0)
+> 			bp = &swbuf2;
+497,499c515,517
+< 	while (*fp&B_BUSY) {
+< 		*fp =| B_WANTED;
+< 		sleep(fp, PSWP);
+---
+> 	while (bp->b_flags&B_BUSY) {
+> 		bp->b_flags =| B_WANTED;
+> 		sleep(bp, PSWP+1);
+501,507c519,525
+< 	*fp = B_BUSY | B_PHYS | rdflg;
+< 	swbuf.b_dev = swapdev;
+< 	swbuf.b_wcount = - (count<<5);	/* 32 w/block */
+< 	swbuf.b_blkno = blkno;
+< 	swbuf.b_addr = coreaddr<<6;	/* 64 b/block */
+< 	swbuf.b_xmem = (coreaddr>>10) & 077;
+< 	(*bdevsw[swapdev>>8].d_strategy)(&swbuf);
+---
+> 	bp->b_flags = B_BUSY | B_PHYS | rdflg;
+> 	bp->b_dev = swapdev;
+> 	bp->b_wcount = - (count<<5);	/* 32 w/block */
+> 	bp->b_blkno = blkno;
+> 	bp->b_addr = coreaddr<<6;	/* 64 b/block */
+> 	bp->b_xmem = (coreaddr>>10) & 077;
+> 	(*bdevsw[swapdev>>8].d_strategy)(bp);
+509,512c527,530
+< 	while((*fp&B_DONE)==0)
+< 		sleep(fp, PSWP);
+< 	if (*fp&B_WANTED)
+< 		wakeup(fp);
+---
+> 	while((bp->b_flags&B_DONE)==0)
+> 		sleep(bp, PSWP);
+> 	if (bp->b_flags&B_WANTED)
+> 		wakeup(bp);
+514,515c532,534
+< 	*fp =& ~(B_BUSY|B_WANTED);
+< 	return(*fp&B_ERROR);
+---
+> 	bp->b_flags =& ~(B_BUSY|B_WANTED);
+> 	if (bp->b_flags & B_ERROR)
+> 		panic("IO err in swap");
+589c608
+< 		sleep(bp, PRIBIO);
+---
+> 		sleep(bp, PRIBIO+1);
+------ dmr/cat.c
+10a11
+> #include "../userx.h"
+39a41
+> 	catintr();
+62,68c64,72
+< 	if (CATADDR->catcsr&DONE && (c=getc(&cat.oq))>=0) {
+< 		CATADDR->catbuf = c;
+< 		if (cat.oq.c_cc==0 || cat.oq.c_cc==CATLOWAT)
+< 			wakeup(&cat.oq);
+< 	} else {
+< 		if (cat.catlock==0)
+< 			CATADDR->catcsr = 0;
+---
+> 	if (CATADDR->catcsr&DONE) {
+> 		if ((c = getc(&cat.oq)) >= 0) {
+> 			CATADDR->catbuf = c;
+> 			if (cat.oq.c_cc==0 || cat.oq.c_cc==CATLOWAT)
+> 				wakeup(&cat.oq);
+> 		} else {
+> 			if (cat.catlock==0)
+> 				CATADDR->catcsr = 0;
+> 		}
+------ dmr/dc.c
+10a11
+> #include "../userx.h"
+12d12
+< #include "../proc.h"
+18c18
+< #define	DCADDR	0174000
+---
+> #define	DCADDR	0174140	/* Std is 174000 */
+23c23
+< #define	NDC11	14
+---
+> #define	NDC11	1
+105c105
+< 	register struct tty *rtp;
+---
+> 	register struct tty *tp;
+112,114c112,114
+< 	rtp = &dc11[dev.d_minor];
+< 	rtp->t_addr = addr = DCADDR + dev.d_minor*8;
+< 	rtp->t_state =| WOPEN;
+---
+> 	tp = &dc11[dev.d_minor];
+> 	tp->t_addr = addr = DCADDR + dev.d_minor*8;
+> 	tp->t_state =| WOPEN;
+116,118c116,118
+< 	if ((rtp->t_state&ISOPEN) == 0) {
+< 		rtp->t_erase = CERASE;
+< 		rtp->t_kill = CKILL;
+---
+> 	if ((tp->t_state&ISOPEN) == 0) {
+> 		tp->t_erase = CERASE;
+> 		tp->t_kill = CKILL;
+121,122c121,122
+< 		rtp->t_state = ISOPEN | WOPEN;
+< 		rtp->t_flags = ODDP|EVENP|ECHO;
+---
+> 		tp->t_state = ISOPEN | WOPEN;
+> 		tp->t_flags = ODDP|EVENP|ECHO;
+125,132c125,128
+< 		rtp->t_state =| CARR_ON;
+< 	while ((rtp->t_state & CARR_ON) == 0)
+< 		sleep(&rtp->t_rawq, TTIPRI);
+< 	rtp->t_state =& ~WOPEN;
+< 	if (u.u_procp->p_ttyp == 0) {
+< 		u.u_procp->p_ttyp = rtp;
+< 		rtp->t_dev = dev;
+< 	}
+---
+> 		tp->t_state =| CARR_ON;
+> 	while ((tp->t_state & CARR_ON) == 0)
+> 		sleep(&tp->t_rawq, TTIPRI);
+> 	ttyopen(dev, tp);
+195c191
+< 				signal(tp, SIGHUP);
+---
+> 				signal(tp->t_pgrp, SIGHUP);
+208c204
+< 	if (csr&&(tp->t_flags&ODDP) || !csr&&(tp->t_flags&EVENP))
+---
+> 	if (tp->t_flags&RAW || csr&&(tp->t_flags&ODDP) || !csr&&(tp->t_flags&EVENP))
+------ dmr/dh.c
+15a16
+> #include "../userx.h"
+17d17
+< #include "../proc.h"
+52a53,61
+>  * DM control bits
+>  */
+> #define	TURNON	03	/* CD lead + line enable */
+> #define	TURNOFF	01	/* line enable */
+> #define	RQS	04	/* request to send */
+> 
+> #define	XCLUDE	0200	/* exclusive-use flag against open */
+> 
+> /*
+82,83d90
+< 	tp->t_dev = dev;
+< 	DHADDR->dhcsr =| IENABLE;
+84a92
+> 	DHADDR->dhcsr =| IENABLE;
+90c98,101
+< 		dhparam(tp);
+---
+> 		dhparam(dev);
+> 	} else if (tp->t_state&XCLUDE && u.u_uid!=0) {
+> 		u.u_error = EBUSY;
+> 		return;
+93,96c104
+< 	tp->t_state =& ~WOPEN;
+< 	tp->t_state =| ISOPEN;
+< 	if (u.u_procp->p_ttyp == 0)
+< 		u.u_procp->p_ttyp = tp;
+---
+> 	ttyopen(dev, tp);
+107c115,116
+< 	dmclose(dev);
+---
+> 	if (tp->t_flags&HUPCL)
+> 		dmctl(dev, TURNOFF);
+140c149
+< 		if((tp->t_state&ISOPEN)==0 || (c&PERROR)) {
+---
+> 		if((tp->t_state&ISOPEN)==0) {
+143a153,156
+> 		if (c&PERROR)
+> 			if ((tp->t_flags&(EVENP|ODDP))==EVENP
+> 			 || (tp->t_flags&(EVENP|ODDP))==ODDP )
+> 				continue;
+160c173
+< 	register r;
+---
+> 	register int *mod;
+162a176,221
+> 	/*
+> 	 * Special weirdness.
+> 	 * On stty, if the input speed is 15 (EXT B)
+> 	 * then the output speed selects a special function.
+> 	 * The stored modes are not affected.
+> 	 */
+> 	if (av==0 && (mod=u.u_arg)[0].lobyte==15) {
+> 		switch (mod[0].hibyte) {
+> 
+> 		/*
+> 		 * Set break
+> 		 */
+> 		case 1:
+> 			DHADDR->dhbreak =| 1<<dev.d_minor;
+> 			return;
+> 
+> 		/*
+> 		 * Clear break
+> 		 */
+> 		case 2:
+> 			DHADDR->dhbreak =& ~(1<<dev.d_minor);
+> 			return;
+> 
+> 		/*
+> 		 * Turn on request to send
+> 		 */
+> 		case 3:
+> 			dmctl(dev, TURNON|RQS);
+> 			return;
+> 
+> 		/*
+> 		 * Turn off request to send
+> 		 */
+> 		case 4:
+> 			dmctl(dev, TURNON);
+> 			return;
+> 
+> 		/*
+> 		 * Prevent opens on channel
+> 		 */
+> 		case 5:
+> 			tp->t_state =| XCLUDE;
+> 			return;
+> 		}
+> 		return;
+> 	}
+165c224
+< 	dhparam(tp);
+---
+> 	dhparam(dev);
+172,173c231
+< dhparam(atp)
+< struct tty *atp;
+---
+> dhparam(dev)
+178c236
+< 	tp = atp;
+---
+> 	tp = &dh11[dev.d_minor];
+180c238
+< 	DHADDR->dhcsr.lobyte = tp->t_dev.d_minor | IENABLE;
+---
+> 	DHADDR->dhcsr.lobyte = dev.d_minor | IENABLE;
+186c244
+< 		dmclose(tp->t_dev);
+---
+> 		dmctl(dev, TURNOFF);
+191,196c249,255
+< 		lpr =| BITS6|PENABLE|HDUPLX; else
+< 		if (tp->t_flags&EVENP)
+< 			if (tp->t_flags&ODDP)
+< 				lpr =| BITS8; else
+< 				lpr =| BITS7|PENABLE; else
+< 			lpr =| BITS7|OPAR|PENABLE;
+---
+> 		lpr =| BITS6|PENABLE|HDUPLX;
+> 	else if (tp->t_flags&RAW)
+> 		lpr =| BITS8;
+> 	else
+> 		lpr =| BITS7|PENABLE;
+> 	if ((tp->t_flags&EVENP)==0)
+> 		lpr =| OPAR;
+236c295
+< 	int sps;
+---
+> 	int sps, dev;
+241a301
+> 	dev = tp-dh11;
+259c319
+< 	cp = dh_clist[tp->t_dev.d_minor];
+---
+> 	cp = dh_clist[dev.d_minor];
+266c326
+< 		if (c >= 0200) {
+---
+> 		if (c >= 0200 && (tp->t_flags&RAW)==0) {
+286c346
+< 		DHADDR->dhcsr.lobyte = tp->t_dev.d_minor | IENABLE;
+---
+> 		DHADDR->dhcsr.lobyte = dev.d_minor | IENABLE;
+289c349
+< 		c = 1<<tp->t_dev.d_minor;
+---
+> 		c = 1<<dev.d_minor;
+------ dmr/dhdm.c
+20c20,21
+< #define	TURNON	07	/* RQ send, CD lead, line enable */
+---
+> #define	TURNON	03	/* CD lead, line enable */
+> #define	RQS	04	/* request to send */
+49,50c50
+<  * If a DH line has the HUPCL mode,
+<  * turn off carrier when it is closed.
+---
+>  * Dump control bits into the DM registers.
+52c52
+< dmclose(dev)
+---
+> dmctl(dev, bits)
+57,61c57,59
+< 	if (tp->t_flags&HUPCL) {
+< 		DMADDR->dmcsr = dev.d_minor;
+< 		DMADDR->dmlstat = TURNOFF;
+< 		DMADDR->dmcsr = IENABLE|SCENABL;
+< 	}
+---
+> 	DMADDR->dmcsr = dev.d_minor;
+> 	DMADDR->dmlstat = bits;
+> 	DMADDR->dmcsr = IENABLE|SCENABL;
+78c76
+< 					signal(tp, SIGHUP);
+---
+> 					signal(tp->t_pgrp, SIGHUP);
+------ dmr/dhfdm.c
+21c21
+< dmclose(dev)
+---
+> dmctl(dev)
+------ dmr/dn.c
+11a12
+> #include "../userx.h"
+76a78
+> 			sleep(&lbolt, DNPRI);
+------ dmr/dp.c
+17a18
+> #include "../userx.h"
+18a20
+> #include "../bufx.h"
+126a129
+> 	u.u_offset[1] = 0;
+146a150
+> 	u.u_offset[1] = 0;
+------ dmr/hp.c
+15a16
+> #include "../bufx.h"
+17a19
+> #include "../userx.h"
+------ dmr/hs.c
+10a11
+> #include "../bufx.h"
+12a14
+> #include "../userx.h"
+------ dmr/ht.c
+10a11
+> #include "../bufx.h"
+12a14
+> #include "../userx.h"
+------ dmr/kl.c
+10a11
+> #include "../userx.h"
+12d12
+< #include "../proc.h"
+22a23,28
+> #define	NL1	000400
+> #define	NL2	001000
+> #define	CR2	020000
+> #define	FF1	040000
+> #define	TAB1	002000
+> 
+42,45d47
+< 	if (u.u_procp->p_ttyp == 0) {
+< 		u.u_procp->p_ttyp = tp;
+< 		tp->t_dev = dev;
+< 	}
+59c61,62
+< 		tp->t_flags = XTABS|LCASE|ECHO|CRMOD;
+---
+> /*		tp->t_flags = XTABS|LCASE|ECHO|CRMOD|CR1;	/*tty33*/
+> 		tp->t_flags = EVENP|ECHO|NL1|CR2|FF1|TAB1;	/*tty37*/
+64a68
+> 	ttyopen(dev, tp);
+------ dmr/lp.c
+11a12
+> #include "../userx.h"
+53c54
+< 	lp11.flag =| (IND|EJECT|OPEN);
+---
+> 	lp11.flag =| (IND|EJECT|OPEN|CAP);
+169d169
+< 	register int c;
+------ dmr/mem.c
+13a14
+> #include "../userx.h"
+34c35,36
+< 		c = fuibyte(on);
+---
+> 		if ((c = fuibyte(on)) < 0)
+> 			u.u_error = ENXIO;
+65c67,68
+< 		suibyte(on, c);
+---
+> 		if (suibyte(on, c) < 0)
+> 			u.u_error = ENXIO;
+------ dmr/partab.c
+------ dmr/pc.c
+11a12
+> #include "../userx.h"
+------ dmr/rf.c
+3,5d2
+<  */
+< 
+< /*
+9a7
+> #include "../systm.h"
+10a9
+> #include "../bufx.h"
+12a12
+> #include "../userx.h"
+33a34,38
+> /*
+>  * Monitoring device number
+>  */
+> #define	DK_N	0
+> 
+67a73,75
+> 	dk_busy =| 1<<DK_N;
+> 	dk_numb[DK_N] =+ 1;
+> 	dk_wds[DK_N] =+ (-bp->b_wcount>>5) & 03777;
+75a84
+> 	dk_busy =& ~(1<<DK_N);
+------ dmr/rk.c
+3,5d2
+<  */
+< 
+< /*
+9a7
+> #include "../systm.h"
+10a9
+> #include "../bufx.h"
+12a12
+> #include "../userx.h"
+26a27,31
+> /*
+>  * Monitoring device bit
+>  */
+> #define	DK_N	1
+> 
+43,44c48
+< 	register *qc, *ql;
+< 	int d;
+---
+> 	register int d;
+95a100,102
+> 	dk_busy =| 1<<DK_N;
+> 	dk_numb[DK_N] =+ 1;
+> 	dk_wds[DK_N] =+ (-bp->b_wcount>>5) & 03777;
+103a111
+> 	dk_busy =& ~(1<<DK_N);
+------ dmr/rp.c
+3,5d2
+<  */
+< 
+< /*
+9a7
+> #include "../systm.h"
+10a9
+> #include "../bufx.h"
+12a12
+> #include "../userx.h"
+63a64,68
+> /*
+>  * Monitoring device number
+>  */
+> #define	DK_N	2
+> 
+114a120,122
+> 	dk_busy =| 1<<DK_N;
+> 	dk_numb[DK_N] =+ 1;
+> 	dk_wds[DK_N] =+ (-bp->b_wcount>>5) & 03777;
+123a132
+> 	dk_busy =& ~(1<<DK_N);
+------ dmr/sys.c
+10a11
+> #include "../userx.h"
+12a14
+> #include "../procx.h"
+16d17
+< 	register *tp;
+18,19c19,23
+< 	if(tp = syttyp())
+< 	(*cdevsw[tp->t_dev.d_major].d_open)(tp->t_dev, flag);
+---
+> 	if(u.u_ttyp == NULL) {
+> 		u.u_error = ENXIO;
+> 		return;
+> 	}
+> 	(*cdevsw[u.u_ttyd.d_major].d_open)(u.u_ttyd, flag);
+24d27
+< 	register *tp;
+26,27c29
+< 	if(tp = syttyp())
+< 	(*cdevsw[tp->t_dev.d_major].d_read)(tp->t_dev);
+---
+> 	(*cdevsw[u.u_ttyd.d_major].d_read)(u.u_ttyd);
+32d33
+< 	register *tp;
+34,35c35
+< 	if(tp = syttyp())
+< 	(*cdevsw[tp->t_dev.d_major].d_write)(tp->t_dev);
+---
+> 	(*cdevsw[u.u_ttyd.d_major].d_write)(u.u_ttyd);
+40d39
+< 	register *tp;
+42,53c41
+< 	if(tp = syttyp())
+< 	(*cdevsw[tp->t_dev.d_major].d_sgtty)(tp->t_dev, flag);
+< }
+< 
+< syttyp()
+< {
+< 	register tp;
+< 
+< 	tp = u.u_procp->p_ttyp;
+< 	if(tp == NULL)
+< 		u.u_error = ENXIO;
+< 	return(tp);
+---
+> 	(*cdevsw[u.u_ttyd.d_major].d_sgtty)(u.u_ttyd, flag);
+------ dmr/tc.c
+11a12
+> #include "../bufx.h"
+12a14
+> #include "../userx.h"
+------ dmr/tm.c
+10a11
+> #include "../bufx.h"
+12a14
+> #include "../userx.h"
+91a94,95
+> 	if(bp->b_flags&B_PHYS)
+> 		mapalloc(bp);
+171c175
+< 		deverror(bp, TMADDR->tmer);
+---
+> 		deverror(bp, TMADDR->tmer, 0);
+182c186
+< 			if(bp != &rtmbuf && (TMADDR->tmer&EOF)==0)
+---
+> 			if(t_openf[unit]>0 && bp!=&rtmbuf && (TMADDR->tmer&EOF)==0)
+------ dmr/tty.c
+10a11
+> #include "../userx.h"
+12a14
+> #include "../procx.h"
+13a16
+> #include "../inodex.h"
+14a18
+> #include "../filex.h"
+17a22,25
+> char	partab[];
+> 
+> #define	DLDELAY	4	/* Extra delay for DL's (double buff) */
+> 
+26c34
+< 	000,000,000,000,004,000,000,000,
+---
+> 	000,000,000,000,CEOT,00,000,000,
+30c38
+< 	000,'|',000,'#',000,000,000,'`',
+---
+> 	000,'|',000,000,000,000,000,'`',
+34d41
+< 	'@',000,000,000,000,000,000,000,
+36a44
+> 	000,000,000,000,000,000,000,000,
+71a80,102
+>  * routine called on first teletype open.
+>  * establishes a process group for distribution
+>  * of quits and interrupts from the tty.
+>  */
+> ttyopen(dev, atp)
+> struct tty *atp;
+> {
+> 	register struct proc *pp;
+> 	register struct tty *tp;
+> 
+> 	pp = u.u_procp;
+> 	tp = atp;
+> 	if(pp->p_pgrp == 0) {
+> 		pp->p_pgrp = pp->p_pid;
+> 		u.u_ttyp = tp;
+> 		u.u_ttyd = dev;
+> 		tp->t_pgrp = pp->p_pid;
+> 	}
+> 	tp->t_state =& ~WOPEN;
+> 	tp->t_state =| ISOPEN;
+> }
+> 
+> /*
+98a130
+> 	u.u_arg[3] = up;
+201a234
+> 	int mc;
+205c238,239
+< 	while (tp->t_delct==0) {
+---
+> 	while ((tp->t_flags&RAW)==0 && tp->t_delct==0
+> 	    || (tp->t_flags&RAW)!=0 && tp->t_rawq.c_cc==0) {
+214,217d247
+< 		if (c==0377) {
+< 			tp->t_delct--;
+< 			break;
+< 		}
+218a249,252
+> 			if (c==0377) {
+> 				tp->t_delct--;
+> 				break;
+> 			}
+229,233c263,271
+< 			} else
+< 			if (maptab[c] && (maptab[c]==c || (tp->t_flags&LCASE))) {
+< 				if (bp[-2] != '\\')
+< 					c = maptab[c];
+< 				bp--;
+---
+> 			} else {
+> 				mc = maptab[c];
+> 				if (c==tp->t_erase || c==tp->t_kill)
+> 					mc = c;
+> 				if (mc && (mc==c || (tp->t_flags&LCASE))) {
+> 					if (bp[-2] != '\\')
+> 						c = mc;
+> 					bp--;
+> 				}
+260a299
+> 	tk_nin =+ 1;
+262c301
+< 	c = ac;
+---
+> 	c = ac&0377;
+264,269c303,311
+< 	if ((c =& 0177) == '\r' && t_flags&CRMOD)
+< 		c = '\n';
+< 	if ((t_flags&RAW)==0 && (c==CQUIT || c==CINTR)) {
+< 		signal(tp, c==CINTR? SIGINT:SIGQIT);
+< 		flushtty(tp);
+< 		return;
+---
+> 	if ((t_flags&RAW)==0) {
+> 		c =& 0177;
+> 		if (c==CQUIT || c==CINTR) {
+> 			signal(tp->t_pgrp, c==CINTR? SIGINT:SIGQIT);
+> 			flushtty(tp);
+> 			return;
+> 		}
+> 		if (c=='\r' && t_flags&CRMOD)
+> 			c = '\n';
+271c313
+< 	if (tp->t_rawq.c_cc>=TTYHOG) {
+---
+> 	if (tp->t_rawq.c_cc>TTYHOG) {
+278c320
+< 	if (t_flags&RAW || c=='\n' || c==004) {
+---
+> 	if (t_flags&RAW || (c=='\n' || c==CEOT)) {
+280c322
+< 		if (putc(0377, &tp->t_rawq)==0)
+---
+> 		if ((t_flags&RAW)==0 && putc(0377, &tp->t_rawq)==0)
+284a327,328
+> 		if (c==tp->t_kill && (t_flags&RAW)==0)
+> 			ttyoutput('\n', tp);
+303a348
+> 	tk_nout =+ 1;
+305c350
+< 	c = ac&0177;
+---
+> 	c = ac;
+308a354
+> 	 * In raw mode dump the char unchanged.
+310c356,362
+< 	if (c==004 && (rtp->t_flags&RAW)==0)
+---
+> 
+> 	if ((rtp->t_flags&RAW)==0) {
+> 		c =& 0177;
+> 		if (c==CEOT)
+> 			return;
+> 	} else {
+> 		putc(c, &rtp->t_outq);
+311a364
+> 	}
+341,342c394
+< 	if (putc(c, &rtp->t_outq))
+< 		return;
+---
+> 	putc(c, &rtp->t_outq);
+347,349c399,401
+< 	 * The delays are indicated by characters above 0200,
+< 	 * thus (unfortunately) restricting the transmission
+< 	 * path to 7 bits.
+---
+> 	 * The delays are indicated by characters above 0200.
+> 	 * In raw mode there are no delays and the
+> 	 * transmission path is 8 bits wide.
+444a497
+> 	int sps;
+453a507,508
+> 	sps = PS->integ;
+> 	spl5();
+457c512,514
+< 		if (c<=0177)
+---
+> 		if (tp->t_flags&RAW)
+> 			addr->tttbuf = c;
+> 		else if (c<=0177)
+460c517
+< 			timeout(ttrstrt, tp, c&0177);
+---
+> 			timeout(ttrstrt, tp, (c&0177) + DLDELAY);
+463a521
+> 	PS->integ = sps;
+------ dmr/vs.c
+18c18,19
+< #define	MAGIC_MAP 0377
+---
+> #define	GO	026
+> #define	COUNT	120
+28a30
+> 	int	vtime;
+31a34
+> 
+33a37,39
+> 	register c;
+> 
+> 	c = VSADDR->vsrcsr;
+36c42
+< 	vschar(0);
+---
+> 	vschar(GO);
+41c47
+< 	vschar(0);
+---
+> 	vschar(GO);
+53,54c59,60
+< 			count = 60;
+< 			vschar(0);
+---
+> 			count = COUNT;
+> 			vschar(GO);
+58c64
+< 	vschar(0);
+---
+> 	vschar(GO);
+64d69
+< 	c =^ MAGIC_MAP;
+66c71
+< 	while (vs.oq.c_cc > 60) {
+---
+> 	while (vs.oq.c_cc > 120) {
+74a80,85
+> vstimo()
+> {
+> 	vs.vtime = 0;
+> 	vsxintr();
+> }
+> 
+83c94
+< 		if (lchar==MAGIC_MAP) {
+---
+> 		if (lchar==GO) {
+85,87c96,100
+< 			lchar = 0;
+< 			if (vs.oq.c_cc==0)
+< 				goto wake;
+---
+> 			lchar = -1;
+> 			if (vs.oq.c_cc==0) {
+> 				wakeup(&vs.oq);
+> 				return;
+> 			}
+90d102
+< 			*xcsr =& ~RQSEND;
+92,93c104,110
+< 			if ((*xcsr&CLSEND) == 0)
+< 				goto wake;
+---
+> 			if ((*xcsr&CLSEND) == 0) {
+> 				if (vs.vtime==0) {
+> 					vs.vtime++;
+> 					timeout(vstimo, 0, 60);
+> 				}
+> 				return;
+> 			}
+96a114,115
+> 		else
+> 			*xcsr =& ~RQSEND;
+98d116
+< 	    wake:
+117a136
+> 	c = VSADDR->vsrbuf;	/* Register must be read (?) */
+------ dmr/vt.c
+3,5d2
+<  */
+< 
+< /*
+10a8,9
+> #include "../userx.h"
+> #include "../tty.h"
+12c11,16
+< int	vtflag;
+---
+> struct
+> {
+> 	char	iflag;
+> 	char	oflag;
+> 	struct	clist	iq;
+> } vt;
+16c20,21
+< 	int	buf;
+---
+> 	int	wbuf;
+> 	int	rbuf;
+20,21c25,27
+< #define	RQINT	01
+< #define	BIENABL	040
+---
+> #define	CSR0	01
+> #define	CSR1	02
+> #define	IENABL	0140
+27,30c33
+< 	if (!flag)
+< 		u.u_error = ENXIO;
+< 	else
+< 		VTADDR->csr = BIENABL;
+---
+> 	VTADDR->csr = IENABL;
+35,36c38,41
+< 	VTADDR->buf = SEOF;
+< 	VTADDR->csr =| RQINT;
+---
+> 	VTADDR->wbuf = SEOF;
+> 	VTADDR->csr =| CSR0;
+> 	while(getc(&vt.iq) >= 0)
+> 		;
+38a44,60
+> vtread()
+> {
+> 	register c;
+> 
+> 	spl5();
+> 	do {
+> 		VTADDR->csr =& ~CSR1;
+> 		while((c=getc(&vt.iq)) < 0) {
+> 			vt.iflag++;
+> 			sleep(&vt.iflag, VTPRI);
+> 		}
+> 		if(passc(c) < 0)
+> 			break;
+> 	} while(vt.iq.c_cc > 0);
+> 	spl0();
+> }
+> 
+47,49c69,71
+< 			if ((VTADDR->csr&RQINT)==0) {
+< 				VTADDR->buf = c&0377;
+< 				VTADDR->csr =| RQINT;
+---
+> 			if ((VTADDR->csr&CSR0)==0) {
+> 				VTADDR->wbuf = c&0377;
+> 				VTADDR->csr =| CSR0;
+53,55c75,77
+< 		if (VTADDR->csr&RQINT) {
+< 			vtflag++;
+< 			sleep(VTADDR, VTPRI);
+---
+> 		if (VTADDR->csr&CSR0) {
+> 			vt.oflag++;
+> 			sleep(&vt.oflag, VTPRI);
+63c85
+< vtintr()
+---
+> vtaintr()
+65,68c87,106
+< 	VTADDR->csr =& ~RQINT;
+< 	if (vtflag) {
+< 		vtflag = 0;
+< 		wakeup(VTADDR);
+---
+> 	register c;
+> 
+> 	c = VTADDR->rbuf & 0377;
+> 	VTADDR->csr =| CSR1;
+> 	if(vt.iq.c_cc <= 50)
+> 		putc(c, &vt.iq);
+> 	if(vt.iflag) {
+> 		vt.iflag = 0;
+> 		wakeup(&vt.iflag);
+> 	}
+> 	if(vt.iq.c_cc <= 50)
+> 		VTADDR->csr =& ~CSR1;
+> }
+> 
+> vtbintr()
+> {
+> 	VTADDR->csr =& ~CSR0;
+> 	if (vt.oflag) {
+> 		vt.oflag = 0;
+> 		wakeup(&vt.oflag);
+------ file.h
+12c12
+< 	int	f_inode;	/* pointer to inode structure */
+---
+> 	struct inode *f_inode;	/* pointer to inode structure */
+14c14
+< } file[NFILE];
+---
+> };
+------ filsys.h
+14,15c14,15
+< 	int	s_isize;	/* size in blocks of I list */
+< 	int	s_fsize;	/* size in blocks of entire volume */
+---
+> 	char	*s_isize;	/* size in blocks of I list */
+> 	char	*s_fsize;	/* size in blocks of entire volume */
+24,25c24,29
+< 	int	s_time[2];	/* current date of last update */
+< 	int	pad[50];
+---
+> 	long	s_time;		/* current date of last update */
+> 	int	pad[40];
+> 	int	s_tfree;	/* Total free, for subsystem examination */
+> 	int	s_tinode;	/* Free inodes, for subsystem examination */
+> 	char	s_fname[6];	/* File system name */
+> 	char	s_fpack[6];	/* File system pack name */
+------ inode.h
+25c25
+< } inode[NINODE];
+---
+> };
+------ ken/acct.c
+0a1,73
+> #include	"../param.h"
+> #include	"../systm.h"
+> #include	"../user.h"
+> #include	"../userx.h"
+> #include	"../inode.h"
+> 
+> /*
+>  * Perform process accounting functions.
+>  */
+> 
+> sysacct()
+> {
+> 	extern uchar();
+> 	register struct inode *ip;
+> 
+> 	if (suser()) {
+> 		if (u.u_arg[0]==0) {
+> 			if (acctp) {
+> 				plock(acctp);
+> 				iput(acctp);
+> 				acctp = NULL;
+> 			}
+> 			return;
+> 		}
+> 		if (acctp) {
+> 			u.u_error = EBUSY;
+> 			return;
+> 		}
+> 		if ((ip = namei(&uchar, 0))==NULL)
+> 			return;
+> 		if((ip->i_mode & IFMT) != 0) {
+> 			u.u_error = EACCES;
+> 			iput(ip);
+> 			return;
+> 		}
+> 		acctp = ip;
+> 		prele(ip);
+> 	}
+> }
+> 
+> /*
+>  * On exit, write a record on the accounting file.
+>  */
+> acct()
+> {
+> 	register struct inode *ip;
+> 	register i, j;
+> 
+> 	if ((ip=acctp)==NULL)
+> 		return;
+> 	plock(ip);
+> 	for (i=0; i<DIRSIZ; i++)
+> 		acctbuf.ac_comm[i] = u.u_comm[i];
+> 	acctbuf.ac_utime = u.u_utime;
+> 	acctbuf.ac_stime = u.u_stime;
+> 	acctbuf.ac_etime = time - u.u_start;
+> 	acctbuf.ac_uid = u.u_ruid;
+> 	acctbuf.ac_flag = u.u_acflag;
+> 	i = ip->i_size0&0377;
+> 	j = ip->i_size1;
+> 	u.u_offset[0] = i;
+> 	u.u_offset[1] = j;
+> 	u.u_base = &acctbuf;
+> 	u.u_count = sizeof(acctbuf);
+> 	u.u_segflg = 1;
+> 	u.u_error = 0;
+> 	writei(ip);
+> 	if(u.u_error) {
+> 		ip->i_size0 = i;
+> 		ip->i_size1 = j;
+> 	}
+> 	prele(ip);
+> }
+------ ken/alloc.c
+2,4d1
+< /*
+<  */
+< 
+9a7
+> #include "../bufx.h"
+10a9
+> #include "../inodex.h"
+11a11
+> #include "../userx.h"
+40,41c40,43
+< 	time[0] = cp->s_time[0];
+< 	time[1] = cp->s_time[1];
+---
+> 	time = cp->s_time;
+> /*
+> 	ssort(cp->s_free+1, cp->s_nfree-1);
+> */
+76a79,81
+> /*
+> 		ssort(fp->s_free+1, fp->s_nfree-1);
+> */
+149a155,213
+>  * Shell sort used to
+>  * sort the free list to permute
+>  * each 24 block to be approx
+>  * interleaved by 3.
+>  *
+> 
+> int	ssar[]
+> {
+> 	0,  8, 16,
+> 	1,  9, 17,
+> 	2, 10, 18,
+> 	3, 11, 19,
+> 	4, 12, 20,
+> 	5, 13, 21,
+> 	6, 14, 22,
+> 	7, 15, 23,
+> };
+> 
+> ssort(v, n)
+> int v[];
+> {
+> 	register gap, j, jg;
+> 	int i, k;
+> 
+> 	for(gap=n/2; gap>0; gap=/2)
+> 	for(i=gap; i<n; i++)
+> 	for(j=i-gap; j>=0; j =- gap) {
+> 		jg = j+gap;
+> 		if(sscmp(v, j, jg))
+> 			break;
+> 		k = v[j];
+> 		v[j] = v[jg];
+> 		v[jg] = k;
+> 	}
+> }
+> 
+> sscmp(v, i, j)
+> int v[];
+> {
+> 	register char *a, *b;
+> 
+> 	a = ssmap(v[i]);
+> 	b = ssmap(v[j]);
+> 	if(a >= b)
+> 		return(1);
+> 	return(0);
+> }
+> 
+> ssmap(n)
+> {
+> 	register b, o;
+> 
+> 	b = ldiv(n, 24);
+> 	o = lrem(n, 24);
+> 	return(b*24 + ssar[o]);
+> }
+> */
+> 
+> /*
+298a363,365
+> /*
+> 			ssort(ip->s_free+1, ip->s_nfree-1);
+> */
+301,302c368
+< 			ip->s_time[0] = time[0];
+< 			ip->s_time[1] = time[1];
+---
+> 			ip->s_time = time;
+307c373
+< 		if((ip->i_flag&ILOCK) == 0) {
+---
+> 		if((ip->i_flag&ILOCK)==0 && ip->i_count) {
+309,310c375,377
+< 			iupdat(ip, time);
+< 			prele(ip);
+---
+> 			ip->i_count++;
+> 			iupdat(ip);
+> 			iput(ip);
+------ ken/clock.c
+4a5
+> #include "../userx.h"
+5a7
+> #include "../procx.h"
+8c10
+< #define	SCHMAG	10
+---
+> #define	SCHMAG	8/10
+22c24
+<  *	lightning bolt wakeup (every 4 sec)
+---
+>  *	lightning bolt wakeup (every second)
+25a28,29
+> char	*await { &waitloc };
+> 
+29a34
+> 	int a;
+88a94
+> 	a = dk_busy&07;
+93c99,104
+< 	} else
+---
+> 		if(u.u_procp->p_nice > 2)
+> 			a =+ 8;
+> 	} else {
+> 		a =+ 16;
+> 		if (pc == await)
+> 			a =+ 8;
+94a106,107
+> 	}
+> 	dk_time[a] =+ 1;
+102,103c115
+< 		if(++time[1] == 0)
+< 			++time[0];
+---
+> 		++time;
+105,108c117,119
+< 		if(time[1]==tout[1] && time[0]==tout[0])
+< 			wakeup(tout);
+< 		if((time[1]&03) == 0) {
+< 			runrun++;
+---
+> 		if (time == tout)
+> 			wakeup(&tout);
+> 		runrun++;
+110d120
+< 		}
+112c122
+< 		if (pp->p_stat) {
+---
+> 		if (pp->p_stat && pp->p_stat<SZOMB) {
+115,118c125,134
+< 			if((pp->p_cpu & 0377) > SCHMAG)
+< 				pp->p_cpu =- SCHMAG; else
+< 				pp->p_cpu = 0;
+< 			if(pp->p_pri > PUSER)
+---
+> 			if(pp->p_clktim)
+> 				if(--pp->p_clktim == 0)
+> 					psignal(pp, SIGCLK);
+> 			a = (pp->p_cpu & 0377)*SCHMAG + pp->p_nice;
+> 			if(a < 0)
+> 				a = 0;
+> 			if(a > 255)
+> 				a = 255;
+> 			pp->p_cpu = a;
+> 			if(pp->p_pri >= PUSER)
+129c145,148
+< 			setpri(u.u_procp);
+---
+> 			pp = u.u_procp;
+> 			if (pp->p_nice==0 && u.u_utime > 60*HZ)
+> 				pp->p_nice = 2;
+> 			setpri(pp);
+143a163,165
+>  *
+>  * The panic is there because there is nothing
+>  * intelligent to be done if an entry won't fit.
+158a181,182
+> 	if (p1 >= &callout[NCALL-1])
+> 		panic("Timeout table overflow");
+------ ken/fio.c
+2,4d1
+< /*
+<  */
+< 
+6a4
+> #include "../userx.h"
+8a7
+> #include "../filex.h"
+10a10
+> #include "../inodex.h"
+11a12
+> #include "../systm.h"
+25,30c26,30
+< 	if(rf<0 || rf>=NOFILE)
+< 		goto bad;
+< 	fp = u.u_ofile[rf];
+< 	if(fp != NULL)
+< 		return(fp);
+< bad:
+---
+> 	if (0<=rf && rf<NOFILE) {
+> 		fp = u.u_ofile[rf];
+> 		if(fp != NULL)
+> 			return(fp);
+> 	}
+38,39c38
+<  * file structure and call closei
+<  * on last closef.
+---
+>  * file structure.
+41a41,46
+>  *
+>  * Decrement reference count on the inode following
+>  * removal to the referencing file structure.
+>  * On the last close switch out the the device handler for
+>  * special files.  Note that the handler is called
+>  * on every open but only the last close.
+46c51,54
+< 	register *rfp, *ip;
+---
+> 	register *ip;
+> 	register struct file *rfp;
+> 	int flag;
+> 	register int (*cfunc)();
+48c56,58
+< 	rfp = fp;
+---
+> 	if ((rfp = fp) == NULL)
+> 		return;
+> 	ip = rfp->f_inode;
+50d59
+< 		ip = rfp->f_inode;
+55,57c64,78
+< 	if(rfp->f_count <= 1)
+< 		closei(rfp->f_inode, rfp->f_flag&FWRITE);
+< 	rfp->f_count--;
+---
+> 	if (--rfp->f_count > 0)
+> 		return;
+> 	plock(ip);
+> 	iput(ip);
+> 	if ((ip->i_mode&IFMT) == IFCHR)
+> 		cfunc = cdevsw[ip->i_addr[0].d_major].d_close;
+> 	else if ((ip->i_mode&IFMT)== IFBLK)
+> 		cfunc = bdevsw[ip->i_addr[0].d_major].d_close;
+> 	else
+> 		return;
+> 	flag = rfp->f_flag&FWRITE;
+> 	for (rfp=file; rfp < &file[NFILE]; rfp++)
+> 		if (rfp->f_count && rfp->f_inode==ip)
+> 			return;
+> 	(*cfunc)(ip->i_addr[0], flag);
+61,93d81
+<  * Decrement reference count on an
+<  * inode due to the removal of a
+<  * referencing file structure.
+<  * On the last closei, switchout
+<  * to the close entry point of special
+<  * device handler.
+<  * Note that the handler gets called
+<  * on every open and only on the last
+<  * close.
+<  */
+< closei(ip, rw)
+< int *ip;
+< {
+< 	register *rip;
+< 	register dev, maj;
+< 
+< 	rip = ip;
+< 	dev = rip->i_addr[0];
+< 	maj = rip->i_addr[0].d_major;
+< 	if(rip->i_count <= 1)
+< 	switch(rip->i_mode&IFMT) {
+< 
+< 	case IFCHR:
+< 		(*cdevsw[maj].d_close)(dev, rw);
+< 		break;
+< 
+< 	case IFBLK:
+< 		(*bdevsw[maj].d_close)(dev, rw);
+< 	}
+< 	iput(rip);
+< }
+< 
+< /*
+108c96
+< 	maj = rip->i_addr[0].d_major;
+---
+> 	maj = rip->i_addr[0].d_major & 0377;
+139,141c127
+<  * permissions except for EXEC where
+<  * at least one of the EXEC bits must
+<  * be on.
+---
+>  * permissions.
+160,163c146
+< 	if(u.u_uid == 0) {
+< 		if(m == IEXEC && (ip->i_mode & 
+< 			(IEXEC | (IEXEC>>3) | (IEXEC>>6))) == 0)
+< 				goto bad;
+---
+> 	if(u.u_uid == 0)
+165d147
+< 	}
+------ ken/iget.c
+4a5
+> #include "../userx.h"
+5a7
+> #include "../inodex.h"
+8a11
+> #include "../bufx.h"
+103a107
+> 			rp->i_flag =| IUPD;
+106c110
+< 		iupdat(rp, time);
+---
+> 		iupdat(rp);
+119,120c123
+<  * with the corresponding dates
+<  * set to the argument tm.
+---
+>  * with the current time.
+122c125
+< iupdat(p, tm)
+---
+> iupdat(p)
+124d126
+< int *tm;
+140,141c142,143
+< 			*ip1++ = time[0];
+< 			*ip1++ = time[1];
+---
+> 			*ip1++ = time.hiword;
+> 			*ip1++ = time.loword;
+145,146c147,148
+< 			*ip1++ = *tm++;
+< 			*ip1++ = *tm;
+---
+> 			*ip1++ = time.hiword;
+> 			*ip1++ = time.loword;
+148c150,151
+< 		bwrite(bp);
+---
+> 		rp->i_flag =& ~(IUPD|IACC);
+> 		bdwrite(bp);
+174c177
+< 			for(cp = bp->b_addr+512; cp >= bp->b_addr; cp--)
+---
+> 			for(cp = bp->b_addr+510; cp >= bp->b_addr; cp--)
+178c181
+< 					for(ep = dp->b_addr+512; ep >= dp->b_addr; ep--)
+---
+> 					for(ep = dp->b_addr+510; ep >= dp->b_addr; ep--)
+204c207,208
+< 	if (ip==NULL)
+---
+> 	if (ip==NULL) {
+> 		iput(u.u_pdir);
+205a210
+> 	}
+------ ken/main.c
+3a4
+> #include "../userx.h"
+5a7
+> #include "../procx.h"
+6a9
+> #include "../textx.h"
+7a11
+> #include "../inodex.h"
+51,52c55
+< 	extern schar;
+< 	register i, *p;
+---
+> 	register i;
+58d60
+< 	updlock = 0;
+123c125
+< 		estabur(0, 1, 0, 0);
+---
+> 		estabur(0, 1, 0, 0, RO);
+142c144,145
+< 	register *up, *rp, a;
+---
+> 	register *udp, *uap, *rdp;
+> 	int *rap, daddr, taddr, *limudp;
+144,149c147,158
+< 	a = u.u_procp->p_addr;
+< 	up = &u.u_uisa[16];
+< 	rp = &UISA->r[16];
+< 	if(cputype == 40) {
+< 		up =- 8;
+< 		rp =- 8;
+---
+> 	taddr = daddr = u.u_procp->p_addr;
+> 	if (udp=u.u_procp->p_textp)
+> 		taddr = udp->x_caddr;
+> 	limudp = &u.u_uisd[16];
+> 	if (cputype==40)
+> 		limudp = &u.u_uisd[8];
+> 	rap = UISA;
+> 	rdp = UISD;
+> 	uap = &u.u_uisa[0];
+> 	for (udp = &u.u_uisd[0]; udp < limudp;) {
+> 		*rap++ = *uap++ + (*udp&TX? taddr: daddr);
+> 		*rdp++ = *udp++;
+151,165d159
+< 	while(rp > &UISA->r[0])
+< 		*--rp = *--up + a;
+< 	if((up=u.u_procp->p_textp) != NULL)
+< 		a =- up->x_caddr;
+< 	up = &u.u_uisd[16];
+< 	rp = &UISD->r[16];
+< 	if(cputype == 40) {
+< 		up =- 8;
+< 		rp =- 8;
+< 	}
+< 	while(rp > &UISD->r[0]) {
+< 		*--rp = *--up;
+< 		if((*rp & WO) == 0)
+< 			rp[(UISA-UISD)/2] =- a;
+< 	}
+175a170,171
+>  * The last argument determines whether the text
+>  * segment is read-write or read-only.
+177c173
+< estabur(nt, nd, ns, sep)
+---
+> estabur(nt, nd, ns, sep, xrw)
+184c180
+< 		if(nseg(nt) > 8 || nseg(nd)+nseg(ns) > 8)
+---
+> 		if(ctos(nt) > 8 || ctos(nd)+ctos(ns) > 8)
+187c183
+< 		if(nseg(nt)+nseg(nd)+nseg(ns) > 8)
+---
+> 		if(ctos(nt)+ctos(nd)+ctos(ns) > 8)
+195c191
+< 		*dp++ = (127<<8) | RO;
+---
+> 		*dp++ = (127<<8) | xrw|TX;
+201c197
+< 		*dp++ = ((nt-1)<<8) | RO;
+---
+> 		*dp++ = ((nt-1)<<8) | xrw|TX;
+257,265d252
+< }
+< 
+< /*
+<  * Return the arg/128 rounded up.
+<  */
+< nseg(n)
+< {
+< 
+< 	return((n+127)>>7);
+------ ken/malloc.c
+1,3c1,2
+< #
+< /*
+<  */
+---
+> #include "../param.h"
+> #include "../systm.h"
+6,23c5
+<  * Structure of the coremap and swapmap
+<  * arrays. Consists of non-zero count
+<  * and base address of that many
+<  * contiguous units.
+<  * (The coremap unit is 64 bytes,
+<  * the swapmap unit is 512 bytes)
+<  * The addresses are increasing and
+<  * the list is terminated with the
+<  * first zero count.
+<  */
+< struct map
+< {
+< 	char *m_size;
+< 	char *m_addr;
+< };
+< 
+< /*
+<  * Allocate size units from the given
+---
+>  * Allocate 'size' units from the given
+26c8,12
+<  * Algorithm is first fit.
+---
+>  * In a map, the addresses are increasing and the
+>  * list is terminated by a 0 size.
+>  * The core map unit is 64 bytes; the swap map unit
+>  * is 512 bytes.
+>  * Algorithm is first-fit.
+34c20
+< 	for (bp = mp; bp->m_size; bp++) {
+---
+> 	for (bp=mp; bp->m_size; bp++) {
+56a43
+> char *aa;
+60c47
+< 	register int a;
+---
+> 	register char *a;
+63c50,54
+< 	for (bp = mp; bp->m_addr<=a && bp->m_size!=0; bp++);
+---
+> 	if ((bp = mp)==coremap && runin) {
+> 		runin = 0;
+> 		wakeup(&runin);		/* Wake scheduler when freeing core */
+> 	}
+> 	for (; bp->m_addr<=a && bp->m_size!=0; bp++);
+------ ken/nami.c
+3a4
+> #include "../inodex.h"
+4a6
+> #include "../userx.h"
+6a9
+> #include "../bufx.h"
+------ ken/pipe.c
+2,4d1
+< /*
+<  */
+< 
+7a5
+> #include "../userx.h"
+8a7
+> #include "../inodex.h"
+9a9
+> #include "../filex.h"
+77d76
+< 
+79,80c78
+< 	 * If the head (read) has caught up with
+< 	 * the tail (write), reset both to 0.
+---
+> 	 * If nothing in the pipe, wait.
+82,92c80
+< 
+< 	if(rp->f_offset[1] == ip->i_size1) {
+< 		if(rp->f_offset[1] != 0) {
+< 			rp->f_offset[1] = 0;
+< 			ip->i_size1 = 0;
+< 			if(ip->i_mode&IWRITE) {
+< 				ip->i_mode =& ~IWRITE;
+< 				wakeup(ip+1);
+< 			}
+< 		}
+< 
+---
+> 	if (ip->i_size1==0) {
+98d85
+< 
+114a102,113
+> 	/*
+> 	 * If reader has caught up with writer, reset
+> 	 * offset and size to 0.
+> 	 */
+> 	if (rp->f_offset[1] == ip->i_size1) {
+> 		rp->f_offset[1] = 0;
+> 		ip->i_size1 = 0;
+> 		if (ip->i_mode&IWRITE) {
+> 			ip->i_mode =& ~IWRITE;
+> 			wakeup(ip+1);
+> 		}
+> 	}
+161c160
+< 	if(ip->i_size1 == PIPSIZ) {
+---
+> 	if(ip->i_size1 >= PIPSIZ) {
+170a170,172
+> 	 * If writing less than PIPSIZ, it always goes.
+> 	 * One can therefore get a file > PIPSIZ if write
+> 	 * sizes do not divide PIPSIZ.
+175c177
+< 	u.u_count = min(c, PIPSIZ-u.u_offset[1]);
+---
+> 	u.u_count = min(c, PIPSIZ);
+------ ken/prf.c
+2,4d1
+< /*
+<  */
+< 
+7a5
+> #include "../bufx.h"
+8a7
+> #include "../systm.h"
+20a20
+> char	*msgbufp msgbuf;	/* Next saved printf character */
+40c40
+< printf(fmt,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc)
+---
+> printf(fmt,x1)
+82a83,86
+>  *
+>  * Whether or not printing is inhibited,
+>  * the last MSGBUFS characters
+>  * are saved in msgbuf for inspection later.
+86c90
+< 	register rc, s;
+---
+> 	register rc, s, timo;
+88a93,97
+> 	if (rc!='\0' && rc!='\r' && rc!=0177) {
+> 		*msgbufp++ = rc;
+> 		if (msgbufp >= &msgbuf[MSGBUFS])
+> 			msgbufp = msgbuf;
+> 	}
+91c100,105
+< 	while((KL->xsr&0200) == 0)
+---
+> 	timo = 30000;
+> 	/*
+> 	 * Try waiting for the console tty to come ready,
+> 	 * otherwise give up after a reasonable time.
+> 	 */
+> 	while((KL->xsr&0200)==0 && --timo!=0)
+------ ken/rdwri.c
+2,4d1
+< /*
+<  */
+< 
+6a4
+> #include "../inodex.h"
+7a6
+> #include "../userx.h"
+8a8
+> #include "../bufx.h"
+20c20
+<  *	u_segflg	read to kernel/user
+---
+>  *	u_segflg	read to kernel/user/user I
+74c74
+<  *	u_segflg	write to kernel/user
+---
+>  *	u_segflg	write to kernel/user/user I
+171c171
+< 	if(u.u_segflg==0 && ((n | cp | u.u_base)&01)==0) {
+---
+> 	if(u.u_segflg!=1 && ((n | cp | u.u_base)&01)==0) {
+173c173,176
+< 			cp = copyin(u.u_base, cp, n);
+---
+> 			if (u.u_segflg==0)
+> 				cp = copyin(u.u_base, cp, n);
+> 			else
+> 				cp = copyiin(u.u_base, cp, n);
+175c178,181
+< 			cp = copyout(cp, u.u_base, n);
+---
+> 			if (u.u_segflg==0)
+> 				cp = copyout(cp, u.u_base, n);
+> 			else
+> 				cp = copyiout(cp, u.u_base, n);
+------ ken/sig.c
+2,4d1
+< /*
+<  */
+< 
+7a5
+> #include "../userx.h"
+8a7
+> #include "../procx.h"
+9a9
+> #include "../inodex.h"
+10a11,13
+> #include "../text.h"
+> #include "../textx.h"
+> #include "../seg.h"
+15c18
+< #define	IPCPRI	(-1)
+---
+> #define	IPCPRI	0
+43,44c46,47
+<  * all processes with 'tp' as its
+<  * controlling teletype.
+---
+>  * all processes with 'pgrp' as
+>  * process group.
+48c51
+< signal(tp, sig)
+---
+> signal(apgrp, sig)
+50a54
+> 	register pgrp;
+51a56,57
+> 	if ((pgrp = apgrp)==0)
+> 		return;
+53c59
+< 		if(p->p_ttyp == tp)
+---
+> 		if(p->p_pgrp == pgrp)
+62a69
+> char *sig;
+64c71
+< 	register *rp;
+---
+> 	register *rp, a;
+66c73,74
+< 	if(sig >= NSIG)
+---
+> 	a = sig;
+> 	if(a >= NSIG)
+69,73c77,81
+< 	if(rp->p_sig != SIGKIL)
+< 		rp->p_sig = sig;
+< 	if(rp->p_stat > PUSER)
+< 		rp->p_stat = PUSER;
+< 	if(rp->p_stat == SWAIT)
+---
+> 	if(a)
+> 		rp->p_sig =| 1<<(a-1);
+> 	if(rp->p_pri > PUSER)
+> 		rp->p_pri = PUSER;
+> 	if(rp->p_stat == SSLEEP && rp->p_pri > 0)
+94,100c102,104
+< 	if(n = p->p_sig) {
+< 		if (p->p_flag&STRC) {
+< 			stop();
+< 			if ((n = p->p_sig) == 0)
+< 				return(0);
+< 		}
+< 		if((u.u_signal[n]&1) == 0)
+---
+> 	while(p->p_sig) {
+> 		n = fsig(p);
+> 		if((u.u_signal[n]&1) == 0 || (p->p_flag&STRC))
+101a106
+> 		p->p_sig =& ~(1<<(n-1));
+144,145c149,154
+< 	n = rp->p_sig;
+< 	rp->p_sig = 0;
+---
+> 	if (rp->p_flag&STRC)
+> 		stop();
+> 	n = fsig(rp);
+> 	if (n==0)
+> 		return;
+> 	rp->p_sig =& ~(1<<(n-1));
+178a188,206
+>  * find the signal in bit-position
+>  * representation in p_sig.
+>  */
+> fsig(p)
+> struct proc *p;
+> {
+> 	register n, i;
+> 	register char *cp;
+> 
+> 	n = p->p_sig;
+> 	for(i=1; i<NSIG; i++) {
+> 		if(n & 1)
+> 			return(i);
+> 		n =>> 1;
+> 	}
+> 	return(0);
+> }
+> 
+> /*
+185a214
+> #include "../userx.h"
+200c229
+< 		if(ip == NULL)
+---
+> 		if (ip==NULL)
+214c243
+< 		estabur(0, s, 0, 0);
+---
+> 		estabur(0, s, 0, 0, RO);
+239c268
+< 	if(estabur(u.u_tsize, u.u_dsize, u.u_ssize+si, u.u_sep))
+---
+> 	if(estabur(u.u_tsize, u.u_dsize, u.u_ssize+si, u.u_sep, RO))
+258a288
+> 	register struct text *xp;
+298a329
+> 	register struct text *xp;
+329c360,361
+< 	/* write user I (for now, always an error) */
+---
+> 	/* write user I */
+> 	/* Must set up to allow writing */
+331,332c363,372
+< 		if (suiword(ipc.ip_addr, 0) < 0)
+< 			goto error;
+---
+> 		/*
+> 		 * If text, must assure exclusive use
+> 		 */
+> 		if (xp = u.u_procp->p_textp) {
+> 			if (xp->x_count!=1 || xp->x_iptr->i_mode&ISVTX)
+> 				goto error;
+> 			xp->x_iptr->i_flag =& ~ITEXT;
+> 		}
+> 		estabur(u.u_tsize, u.u_dsize, u.u_ssize, u.u_sep, RW);
+> 		i = suiword(ipc.ip_addr, 0);
+333a374,378
+> 		estabur(u.u_tsize, u.u_dsize, u.u_ssize, u.u_sep, RO);
+> 		if (i<0)
+> 			goto error;
+> 		if (xp)
+> 			xp->x_flag =| XWRIT;
+362c407,408
+< 		u.u_procp->p_sig = ipc.ip_data;
+---
+> 		u.u_procp->p_sig = 0;
+> 		psignal(u.u_procp, ipc.ip_data);
+------ ken/slp.c
+2,4d1
+< /*
+<  */
+< 
+6a4
+> #include "../userx.h"
+7a6
+> #include "../procx.h"
+8a8
+> #include "../textx.h"
+10a11
+> #include "../filex.h"
+11a13
+> #include "../inodex.h"
+12a15
+> #include "../bufx.h"
+19,20c22,23
+<  * pri<0 a signal cannot disturb the sleep;
+<  * if pri>=0 signals will be processed.
+---
+>  * pri<=0 a signal cannot disturb the sleep;
+>  * if pri>0 signals will be processed.
+31,32c34,42
+< 	if(pri >= 0) {
+< 		if(issig())
+---
+> 	spl6();
+> 	rp->p_stat = SSLEEP;
+> 	rp->p_wchan = chan;
+> 	rp->p_pri = pri;
+> 	if(pri > 0) {
+> 		if(issig()) {
+> 			rp->p_wchan = 0;
+> 			rp->p_stat = SRUN;
+> 			spl0();
+34,37c44
+< 		spl6();
+< 		rp->p_wchan = chan;
+< 		rp->p_stat = SWAIT;
+< 		rp->p_pri = pri;
+---
+> 		}
+47,50d53
+< 		spl6();
+< 		rp->p_wchan = chan;
+< 		rp->p_stat = SSLEEP;
+< 		rp->p_pri = pri;
+58c61
+< 	 * If priority was low (>=0) and
+---
+> 	 * If priority was low (>0) and
+80c83
+< 		if(p->p_wchan == c) {
+---
+> 		if(p->p_wchan==c && p->p_stat!=SZOMB)
+82d84
+< 		}
+86a89,107
+> setrq(p)
+> struct proc *p;
+> {
+> 	register struct proc *q;
+> 	register s;
+> 
+> 	s = PS->integ;
+> 	spl6();
+> 	for(q=runq; q!=NULL; q=q->p_link)
+> 		if(q == p) {
+> 			printf("proc on q\n");
+> 			goto out;
+> 		}
+> 	p->p_link = runq;
+> 	runq = p;
+> out:
+> 	PS->integ = s;
+> }
+> 
+95a117,118
+> 	if (rp->p_stat==0 || rp->p_stat==SZOMB)
+> 		panic("Running a dead proc");
+97a121
+> 	setrq(p);
+109c133
+<  * is set if the priority is higher
+---
+>  * is set if the priority is better
+121c145
+< 	if(p > curpri)
+---
+> 	if(p < curpri)
+123a148
+> 	return(p);
+134,137c159,160
+<  * Although it is not remarkably evident, the basic
+<  * synchronization here is on the runin flag, which is
+<  * slept on and is set once per second by the clock routine.
+<  * Core shuffling therefore takes place once per second.
+---
+>  * The runout flag is set whenever someone is swapped out.
+>  * Sched sleeps on it awaiting work.
+139,142c162,165
+<  * panic: swap error -- IO error while swapping.
+<  *	this is the one panic that should be
+<  *	handled in a less drastic way. Its
+<  *	very hard.
+---
+>  * Sched sleeps on runin whenever it cannot find enough
+>  * core (by swapping out or otherwise) to fit the
+>  * selected swapped process.  It is awakend when the
+>  * core situation changes and in any event once per second.
+146,148c169,171
+< 	struct proc *p1;
+< 	register struct proc *rp;
+< 	register a, n;
+---
+> 	register struct proc *rp, *p;
+> 	register outage, inage;
+> 	int maxsize;
+151c174
+< 	 * find user to swap in
+---
+> 	 * find user to swap in;
+155,160d177
+< 	goto loop;
+< 
+< sloop:
+< 	runin++;
+< 	sleep(&runin, PSWP);
+< 
+163,168c180,185
+< 	n = -1;
+< 	for(rp = &proc[0]; rp < &proc[NPROC]; rp++)
+< 	if(rp->p_stat==SRUN && (rp->p_flag&SLOAD)==0 &&
+< 	    rp->p_time > n) {
+< 		p1 = rp;
+< 		n = rp->p_time;
+---
+> 	outage = -20000;
+> 	for (rp = &proc[0]; rp < &proc[NPROC]; rp++)
+> 	if (rp->p_stat==SRUN && (rp->p_flag&SLOAD)==0 &&
+> 	    rp->p_time-rp->p_nice*8 > outage) {
+> 		p = rp;
+> 		outage = rp->p_time-rp->p_nice*8;
+170c187,190
+< 	if(n == -1) {
+---
+> 	/*
+> 	 * If there is no one there, wait.
+> 	 */
+> 	if (outage == -20000) {
+175,179d194
+< 
+< 	/*
+< 	 * see if there is core for that process
+< 	 */
+< 
+181,187d195
+< 	rp = p1;
+< 	a = rp->p_size;
+< 	if((rp=rp->p_textp) != NULL)
+< 		if(rp->x_ccount == 0)
+< 			a =+ rp->x_size;
+< 	if((a=malloc(coremap, a)) != NULL)
+< 		goto found2;
+190,191c198,199
+< 	 * none found,
+< 	 * look around for easy core
+---
+> 	 * See if there is core for that process;
+> 	 * if so, swap it in.
+194,198c202,203
+< 	spl6();
+< 	for(rp = &proc[0]; rp < &proc[NPROC]; rp++)
+< 	if((rp->p_flag&(SSYS|SLOCK|SLOAD))==SLOAD &&
+< 	    (rp->p_stat == SWAIT || rp->p_stat==SSTOP))
+< 		goto found1;
+---
+> 	if (swapin(p))
+> 		goto loop;
+201,204c206,209
+< 	 * no easy core,
+< 	 * if this process is deserving,
+< 	 * look around for
+< 	 * oldest process in core
+---
+> 	 * none found.
+> 	 * look around for core.
+> 	 * Select the largest of those sleeping
+> 	 * at bad priority; if none, select the oldest.
+207,215c212,231
+< 	if(n < 3)
+< 		goto sloop;
+< 	n = -1;
+< 	for(rp = &proc[0]; rp < &proc[NPROC]; rp++)
+< 	if((rp->p_flag&(SSYS|SLOCK|SLOAD))==SLOAD &&
+< 	   (rp->p_stat==SRUN || rp->p_stat==SSLEEP) &&
+< 	    rp->p_time > n) {
+< 		p1 = rp;
+< 		n = rp->p_time;
+---
+> 	spl6();
+> 	p = NULL;
+> 	maxsize = -1;
+> 	inage = -1;
+> 	for (rp = &proc[0]; rp < &proc[NPROC]; rp++) {
+> 		if ((rp->p_flag&(SSYS|SLOCK|SLOAD))!=SLOAD)
+> 			continue;
+> 		if (rp->p_textp && rp->p_textp->x_flag&XLOCK)
+> 			continue;
+> 		if (rp->p_stat==SSLEEP&&rp->p_pri>=0 || rp->p_stat==SSTOP) {
+> 			if (maxsize < rp->p_size) {
+> 				p = rp;
+> 				maxsize = rp->p_size;
+> 			}
+> 		} else if (maxsize<0 && (rp->p_stat==SRUN||rp->p_stat==SSLEEP)) {
+> 			if (rp->p_time+rp->p_nice > inage) {
+> 				p = rp;
+> 				inage = rp->p_time+rp->p_nice;
+> 			}
+> 		}
+217,220c233
+< 	if(n < 2)
+< 		goto sloop;
+< 	rp = p1;
+< 
+---
+> 	spl0();
+222c235,238
+< 	 * swap user out
+---
+> 	 * Swap found user out if sleeping at bad pri,
+> 	 * or if he has spent at least 2 seconds in core and
+> 	 * the swapped-out process has spent at least 3 seconds out.
+> 	 * Otherwise wait a bit and try again.
+224,228c240,247
+< 
+< found1:
+< 	spl0();
+< 	rp->p_flag =& ~SLOAD;
+< 	xswap(rp, 1, 0);
+---
+> 	if (maxsize>=0 || (outage>=3 && inage>=2)) {
+> 		p->p_flag =& ~SLOAD;
+> 		xswap(p, 1, 0);
+> 		goto loop;
+> 	}
+> 	spl6();
+> 	runin++;
+> 	sleep(&runin, PSWP);
+229a249
+> }
+231,233c251,262
+< 	/*
+< 	 * swap user in
+< 	 */
+---
+> /*
+>  * Swap a process in.
+>  * Allocate data and possible text separately.
+>  * It would be better to do largest first.
+>  */
+> swapin(pp)
+> struct proc *pp;
+> {
+> 	register struct proc *p;
+> 	register struct text *xp;
+> 	register int a;
+> 	int x;
+235,241c264,277
+< found2:
+< 	if((rp=p1->p_textp) != NULL) {
+< 		if(rp->x_ccount == 0) {
+< 			if(swap(rp->x_daddr, a, rp->x_size, B_READ))
+< 				goto swaper;
+< 			rp->x_caddr = a;
+< 			a =+ rp->x_size;
+---
+> 	p = pp;
+> 	if ((a = malloc(coremap, p->p_size)) == NULL)
+> 		return(0);
+> 	if (xp = p->p_textp) {
+> 		xlock(xp);
+> 		if (xp->x_ccount==0) {
+> 			if ((x = malloc(coremap, xp->x_size)) == NULL) {
+> 				xunlock(xp);
+> 				mfree(coremap, p->p_size, a);
+> 				return(0);
+> 			}
+> 			xp->x_caddr = x;
+> 			if ((xp->x_flag&XLOAD)==0)
+> 				swap(xp->x_daddr,x,xp->x_size,B_READ);
+243c279,280
+< 		rp->x_ccount++;
+---
+> 		xp->x_ccount++;
+> 		xunlock(xp);
+245,252c282,288
+< 	rp = p1;
+< 	if(swap(rp->p_addr, a, rp->p_size, B_READ))
+< 		goto swaper;
+< 	mfree(swapmap, (rp->p_size+7)/8, rp->p_addr);
+< 	rp->p_addr = a;
+< 	rp->p_flag =| SLOAD;
+< 	rp->p_time = 0;
+< 	goto loop;
+---
+> 	swap(p->p_addr, a, p->p_size, B_READ);
+> 	mfree(swapmap, ctob(p->p_size), p->p_addr);
+> 	p->p_addr = a;
+> 	p->p_flag =| SLOAD;
+> 	p->p_time = 0;
+> 	return(1);
+> }
+254,255c290,294
+< swaper:
+< 	panic("swap error");
+---
+> qswtch()
+> {
+> 
+> 	setrq(u.u_procp);
+> 	swtch();
+266,268c305,307
+< 	static struct proc *p;
+< 	register i, n;
+< 	register struct proc *rp;
+---
+> 	register n;
+> 	register struct proc *p, *q;
+> 	static struct proc *pp, *pq;
+270,271d308
+< 	if(p == NULL)
+< 		p = &proc[0];
+273a311
+> 	 * and switch to schedulers stack.
+276,278d313
+< 	/*
+< 	 * Switch to scheduler's stack
+< 	 */
+281a317
+> 	spl6();
+283,284c319,320
+< 	rp = p;
+< 	p = NULL;
+---
+> 	pp = NULL;
+> 	q = NULL;
+289,297c325,330
+< 	i = NPROC;
+< 	do {
+< 		rp++;
+< 		if(rp >= &proc[NPROC])
+< 			rp = &proc[0];
+< 		if(rp->p_stat==SRUN && (rp->p_flag&SLOAD)!=0) {
+< 			if(rp->p_pri < n) {
+< 				p = rp;
+< 				n = rp->p_pri;
+---
+> 	for(p=runq; p!=NULL; p=p->p_link) {
+> 		if((p->p_stat==SRUN) && (p->p_flag&SLOAD)) {
+> 			if(p->p_pri < n) {
+> 				pp = p;
+> 				pq = q;
+> 				n = p->p_pri;
+300c333,334
+< 	} while(--i);
+---
+> 		q = p;
+> 	}
+303a338
+> 	p = pp;
+305d339
+< 		p = rp;
+306a341
+> 		spl0();
+309c344,347
+< 	rp = p;
+---
+> 	q = pq;
+> 	if(q == NULL)
+> 		runq = p->p_link; else
+> 		q->p_link = p->p_link;
+310a349
+> 	spl0();
+315c354
+< 	retu(rp->p_addr);
+---
+> 	retu(p->p_addr);
+324,325d362
+< 	 *
+< 	 * You are not expected to understand this.
+327,328c364,365
+< 	if(rp->p_flag&SSWAP) {
+< 		rp->p_flag =& ~SSWAP;
+---
+> 	if(p->p_flag&SSWAP) {
+> 		p->p_flag =& ~SSWAP;
+386a424
+> 	rpp->p_clktim = 0;
+389c427
+< 	rpp->p_ttyp = rip->p_ttyp;
+---
+> 	rpp->p_pgrp = rip->p_pgrp;
+394a433
+> 	rpp->p_cpu = 0;
+442a482
+> 	setrq(rpp);
+481c521
+< 		swtch();
+---
+> 		qswtch();
+------ ken/subr.c
+2,4d1
+< /*
+<  */
+< 
+7a5
+> #include "../inodex.h"
+8a7
+> #include "../userx.h"
+9a9
+> #include "../bufx.h"
+54a55
+> 			ip->i_flag =| IUPD;
+79d79
+< 		ip->i_flag =| IUPD;
+82a83
+> 		ip->i_flag =| IUPD;
+134a136
+> 	register id;
+136,138c138,141
+< 	if(u.u_segflg)
+< 		*u.u_base = c; else
+< 		if(subyte(u.u_base, c) < 0) {
+---
+> 	if((id = u.u_segflg) == 1)
+> 		*u.u_base = c;
+> 	else
+> 		if(id?suibyte(u.u_base, c):subyte(u.u_base, c) < 0) {
+158c161
+< 	register c;
+---
+> 	register c, id;
+162,164c165,168
+< 	if(u.u_segflg)
+< 		c = *u.u_base; else
+< 		if((c=fubyte(u.u_base)) < 0) {
+---
+> 	if((id = u.u_segflg) == 1)
+> 		c = *u.u_base;
+> 	else
+> 		if((c = id==0?fubyte(u.u_base):fuibyte(u.u_base)) < 0) {
+------ ken/sys1.c
+2,4d1
+< /*
+<  */
+< 
+7a5
+> #include "../userx.h"
+8a7
+> #include "../procx.h"
+9a9
+> #include "../bufx.h"
+11a12,13
+> #include "../inodex.h"
+> #include "../seg.h"
+15,20d16
+<  * Because of the fact that an I/O buffer is used
+<  * to store the caller's arguments during exec,
+<  * and more buffers are needed to read in the text file,
+<  * deadly embraces waiting for free buffers are possible.
+<  * Therefore the number of processes simultaneously
+<  * running in exec has to be limited to NEXEC.
+22,23d17
+< #define EXPRI	-1
+< 
+26,28c20
+< 	int ap, na, nc, *bp;
+< 	int ts, ds, sep;
+< 	register c, *ip;
+---
+> 	register nc;
+30c22,25
+< 	extern uchar;
+---
+> 	register struct buf *bp;
+> 	int na, bno, ucp, ap, c;
+> 	struct inode *ip;
+> 	extern int uchar();
+32,39c27
+< 	/*
+< 	 * pick up file names
+< 	 * and check various modes
+< 	 * for execute permission
+< 	 */
+< 
+< 	ip = namei(&uchar, 0);
+< 	if(ip == NULL)
+---
+> 	if ((ip = namei(uchar, 0)) == NULL)
+41,45c29,31
+< 	while(execnt >= NEXEC)
+< 		sleep(&execnt, EXPRI);
+< 	execnt++;
+< 	bp = getblk(NODEV);
+< 	if(access(ip, IEXEC) || (ip->i_mode&IFMT)!=0)
+---
+> 	bno = 0;
+> 	bp = 0;
+> 	if(access(ip, IEXEC))
+47c33,37
+< 
+---
+> 	if((ip->i_mode & IFMT) != 0 ||
+> 	   (ip->i_mode & (IEXEC|(IEXEC>>3)|(IEXEC>>6))) == 0) {
+> 		u.u_error = EACCES;
+> 		goto bad;
+> 	}
+49,50c39
+< 	 * pack up arguments into
+< 	 * allocated disk buffer
+---
+> 	 * Collect arguments on "file" in swap space.
+52,53d40
+< 
+< 	cp = bp->b_addr;
+56c43,45
+< 	while(ap = fuword(u.u_arg[1])) {
+---
+> 	if ((bno = malloc(swapmap,(NCARGS+511)/512)) == 0)
+> 		panic("Out of swap");
+> 	if (u.u_arg[1]) while(ap = fuword(u.u_arg[1])) {
+59c48
+< 			goto bad;
+---
+> 			u.u_error = EFAULT;
+61,67c50,51
+< 		for(;;) {
+< 			c = fubyte(ap++);
+< 			if(c == -1)
+< 				goto bad;
+< 			*cp++ = c;
+< 			nc++;
+< 			if(nc > 510) {
+---
+> 		do {
+> 			if (nc >= NCARGS-1)
+68a53,55
+> 			if ((c = fubyte(ap++)) < 0)
+> 				u.u_error = EFAULT;
+> 			if (u.u_error)
+69a57,61
+> 			if ((nc&0777) == 0) {
+> 				if (bp)
+> 					bawrite(bp);
+> 				bp = getblk(swapdev, bno+(nc>>9));
+> 				cp = bp->b_addr;
+71,73c63,65
+< 			if(c == 0)
+< 				break;
+< 		}
+---
+> 			nc++;
+> 			*cp++ = c;
+> 		} while (c>0);
+75,76c67,70
+< 	if((nc&1) != 0) {
+< 		*cp++ = 0;
+---
+> 	if (bp)
+> 		bawrite(bp);
+> 	bp = 0;
+> 	if((nc&1) != 0)
+77a72,95
+> 	if (getxfile(ip, nc) || u.u_error)
+> 		goto bad;
+> 
+> 	/*
+> 	 * copy back arglist
+> 	 */
+> 
+> 	ucp = -nc;
+> 	ap = ucp - na*2 - 4;
+> 	u.u_ar0[R6] = ap;
+> 	suword(ap, na);
+> 	nc = 0;
+> 	while(na--) {
+> 		suword(ap=+2, ucp);
+> 		do {
+> 			if ((nc&0777) == 0) {
+> 				if (bp)
+> 					brelse(bp);
+> 				bp = bread(swapdev, bno+(nc>>9));
+> 				cp = bp->b_addr;
+> 			}
+> 			subyte(ucp++, (c = *cp++));
+> 			nc++;
+> 		} while(c&0377);
+78a97,105
+> 	suword(ap+2, -1);
+> 	setregs();
+> bad:
+> 	if (bp)
+> 		brelse(bp);
+> 	if(bno)
+> 		mfree(swapmap, (NCARGS+511)/512, bno);
+> 	iput(ip);
+> }
+79a107,117
+> /*
+>  * Read in and set up memory for executed file.
+>  * Zero return is normal;
+>  * non-zero means only the text is being replaced
+>  */
+> getxfile(aip, nargc)
+> {
+> 	register struct inode *ip;
+> 	register ds, sep;
+> 	int ts, ss, overlay, i;
+> 
+81c119
+< 	 * read in first 8 bytes
+---
+> 	 * read in first few bytes
+84,87c122,126
+< 	 * w0 = 407/410/411 (410 implies RO text) (411 implies sep ID)
+< 	 * w1 = text size
+< 	 * w2 = data size
+< 	 * w3 = bss size
+---
+> 	 * ux_mag = 407/410/411/405
+> 	 *  407 is plain executable
+> 	 *  410 is RO text
+> 	 *  411 is separated ID
+> 	 *  405 is overlaid text
+90,91c129,131
+< 	u.u_base = &u.u_arg[0];
+< 	u.u_count = 8;
+---
+> 	ip = aip;
+> 	u.u_base = &u.u_exdata;
+> 	u.u_count = sizeof(u.u_exdata);
+98a139,142
+> 	if (u.u_count!=0) {
+> 		u.u_error = ENOEXEC;
+> 		goto bad;
+> 	}
+100,106c144,152
+< 	if(u.u_arg[0] == 0407) {
+< 		u.u_arg[2] =+ u.u_arg[1];
+< 		u.u_arg[1] = 0;
+< 	} else
+< 	if(u.u_arg[0] == 0411)
+< 		sep++; else
+< 	if(u.u_arg[0] != 0410) {
+---
+> 	overlay = 0;
+> 	if(u.u_exdata.ux_mag == 0407) {
+> 		u.u_exdata.ux_dsize =+ u.u_exdata.ux_tsize;
+> 		u.u_exdata.ux_tsize = 0;
+> 	} else if (u.u_exdata.ux_mag == 0411)
+> 		sep++;
+> 	else if (u.u_exdata.ux_mag == 0405)
+> 		overlay++;
+> 	else if (u.u_exdhpca  = 176734   lgorith	mov	r0,r1 uge a	clr	r0 	div	$22.,r0			/ r1 = sector et 	mov	r1,-(sp) fi	mov	r0,r1 p) 3		clr	r0 	div	$19.,r0			/ r0 = cyl   r1 = trk add	bisb	r1,1(sp) -dskc = . + 2 r0,	add	$220.,r0		/ cylinder offset p, erro	mov	r0,*$hpca ,	mov	$hpda,r1 ib	mov	(sp)+,(r1)		/ set trk/sector uffer 	mov	r5,-(r1)		/ buffer address 1: v	(sp	mov	$-256.,-(r1) ov	(sp	mov	$71,-(r1)		/ read u1: 0),r0	tstb	(r1)			/ io complete ?? 0 	bpl	1b			/ --> no s1 = 	rts	pc  pda  = / read and echo character from tty. 32 uSIZE;
+< 	expand(c);
+< 	while(--c >= USIZE)
+< 		clearseg(u.u_procp->p_addr+c);
+< 
+< 	/*
+< 	 * read in data segment
+< 	 */
+< 
+< 	estabur(0, ds, 0, 0);
+< 	u.u_base = 0;
+< 	u.u_offset[1] = 020+u.u_arg[1];
+< 	u.u_count = u.u_arg[2];
+< 	readi(ip);
+< 
+< 	/*
+< 	 * initialize stack segment
+< 	 */
+< 
+---
+> 	ts = ((u.u_exdata.ux_tsize+63)>>6) & 01777;
+> 	ds = ((u.u_exdata.ux_dsize+u.u_exdata.ux_bsize+63)>>6) & 01777;
+> 	ss = SSIZE + (nargc>>6);
+> 	if (overlay) {
+> 		if (u.u_sep==0 && ctos(ts) != ctos(u.u_tsize) || nargc) {
+> 			u.u_error = ENOMEM;
+> 			goto bad;
+> 		}
+> 		ds = u.u_dsize;
+> 		ss = u.u_ssize;
+> 		sep = u.u_sep;
+> 		xfree();
+> 		xalloc(ip);
+> 		u.u_ar0[R7] = u.u_exdata.ux_entloc & ~01;
+> 	} else {
+> 		if(estabur(ts, ds, ss, sep, RO))
+> 			goto bad;
+> 	
+> 		/*
+> 		 * allocate and clear core
+> 		 * at this point, committed
+> 		 * to the new image
+> 		 */
+> 	
+> 		u.u_prof[3] = 0;
+> 		xfree();
+> 		i = USIZE+ds+ss;
+> 		expand(i);
+> 		while(--i >= USIZE)
+> 			clearseg(u.u_procp->p_addr+i);
+> 		xalloc(ip);
+> 	
+> 		/*
+> 		 * read in data segment
+> 		 */
+> 	
+> 		estabur(0, ds, 0, 0, RO);
+> 		u.u_base = 0;
+> 		u.u_offset[1] = 020+u.u_exdata.ux_tsize;
+> 		u.u_count = u.u_exdata.ux_dsize;
+> 		readi(ip);
+> 		/*
+> 		 * set SUID/SGID protections, if no tracing
+> 		 */
+> 		if ((u.u_procp->p_flag&STRC)==0) {
+> 			if(ip->i_mode&ISUID)
+> 				if(u.u_uid != 0) {
+> 					u.u_uid = ip->i_uid;
+> 					u.u_procp->p_uid = ip->i_uid;
+> 				}
+> 			if(ip->i_mode&ISGID)
+> 				u.u_gid = ip->i_gid;
+> 		}
+> 	}
+157c223
+< 	u.u_ssize = SSIZE;
+---
+> 	u.u_ssize = ss;
+159,171c225,228
+< 	estabur(u.u_tsize, u.u_dsize, u.u_ssize, u.u_sep);
+< 	cp = bp->b_addr;
+< 	ap = -nc - na*2 - 4;
+< 	u.u_ar0[R6] = ap;
+< 	suword(ap, na);
+< 	c = -nc;
+< 	while(na--) {
+< 		suword(ap=+2, c);
+< 		do
+< 			subyte(c++, *cp);
+< 		while(*cp++);
+< 	}
+< 	suword(ap+2, -1);
+---
+> 	estabur(ts, ds, ss, sep, RO);
+> bad:
+> 	return(overlay);
+> }
+173,175c230,237
+< 	/*
+< 	 * set SUID/SGID protections, if no tracing
+< 	 */
+---
+> /*
+>  * Clear registers on exec
+>  */
+> setregs()
+> {
+> 	register int *rp;
+> 	register char *cp;
+> 	register i;
+177,184c239,249
+< 	if ((u.u_procp->p_flag&STRC)==0) {
+< 		if(ip->i_mode&ISUID)
+< 			if(u.u_uid != 0) {
+< 				u.u_uid = ip->i_uid;
+< 				u.u_procp->p_uid = ip->i_uid;
+< 			}
+< 		if(ip->i_mode&ISGID)
+< 			u.u_gid = ip->i_gid;
+---
+> 	for(rp = &u.u_signal[0]; rp < &u.u_signal[NSIG]; rp++)
+> 		if((*rp & 1) == 0)
+> 			*rp = 0;
+> 	for(cp = &regloc[0]; cp < &regloc[6];)
+> 		u.u_ar0[*cp++] = 0;
+> 	u.u_ar0[R7] = u.u_exdata.ux_entloc & ~01;
+> 	for(rp = &u.u_fsav[0]; rp < &u.u_fsav[25];)
+> 		*rp++ = 0;
+> 	for (rp = &u.u_ofile[FCLFILE]; rp < &u.u_ofile[NOFILE];) {
+> 		closef(*rp);
+> 		*rp++ = NULL;
+186d250
+< 
+188c252
+< 	 * clear sigs, regs and return
+---
+> 	 * Remember file name for accounting.
+190,207c254,256
+< 
+< 	c = ip;
+< 	for(ip = &u.u_signal[0]; ip < &u.u_signal[NSIG]; ip++)
+< 		if((*ip & 1) == 0)
+< 			*ip = 0;
+< 	for(cp = &regloc[0]; cp < &regloc[6];)
+< 		u.u_ar0[*cp++] = 0;
+< 	u.u_ar0[R7] = 0;
+< 	for(ip = &u.u_fsav[0]; ip < &u.u_fsav[25];)
+< 		*ip++ = 0;
+< 	ip = c;
+< 
+< bad:
+< 	iput(ip);
+< 	brelse(bp);
+< 	if(execnt >= NEXEC)
+< 		wakeup(&execnt);
+< 	execnt--;
+---
+> 	u.u_acflag =& ~1;
+> 	for (i=0; i<DIRSIZ; i++)
+> 		u.u_comm[i] = u.u_dbuf[i];
+230,231c279,280
+< 	register int *q, a;
+< 	register struct proc *p;
+---
+> 	register int *a;
+> 	register struct proc *p, *q;
+233,239c282,290
+< 	u.u_procp->p_flag =& ~STRC;
+< 	for(q = &u.u_signal[0]; q < &u.u_signal[NSIG];)
+< 		*q++ = 1;
+< 	for(q = &u.u_ofile[0]; q < &u.u_ofile[NOFILE]; q++)
+< 		if(a = *q) {
+< 			*q = NULL;
+< 			closef(a);
+---
+> 	p = u.u_procp;
+> 	p->p_flag =& ~STRC;
+> 	p->p_clktim = 0;
+> 	for(a = &u.u_signal[0]; a < &u.u_signal[NSIG];)
+> 		*a++ = 1;
+> 	for(a = &u.u_ofile[0]; a < &u.u_ofile[NOFILE]; a++)
+> 		if (*a) {
+> 			closef(*a);
+> 			*a = NULL;
+240a292
+> 	plock(u.u_cdir);
+243,263c295,306
+< 	a = malloc(swapmap, 1);
+< 	if(a == NULL)
+< 		panic("out of swap");
+< 	p = getblk(swapdev, a);
+< 	bcopy(&u, p->b_addr, 256);
+< 	bwrite(p);
+< 	q = u.u_procp;
+< 	mfree(coremap, q->p_size, q->p_addr);
+< 	q->p_addr = a;
+< 	q->p_stat = SZOMB;
+< 
+< loop:
+< 	for(p = &proc[0]; p < &proc[NPROC]; p++)
+< 	if(q->p_ppid == p->p_pid) {
+< 		wakeup(&proc[1]);
+< 		wakeup(p);
+< 		for(p = &proc[0]; p < &proc[NPROC]; p++)
+< 		if(q->p_pid == p->p_ppid) {
+< 			p->p_ppid  = 1;
+< 			if (p->p_stat == SSTOP)
+< 				setrun(p);
+---
+> 	acct();
+> 	mfree(coremap, p->p_size, p->p_addr);
+> 	p->p_stat = SZOMB;
+> 	p->xp_xstat = u.u_arg[0];
+> 	p->xp_utime = u.u_cutime + u.u_utime;
+> 	p->xp_stime = u.u_cstime + u.u_stime;
+> 	for(q = &proc[0]; q < &proc[NPROC]; q++)
+> 		if(q->p_ppid == p->p_pid) {
+> 			wakeup(&proc[1]);
+> 			q->p_ppid = 1;
+> 			if (q->p_stat==SSTOP)
+> 				setrun(q);
+265,269c308,315
+< 		swtch();
+< 		/* no return */
+< 	}
+< 	q->p_ppid = 1;
+< 	goto loop;
+---
+> 	for(q = &proc[0]; q < &proc[NPROC]; q++)
+> 		if(p->p_ppid == q->p_pid) {
+> 			wakeup(q);
+> 			swtch();
+> 			/* no return */
+> 		}
+> 	printf("Init proc dead");
+> 	swtch();
+281c327
+< 	register f, *bp;
+---
+> 	register f;
+292,293c338,340
+< 			bp = bread(swapdev, f=p->p_addr);
+< 			mfree(swapmap, 1, f);
+---
+> 			u.u_ar0[R1] = p->xp_xstat;
+> 			u.u_cutime =+ p->xp_utime;
+> 			u.u_cstime =+ p->xp_stime;
+298c345
+< 			p->p_ttyp = 0;
+---
+> 			p->p_pgrp = 0;
+300,308c347
+< 			p = bp->b_addr;
+< 			u.u_cstime[0] =+ p->u_cstime[0];
+< 			dpadd(u.u_cstime, p->u_cstime[1]);
+< 			dpadd(u.u_cstime, p->u_stime);
+< 			u.u_cutime[0] =+ p->u_cutime[0];
+< 			dpadd(u.u_cutime, p->u_cutime[1]);
+< 			dpadd(u.u_cutime, p->u_utime);
+< 			u.u_ar0[R1] = p->u_arg[0];
+< 			brelse(bp);
+---
+> 			p->p_wchan = 0;
+315c354
+< 				u.u_ar0[R1] = (p->p_sig<<8) | 0177;
+---
+> 				u.u_ar0[R1] = (fsig(p)<<8) | 0177;
+318,319c357
+< 			p->p_flag =& ~(STRC|SWTED);
+< 			setrun(p);
+---
+> 			continue;
+334a373
+> 	register a;
+335a375,383
+> 	/*
+> 	 * Make sure there's enough swap space for max
+> 	 * core image, thus reducing chances of running out
+> 	 */
+> 	if ((a = malloc(swapmap, ctob(MAXMEM))) == 0) {
+> 		u.u_error = ENOMEM;
+> 		goto out;
+> 	}
+> 	mfree(swapmap, ctob(MAXMEM), a);
+346,347c394,395
+< 		u.u_cstime[0] = 0;
+< 		u.u_cstime[1] = 0;
+---
+> 		u.u_start = time;
+> 		u.u_cstime = 0;
+349,350c397
+< 		u.u_cutime[0] = 0;
+< 		u.u_cutime[1] = 0;
+---
+> 		u.u_cutime = 0;
+351a399
+> 		u.u_acflag =| 1;
+377c425
+< 		n =- nseg(u.u_tsize) * 128;
+---
+> 		n =- ctos(u.u_tsize) * 128;
+382c430
+< 	if(estabur(u.u_tsize, u.u_dsize+d, u.u_ssize, u.u_sep))
+---
+> 	if(estabur(u.u_tsize, u.u_dsize+d, u.u_ssize, u.u_sep, RO))
+------ ken/sys2.c
+4a5
+> #include "../userx.h"
+6a8
+> #include "../filex.h"
+7a10
+> #include "../inodex.h"
+32c35
+< 	register *fp, m;
+---
+> 	register *fp, *ip, m;
+49a53
+> 		ip = fp->f_inode;
+51a56,57
+> 		if((ip->i_mode&(IFCHR&IFBLK)) == 0)
+> 			plock(ip);
+53,54c59,62
+< 			readi(fp->f_inode); else
+< 			writei(fp->f_inode);
+---
+> 			readi(ip); else
+> 			writei(ip);
+> 		if((ip->i_mode&(IFCHR&IFBLK)) == 0)
+> 			prele(ip);
+120c128
+< 	if(trf)
+---
+> 	if(trf == 1)
+195,196c203,208
+< 	fp->f_offset[1] = n[1];
+< 	fp->f_offset[0] = n[0];
+---
+> 	if (n[0] & ~0777)
+> 		u.u_error = EFBIG;
+> 	else {
+> 		fp->f_offset[1] = n[1];
+> 		fp->f_offset[0] = n[0];
+> 	}
+199a212,224
+>  * Tell -- discover offset of file R/W pointer
+>  */
+> tell()
+> {
+> 	register struct file *fp;
+> 
+> 	if (fp = getf(u.u_ar0[R0])) {
+> 		u.u_ar0[R0] = fp->f_offset[0];
+> 		u.u_ar0[R1] = fp->f_offset[1];
+> 	}
+> }
+> 
+> /*
+217c242,247
+< 	 * unlock to avoid possibly hanging the namei
+---
+> 	 * Unlock to avoid possibly hanging the namei.
+> 	 * Sadly, this means races. (Suppose someone
+> 	 * deletes the file in the meantime?)
+> 	 * Nor can it be locked again later
+> 	 * because then there will be deadly
+> 	 * embraces.
+219c249
+< 	ip->i_flag =& ~ILOCK;
+---
+> 	prele(ip);
+273c303
+< 	char *d[2];
+---
+> 	long d;
+276,286c306,310
+< 	d[0] = time[0];
+< 	d[1] = time[1];
+< 	dpadd(d, u.u_ar0[R0]);
+< 
+< 	while(dpcmp(d[0], d[1], time[0], time[1]) > 0) {
+< 		if(dpcmp(tout[0], tout[1], time[0], time[1]) <= 0 ||
+< 		   dpcmp(tout[0], tout[1], d[0], d[1]) > 0) {
+< 			tout[0] = d[0];
+< 			tout[1] = d[1];
+< 		}
+< 		sleep(tout, PSLEP);
+---
+> 	d = time + u.u_ar0[R0];
+> 	while (time < d) {
+> 		if (tout<=time || d<tout)
+> 			tout = d;
+> 		sleep(&tout, PSLEP);
+288a313,339
+> }
+> 
+> /*
+>  * access system call
+>  */
+> saccess()
+> {
+> 	extern uchar;
+> 	register svuid, svgid;
+> 	register *ip;
+> 
+> 	svuid = u.u_uid;
+> 	svgid = u.u_gid;
+> 	u.u_uid = u.u_ruid;
+> 	u.u_gid = u.u_rgid;
+> 	ip = namei(&uchar, 0);
+> 	if (ip != NULL) {
+> 		if (u.u_arg[1]&(IREAD>>6))
+> 			access(ip, IREAD);
+> 		if (u.u_arg[1]&(IWRITE>>6))
+> 			access(ip, IWRITE);
+> 		if (u.u_arg[1]&(IEXEC>>6))
+> 			access(ip, IEXEC);
+> 		iput(ip);
+> 	}
+> 	u.u_uid = svuid;
+> 	u.u_gid = svgid;
+------ ken/sys3.c
+2,4d1
+< /*
+<  */
+< 
+8a6
+> #include "../bufx.h"
+10a9
+> #include "../userx.h"
+11a11
+> #include "../inodex.h"
+12a13
+> #include "../filex.h"
+52c53
+< 	iupdat(ip, time);
+---
+> 	iupdat(ip);
+57c58,59
+< 		suword(ub, *ip++);
+---
+> 		if (suword(ub, *ip) != *ip++)
+> 			u.u_error = EFAULT;
+61c63,64
+< 		suword(ub, *cp++);
+---
+> 		if (suword(ub, *cp) != *cp++)
+> 			u.u_error = EFAULT;
+129a133,135
+> /*
+> 	ssort(smp->s_free+1, smp->s_nfree-1);
+> */
+167a174
+> 	plock(ip);
+186c193
+< 		return;
+---
+> 		return(NODEV);
+------ ken/sys4.c
+3,5d2
+<  */
+< 
+< /*
+10a8
+> #include "../userx.h"
+12a11
+> #include "../inodex.h"
+14a14
+> #include "../procx.h"
+24,26c24,25
+< 
+< 	u.u_ar0[R0] = time[0];
+< 	u.u_ar0[R1] = time[1];
+---
+> 	u.u_ar0[R0] = time.hiword;
+> 	u.u_ar0[R1] = time.loword;
+31d29
+< 
+33,35c31,33
+< 		time[0] = u.u_ar0[R0];
+< 		time[1] = u.u_ar0[R1];
+< 		wakeup(tout);
+---
+> 		time.hiword = u.u_ar0[R0];
+> 		time.loword = u.u_ar0[R1];
+> 		wakeup(&tout);
+101c99,100
+<  * panic: unlink -- "cannot happen"
+---
+>  * Hard to avoid races here, especially
+>  * in unlinking directories.
+111,112c110,119
+< 	prele(pp);
+< 	ip = iget(pp->i_dev, u.u_dent.u_ino);
+---
+> 	/*
+> 	 * Check for unlink(".")
+> 	 * to avoid hanging on the iget
+> 	 */
+> 	if (pp->i_number != u.u_dent.u_ino)
+> 		ip = iget(pp->i_dev, u.u_dent.u_ino);
+> 	else {
+> 		ip = pp;
+> 		ip->i_count++;
+> 	}
+114c121
+< 		panic("unlink -- iget");
+---
+> 		goto out1;
+116a124,134
+> 	/*
+> 	 * Don't unlink a mounted file.
+> 	 */
+> 	if (ip->i_dev != pp->i_dev) {
+> 		u.u_error = EBUSY;
+> 		goto out;
+> 	}
+> 	if (ip->i_flag&ITEXT && ip->i_nlink==1) {
+> 		u.u_error = ETXTBSY;
+> 		goto out;
+> 	}
+126d143
+< 	iput(pp);
+127a145,146
+> out1:
+> 	iput(pp);
+145a165,166
+> 	prele(ip);
+> 	plock(u.u_cdir);
+148d168
+< 	prele(ip);
+177,201d196
+< /*
+<  * Change modified date of file:
+<  * time to r0-r1; sys smdate; file
+<  * This call has been withdrawn because it messes up
+<  * incremental dumps (pseudo-old files aren't dumped).
+<  * It works though and you can uncomment it if you like.
+< 
+< smdate()
+< {
+< 	register struct inode *ip;
+< 	register int *tp;
+< 	int tbuf[2];
+< 
+< 	if ((ip = owner()) == NULL)
+< 		return;
+< 	ip->i_flag =| IUPD;
+< 	tp = &tbuf[2];
+< 	*--tp = u.u_ar0[R1];
+< 	*--tp = u.u_ar0[R0];
+< 	iupdat(ip, tp);
+< 	ip->i_flag =& ~IUPD;
+< 	iput(ip);
+< }
+< */
+< 
+207c202
+< 	if(a<=0 || a>=NSIG || a ==SIGKIL) {
+---
+> 	if(a<=0 || a>=NSIG || a==SIGKIL) {
+213,214c208
+< 	if(u.u_procp->p_sig == a)
+< 		u.u_procp->p_sig = 0;
+---
+> 	u.u_procp->p_sig =& ~(1<<(a-1));
+227,228d220
+< 		if(p == q)
+< 			continue;
+231c223
+< 		if(a == 0 && (p->p_ttyp != q->p_ttyp || p <= &proc[1]))
+---
+> 		if(a == 0 && (p->p_pgrp != q->p_pgrp || p <= &proc[1]))
+246c238
+< 	for(p = &u.u_utime; p  < &u.u_utime+6;) {
+---
+> 	for(p = &u.u_utime; p  < &u.u_utime+4;) {
+258a251,274
+> }
+> 
+> /*
+>  * alarm clock signal
+>  */
+> alarm()
+> {
+> 	register c, *p;
+> 
+> 	p = u.u_procp;
+> 	c = p->p_clktim;
+> 	p->p_clktim = u.u_ar0[R0];
+> 	u.u_ar0[R0] = c;
+> }
+> 
+> /*
+>  * indefinite wait.
+>  * no one should wakeup(&u)
+>  */
+> pause()
+> {
+> 
+> 	for(;;)
+> 		sleep(&u, PSLEP);
+------ ken/sysent.c
+3,5d2
+<  */
+< 
+< /*
+40c37
+< 	0, &nosys,			/* 27 = x */
+---
+> 	0, &alarm,			/* 27 = alarm */
+42c39
+< 	0, &nosys,			/* 29 = x */
+---
+> 	0, &pause,			/* 29 = pause */
+46c43
+< 	0, &nosys,			/* 33 = x */
+---
+> 	2, &saccess,			/* 33 = access */
+52,53c49,50
+< 	0, &nosys,			/* 39 = x */
+< 	0, &nosys,			/* 40 = x */
+---
+> 	0, &nullsys,			/* 39 = setpgrp (not in yet) */
+> 	0, &tell,			/* 40 = tell */
+62,64c59,61
+< 	0, &nosys,			/* 49 = x */
+< 	0, &nosys,			/* 50 = x */
+< 	0, &nosys,			/* 51 = x */
+---
+> 	0, &nosys,			/* 49 = reserved for USG */
+> 	0, &nosys,			/* 50 = reserved for USG */
+> 	1, &sysacct,			/* 51 = turn acct off/on */
+------ ken/text.c
+2,4d1
+< /*
+<  */
+< 
+7a5
+> #include "../userx.h"
+9a8
+> #include "../textx.h"
+10a10,13
+> #include "../inodex.h"
+> #include "../buf.h"
+> #include "../bufx.h"
+> #include "../seg.h"
+21d23
+<  * panic: swap error -- IO error
+31c33
+< 	a = malloc(swapmap, (rp->p_size+7)/8);
+---
+> 	a = malloc(swapmap, ctob(rp->p_size));
+34d35
+< 	xccdec(rp->p_textp);
+36,37c37,38
+< 	if(swap(a, rp->p_addr, os, 0))
+< 		panic("swap error");
+---
+> 	xccdec(rp->p_textp);
+> 	swap(a, rp->p_addr, os, B_WRITE);
+55c56,57
+< 	register *xp, *ip;
+---
+> 	register struct text *xp;
+> 	register struct inode *ip;
+57,58c59,73
+< 	if((xp=u.u_procp->p_textp) != NULL) {
+< 		u.u_procp->p_textp = NULL;
+---
+> 	if((xp=u.u_procp->p_textp) == NULL)
+> 		return;
+> 	xlock(xp);
+> 	xp->x_flag =& ~XLOCK;
+> 	ip = xp->x_iptr;
+> 	if(--xp->x_count==0 && (ip->i_mode&ISVTX)==0) {
+> 		xp->x_iptr = NULL;
+> 		mfree(swapmap, ctob(xp->x_size), xp->x_daddr);
+> 		mfree(coremap, xp->x_size, xp->x_caddr);
+> 		ip->i_flag =& ~ITEXT;
+> 		if (ip->i_flag&ILOCK)
+> 			ip->i_count--;
+> 		else
+> 			iput(ip);
+> 	} else
+60,69c75
+< 		if(--xp->x_count == 0) {
+< 			ip = xp->x_iptr;
+< 			if((ip->i_mode&ISVTX) == 0) {
+< 				xp->x_iptr = NULL;
+< 				mfree(swapmap, (xp->x_size+7)/8, xp->x_daddr);
+< 				ip->i_flag =& ~ITEXT;
+< 				iput(ip);
+< 			}
+< 		}
+< 	}
+---
+> 	u.u_procp->p_textp = NULL;
+77c83,84
+<  * in from the inode (ip) and established in the swap space.
+---
+>  * in from the inode (ip); the written bit is set to force it
+>  * to be written out as appropriate.
+80,86d86
+<  * The full coroutine glory has to be invoked--
+<  * see slp.c-- because if the calling process
+<  * is misplaced in core the text image might not fit.
+<  * Quite possibly the code after "out:" could check to
+<  * see if the text does fit and simply swap it in.
+<  *
+<  * panic: out of swap space
+94c94
+< 	if(u.u_arg[1] == 0)
+---
+> 	if(u.u_exdata.ux_tsize == 0)
+97c97
+< 	for(xp = &text[0]; xp < &text[NTEXT]; xp++)
+---
+> 	for (xp = &text[0]; xp < &text[NTEXT]; xp++) {
+101,108c101,120
+< 		} else
+< 			if(xp->x_iptr == ip) {
+< 				xp->x_count++;
+< 				u.u_procp->p_textp = xp;
+< 				goto out;
+< 			}
+< 	if((xp=rp) == NULL)
+< 		panic("out of text");
+---
+> 			continue;
+> 		}
+> 		if(xp->x_iptr == ip) {
+> 			xlock(xp);
+> 			xp->x_count++;
+> 			u.u_procp->p_textp = xp;
+> 			if (xp->x_ccount == 0)
+> 				xexpand(xp);
+> 			else
+> 				xp->x_ccount++;
+> 			xunlock(xp);
+> 			return;
+> 		}
+> 	}
+> 	if((xp=rp) == NULL) {
+> 		printf("out of text");
+> 		psignal(u.u_procp, SIGKIL);
+> 		return;
+> 	}
+> 	xp->x_flag = XLOAD|XLOCK;
+111,112c123,126
+< 	xp->x_iptr = ip;
+< 	ts = ((u.u_arg[1]+63)>>6) & 01777;
+---
+> 	xp->x_iptr = rp = ip;
+> 	rp->i_flag =| ITEXT;
+> 	rp->i_count++;
+> 	ts = ((u.u_exdata.ux_tsize+63)>>6) & 01777;
+114c128
+< 	if((xp->x_daddr = malloc(swapmap, (ts+7)/8)) == NULL)
+---
+> 	if((xp->x_daddr = malloc(swapmap, ctob(ts))) == NULL)
+116,118c130,134
+< 	expand(USIZE+ts);
+< 	estabur(0, ts, 0, 0);
+< 	u.u_count = u.u_arg[1];
+---
+> 	u.u_procp->p_textp = xp;
+> 	xexpand(xp);
+> 	estabur(ts, 0, 0, 0, RW);
+> 	u.u_count = u.u_exdata.ux_tsize;
+> 	u.u_offset[0] = 0;
+121,130c137,143
+< 	readi(ip);
+< 	rp = u.u_procp;
+< 	rp->p_flag =| SLOCK;
+< 	swap(xp->x_daddr, rp->p_addr+USIZE, ts, 0);
+< 	rp->p_flag =& ~SLOCK;
+< 	rp->p_textp = xp;
+< 	rp = ip;
+< 	rp->i_flag =| ITEXT;
+< 	rp->i_count++;
+< 	expand(USIZE);
+---
+> 	u.u_segflg = 2;
+> 	u.u_procp->p_flag =| SLOCK;
+> 	readi(rp);
+> 	u.u_procp->p_flag =& ~SLOCK;
+> 	u.u_segflg = 0;
+> 	xp->x_flag = XWRIT;
+> }
+132,139c145,162
+< out:
+< 	if(xp->x_ccount == 0) {
+< 		savu(u.u_rsav);
+< 		savu(u.u_ssav);
+< 		xswap(u.u_procp, 1, 0);
+< 		u.u_procp->p_flag =| SSWAP;
+< 		swtch();
+< 		/* no return */
+---
+> /*
+>  * Assure core for text segment
+>  * Text must be locked to keep someone else from
+>  * freeing it in the meantime.
+>  * x_ccount must be 0.
+>  */
+> xexpand(axp)
+> struct text *axp;
+> {
+> 	register struct text *xp;
+> 
+> 	xp = axp;
+> 	if ((xp->x_caddr = malloc(coremap, xp->x_size)) != NULL) {
+> 		if ((xp->x_flag&XLOAD)==0)
+> 			swap(xp->x_daddr, xp->x_caddr, xp->x_size, B_READ);
+> 		xp->x_ccount++;
+> 		xunlock(xp);
+> 		return;
+141c164,170
+< 	xp->x_ccount++;
+---
+> 	savu(u.u_rsav);
+> 	savu(u.u_ssav);
+> 	xswap(u.u_procp, 1, 0);
+> 	xunlock(xp);
+> 	u.u_procp->p_flag =| SSWAP;
+> 	qswtch();
+> 	/* no return */
+144a174,198
+>  * Lock and unlock a text segment from swapping
+>  */
+> xlock(axp)
+> {
+> 	register struct text *xp;
+> 
+> 	xp = axp;
+> 	while(xp->x_flag&XLOCK) {
+> 		xp->x_flag =| XWANT;
+> 		sleep(xp, PSWP);
+> 	}
+> 	xp->x_flag =| XLOCK;
+> }
+> 
+> xunlock(axp)
+> {
+> 	register struct text *xp;
+> 
+> 	xp = axp;
+> 	if (xp->x_flag&XWANT)
+> 		wakeup(xp);
+> 	xp->x_flag =& ~(XLOCK|XWANT);
+> }
+> 
+> /*
+148,149c202,203
+< xccdec(xp)
+< int *xp;
+---
+> xccdec(axp)
+> struct text *axp;
+151c205
+< 	register *rp;
+---
+> 	register struct text *xp;
+153,155c207,217
+< 	if((rp=xp)!=NULL && rp->x_ccount!=0)
+< 		if(--rp->x_ccount == 0)
+< 			mfree(coremap, rp->x_size, rp->x_caddr);
+---
+> 	if ((xp = axp)==NULL || xp->x_ccount==0)
+> 		return;
+> 	xlock(xp);
+> 	if (--xp->x_ccount==0) {
+> 		if (xp->x_flag&XWRIT) {
+> 			xp->x_flag =& ~XWRIT;
+> 			swap(xp->x_daddr,xp->x_caddr,xp->x_size,B_WRITE);
+> 		}
+> 		mfree(coremap, xp->x_size, xp->x_caddr);
+> 	}
+> 	xunlock(xp);
+------ ken/trap.c
+4a5
+> #include "../userx.h"
+13a15
+> #define	MEMORY	0177740		/* 11/70 "memory" subsystem */
+123,128c125,127
+< 		if(u.u_error < 100) {
+< 			if(u.u_error) {
+< 				ps =| EBIT;
+< 				r0 = u.u_error;
+< 			}
+< 			goto out;
+---
+> 		if(u.u_error) {
+> 			ps =| EBIT;
+> 			r0 = u.u_error;
+130,131c129
+< 		i = SIGSYS;
+< 		break;
+---
+> 		goto out;
+165a164,199
+> 
+> 	/*
+> 	 * The code here is a half-hearted
+> 	 * attempt to do something with all
+> 	 * of the 11/70 parity registers.
+> 	 * In fact, there is little that
+> 	 * can be done.
+> 	 */
+> 	case 10:
+> 	case 10+USER:
+> 		printf("parity\n");
+> 		if(cputype == 70) {
+> 			for(i=0; i<4; i++)
+> 				printf("%o ", MEMORY->r[i]);
+> 			printf("\n");
+> 			MEMORY->r[2] = -1;
+> 			if(dev & USER) {
+> 				i = SIGBUS;
+> 				break;
+> 			}
+> 		}
+> 		panic("parity");
+> 
+> 	/*
+> 	 * Locations 0-2 specify this style trap, since
+> 	 * DEC hardware often generates spurious
+> 	 * traps through location 0.  This is a
+> 	 * symptom of hardware problems and may
+> 	 * represent a real interrupt that got
+> 	 * sent to the wrong place.  Watch out
+> 	 * for hangs on disk completion if this message appears.
+> 	 */
+> 	case 15:
+> 	case 15+USER:
+> 		printf("Random interrupt ignored\n");
+> 		return;
+172c206
+< 	setpri(u.u_procp);
+---
+> 	curpri = setpri(u.u_procp);
+------ param.h
+5,8c5,8
+< #define	NBUF	15		/* size of buffer cache */
+< #define	NINODE	100		/* number of in core inodes */
+< #define	NFILE	100		/* number of in core file structures */
+< #define	NMOUNT	5		/* number of mountable file systems */
+---
+> #define	NBUF	32		/* size of buffer cache */
+> #define	NINODE	125		/* number of in core inodes */
+> #define	NFILE	125		/* number of in core file structures */
+> #define	NMOUNT	8		/* number of mountable file systems */
+13c13,14
+< #define	NOFILE	15		/* max open files per process */
+---
+> #define	NOFILE	20		/* max open files per process */
+> #define	FCLFILE	15		/* First file auto-closed on exec */
+15,16c16,17
+< #define	CMAPSIZ	100		/* size of core allocation area */
+< #define	SMAPSIZ	100		/* size of swap allocation area */
+---
+> #define	CMAPSIZ	50		/* size of core allocation area */
+> #define	SMAPSIZ	50		/* size of swap allocation area */
+18c19
+< #define	NPROC	50		/* max number of processes */
+---
+> #define	NPROC	65		/* max number of processes */
+20c21
+< #define	NCLIST	100		/* max total clist size */
+---
+> #define	NCLIST	150		/* max total clist size */
+21a23,24
+> #define	MSGBUFS	128		/* Characters saved from error messages */
+> #define	NCARGS	5120		/* # characters in exec arglist */
+42,55c45,64
+< #define	NSIG	20
+< #define		SIGHUP	1	/* hangup */
+< #define		SIGINT	2	/* interrupt (rubout) */
+< #define		SIGQIT	3	/* quit (FS) */
+< #define		SIGINS	4	/* illegal instruction */
+< #define		SIGTRC	5	/* trace or breakpoint */
+< #define		SIGIOT	6	/* iot */
+< #define		SIGEMT	7	/* emt */
+< #define		SIGFPT	8	/* floating exception */
+< #define		SIGKIL	9	/* kill */
+< #define		SIGBUS	10	/* bus error */
+< #define		SIGSEG	11	/* segmentation violation */
+< #define		SIGSYS	12	/* sys */
+< #define		SIGPIPE	13	/* end of pipe */
+---
+> #define	NSIG	17
+> /*
+>  * No more than 16 signals (1-17) because they are
+>  * stored in bits in a word.
+>  */
+> #define	SIGHUP	1	/* hangup */
+> #define	SIGINT	2	/* interrupt (rubout) */
+> #define	SIGQIT	3	/* quit (FS) */
+> #define	SIGINS	4	/* illegal instruction */
+> #define	SIGTRC	5	/* trace or breakpoint */
+> #define	SIGIOT	6	/* iot */
+> #define	SIGEMT	7	/* emt */
+> #define	SIGFPT	8	/* floating exception */
+> #define	SIGKIL	9	/* kill, uncatchable termination */
+> #define	SIGBUS	10	/* bus error */
+> #define	SIGSEG	11	/* segmentation violation */
+> #define	SIGSYS	12	/* bad system call */
+> #define	SIGPIPE	13	/* end of pipe */
+> #define	SIGCLK	14	/* alarm clock */
+> #define	SIGTRM	15	/* Catchable termination */
+86a96,103
+>  * structure to access a long as integers
+>  */
+> struct {
+> 	int	hiword;
+> 	int	loword;
+> };
+> 
+> /*
+91a109,117
+> 
+> /*
+>  * Some macros for units conversion
+>  */
+> /* Core clicks (64 bytes) to segments */
+> #define	ctos(x)	((x+127)>>7)
+> 
+> /* Core clicks (64 bytes) to blocks */
+> #define	ctob(x)	((x+7)>>3)
+------ proc.h
+9,10c9
+< struct	proc
+< {
+---
+> struct	proc {
+14,15d12
+< 	char	p_sig;		/* signal number sent to this process */
+< 	char	p_uid;		/* user id, used to direct tty signals */
+18,19c15,18
+< 	char	p_nice;		/* nice for scheduling */
+< 	int	p_ttyp;		/* controlling tty */
+---
+> 	char	p_nice;		/* nice for cpu usage */
+> 	int	p_sig;		/* signals pending to this process */
+> 	int	p_uid;		/* user id, used to direct tty signals */
+> 	int	p_pgrp;		/* name of process group leader */
+26c25,27
+< } proc[NPROC];
+---
+> 	int	*p_link;	/* linked list of running processes */
+> 	int	p_clktim;	/* time to alarm clock signal */
+> };
+29,30c30,31
+< #define	SSLEEP	1		/* sleeping on high priority */
+< #define	SWAIT	2		/* sleeping on low priority */
+---
+> #define	SSLEEP	1		/* awaiting an event */
+> #define	SWAIT	2		/* (abandoned state) */
+42a44,65
+> 
+> /*
+>  * Structure used to access saved times and status
+>  * of a dead processs, by the parent.
+>  * Overlays the proc structure.
+>  */
+> struct	xproc {
+> 	char	p_stat;
+> 	char	p_flag;
+> 	char	p_pri;		/* priority, negative is high */
+> 	char	p_time;		/* resident time for scheduling */
+> 	char	p_cpu;		/* cpu usage for scheduling */
+> 	char	p_nice;		/* nice for cpu usage */
+> 	int	p_sig;		/* signals pending to this process */
+> 	int	p_uid;		/* user id, used to direct tty signals */
+> 	int	p_pgrp;		/* name of process group leader */
+> 	int	p_pid;		/* unique process id */
+> 	int	p_ppid;		/* process id of parent */
+> 	int	xp_xstat;	/* Exit status for wait */
+> 	long	xp_utime;	/* user time, this proc */
+> 	long	xp_stime;	/* system time, this proc */
+> };
+------ reg.h
+------ seg.h
+9d8
+< #define	WO	04
+11a11
+> #define	TX	020		/* Software: text segment */
+------ systm.h
+7,8c7,12
+< int	coremap[CMAPSIZ];	/* space for core allocation */
+< int	swapmap[SMAPSIZ];	/* space for swap allocation */
+---
+> struct map {
+> 	int	m_size;
+> 	char	*m_addr;
+> };
+> struct map coremap[CMAPSIZ];	/* space for core allocation */
+> struct map swapmap[SMAPSIZ];	/* space for swap allocation */
+9a14
+> int	*runq;			/* head of linked list of running processes */
+11d15
+< int	execnt;			/* number of processes in exec */
+13,14c17,28
+< int	time[2];		/* time in sec from 1970 */
+< int	tout[2];		/* time of day of next sleep */
+---
+> long	time;			/* time in sec from 1970 */
+> long	tout;			/* time of day of next sleep */
+> int	*acctp;			/* inode of accounting file */
+> struct {
+> 	char	ac_comm[DIRSIZ];	/* Accounting command name */
+> 	long	ac_utime;		/* Accounting user time */
+> 	long	ac_stime;		/* Accounting system time */
+> 	long	ac_etime;		/* Accounting elapsed time */
+> 	char	ac_uid;			/* Accounting user ID */
+> 	char	ac_flag;		/* Accounting flag (unused) */
+> } acctbuf;
+> 
+22c36
+<  * delays on teletypes.
+---
+>  * delays on typewriters.
+40a55,71
+> 
+> /*
+>  * Nblkdev is the number of entries
+>  * (rows) in the block switch. It is
+>  * set in binit/bio.c by making
+>  * a pass over the switch.
+>  * Used in bounds checking on major
+>  * device numbers.
+>  */
+> int	nblkdev;
+> 
+> /*
+>  * Number of character switch entries.
+>  * Set by cinit/tty.c
+>  */
+> int	nchrdev;
+> 
+54a86,95
+> char	msgbuf[MSGBUFS];	/* saved "printf" characters */
+> /*
+>  * Instrumentation
+>  */
+> int	dk_busy;
+> long	dk_time[32];
+> long	dk_numb[3];
+> long	dk_wds[3];
+> long	tk_nin;
+> long	tk_nout;
+------ text.h
+15c15,22
+< } text[NTEXT];
+---
+> 	char	x_flag;		/* traced, written flags */
+> };
+> 
+> #define	XTRC	01		/* Text may be written, exclusive use */
+> #define	XWRIT	02		/* Text written into, must swap out */
+> #define	XLOAD	04		/* Currently being read from file */
+> #define	XLOCK	010		/* Being swapped in or out */
+> #define	XWANT	020		/* Wanted for swapping */
+------ tty.h
+40c40
+< 	int	t_dev;		/* device name */
+---
+> 	int	t_pgrp;		/* process group name */
+43,44d42
+< char partab[];			/* ASCII table: parity, character class */
+< 
+55,56c53,54
+< #define	TTHIWAT	50
+< #define	TTLOWAT	30
+---
+> #define	TTHIWAT	100
+> #define	TTLOWAT	50
+------ user.h
+19c19
+< 	char	u_segflg;		/* flag for IO; user or kernel space */
+---
+> 	char	u_segflg;		/* IO flag: 0:user D; 1:system; 2:user I */
+48,51c48,51
+< 	int	u_utime;		/* this process user time */
+< 	int	u_stime;		/* this process system time */
+< 	int	u_cutime[2];		/* sum of childs' utimes */
+< 	int	u_cstime[2];		/* sum of childs' stimes */
+---
+> 	long	u_utime;		/* this process user time */
+> 	long	u_stime;		/* this process system time */
+> 	long	u_cutime;		/* sum of childs' utimes */
+> 	long	u_cstime;		/* sum of childs' stimes */
+54a55,67
+> 	int	u_ttyp;			/* controlling tty pointer */
+> 	int	u_ttyd;			/* controlling tty dev */
+> 	struct {			/* header of executable file */
+> 		int	ux_mag;		/* magic number */
+> 		int	ux_tsize;	/* text size */
+> 		int	ux_dsize;	/* data size */
+> 		int	ux_bsize;	/* bss size */
+> 		int	ux_ssize;	/* symbol table size */
+> 		int	ux_entloc;	/* entry location */
+> 	} u_exdata;
+> 	char	u_comm[DIRSIZ];
+> 	long	u_start;
+> 	char	u_acflag;
+59c72
+< } u;
+---
+> };
+62d74
+< #define	EFAULT	106
+75a88
+> #define	EFAULT	14

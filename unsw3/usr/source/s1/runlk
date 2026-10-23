@@ -1,0 +1,15 @@
+echoall
+cc -s -O ac?.c -lP;cp a.out /usr/bin/ac
+cc -s -O ar.c -lP;cp a.out /bin/ar
+cc -s -O chown.c -lP;cp a.out /etc/chown
+cc -s -O copy.c -lP;cp a.out /bin/copy
+cc -s -O du.c -lP;cp a.out /bin/du
+cc -s -O find.c -lPcp a.out /usr/bin/find
+cc -s -n -O getty.c -lP;cp a.out /etc/getty;chmod 700 /etc/getty
+cc -s -n -O glob.c -lP;cp a.out /etc/glob
+cc -s -n -O init.c -lP;cp a.out /etc/init;chmod 700 /etc/init
+cc -s -n -O lpr.c -lP;cp a.out /bin/lpr
+cc -s -n -O ls.c -lP;cp a.out /bin/ls;chmod 705 /bin/ls
+cc -s -O lpd.c ;cp a.out /etc/lpd
+cc -s -O pp.c -lP;cp a.out /usr/bin/pp
+cc -s -O banner.c ;cp a.out /usr/bin/banner

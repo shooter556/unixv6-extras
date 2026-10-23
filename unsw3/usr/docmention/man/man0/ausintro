@@ -1,0 +1,109 @@
+.po 20
+.ll 75
+.pl 88
+.af % i
+.de fo
+'sp 4
+'tl '' % ''
+'bp
+..
+.de he
+'sp 4
+..
+.wh -7 fo
+.wh 0 he
+.ce
+PREFACE AND INTRODUCTION TO THE SECOND AUSTRALIAN SIXTH EDITION
+.sp 2
+Since the printing of the First Australian Sixth Edition (FASE) of the \s8UNIX\s10
+Programmers Manual (UPM) one fact about \s8UNIX\s10 systems has been made
+abundantly clear:
+.sp
+.in +10
+.ll -10
+"A system maintained at any site will diverge, without bound, from
+systems maintained at all other sites."
+.sp
+.in -10
+.ll +10
+So far, at the University of New South Wales,
+we have acquired, from various sources including the
+Chicago Circle Software Exchange and overseas visitors,
+some thirteen 2400ft. magnetic tapes of source code,
+binary files and documentation ranging from the truly sublime
+to the absolutely ridiculous.
+.sp
+The sheer bulk of data is staggering !
+.sp
+Clearly, some decisions have had to be made (ad hoc I agree)
+as to what should be included in this edition of the UPM.
+.sp
+Firstly any alterations to existing manual entries were examined carefully
+since the fact that they had been changed would point
+to
+possible inadequacies
+to be overcome.
+.sp
+When assessing completely new software and documentation other criteria
+were used such as:
+.in +5
+.sp
+How easy was it achieve the same result?
+Should a
+``formfeed'' program be included when a simple ``echo "cntrl/l" '' would do?
+.sp
+Was the hardware associated with the program readily available in Australia?
+.sp
+Would the inclusion of the program require extensive
+undocumented system changes?
+.in -5
+.sp
+At this point I should like to enter a plea to all future documenters.
+.sp
+.in +10
+.ll -10
+"If you alter existing manual entries
+.ul
+please designate the base edition manual
+from which the source was obtained and
+.ul
+mark alterations
+in some fashion."
+.sp
+.in -10
+.ll +10
+The source edition I have used is that distributed with the Level Six \s8UNIX\s10 system
+and alterations have been marked with a vertical bar ``|'' to the right of the text.
+Any changes are clearly visible in the output form and
+enclosed by ``.mc''
+.it nroff
+(I)
+commands in the source.
+Additional entries, as opposed to alterations, have not been marked
+as it is a simple matter to
+obtain the names of new files given the old and new directories.
+.sp
+Alterations and additions were produced on a ``QUME''  Q55 printer terminal.
+Unfortunately  "bold" and "italics" print wheels were not available so characters
+in these type fonts have been underlined.
+.sp
+On perusal, it will become
+apparent that some entries appearing in the
+index are missing from the body of the manual.
+This indicates that documentation on such things does exist
+but was omitted because it was not generally of interest.
+.sp
+Work
+is proceeding to compose the complete source code libraries documented by the manual.
+These should be available well before the manual is ready for distribution.
+.sp
+I am grateful to the Australian Graduate School of Management
+for the use of their PDP 11/70 system, and to Ian Johnstone and Greg James
+for their help in consolidating the documentation and source code.
+Thanks go also to the other UNSW Gurus and to Jeff Rottman for his "up to the minute" knowledge.
+.sp 5
+.in +45
+Peter Ivanov
+.br
+University of New South Wales.
+.in -60

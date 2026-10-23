@@ -1,0 +1,21 @@
+*= files to support AUSAM
+
+access.s		new system call -- allows setuid command
+			to easily check file permissions
+clktim.s		new system call sets real time limit
+connect.s		new system call logically connects two tty ports
+ctime.s			a faster smaller version of ctime.c
+errlst.c		knows about new system errors
+execc.c			generalised exec -- searches standard directories
+			handles shell file, Pascal objects, etc.
+getuid.s								*
+gprocs.s		new system call -- fast access to proc table
+limits.s								*
+lock.s			new system call -- file locking
+longops-fp.s		emulation of c-compiler's 32-bit arith. 
+			uses FPU -- has bugs
+lseek.c			32-bit seeks
+pp.s			new system call -- "p" primitive for shared data
+skill.c			signal a process and all its children
+tlimit.s		new system call -- sets cpu time limits
+vv.s			new system call -- "v" primitive for shared data

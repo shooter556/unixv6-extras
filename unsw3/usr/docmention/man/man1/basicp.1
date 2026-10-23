@@ -1,0 +1,162 @@
+.th BASICP I June/77
+.sh NAME
+basicp \*- Basic-Plus
+.sh SYNOPSIS
+.bd basicp
+.sh DESCRIPTION
+This description is intended to supplement the Basic-plus Language Manual (DEC-11-ORBPA-C-D)
+for UNIX users of Basic-plus.  Only changes to the manual will be noted here:
+the references are to section numbers in the language manual.
+.sp
+1.1) Introduction
+.sp
+	Basic-plus is a subsystem under the Unix time-sharing monitor.
+To run basic plus, type:
+.sp
+	% basicp
+.sp
+	The language implementation corresponds to RSTS/E version 5B.
+
+ 2.3.2) Typing conventions
+.sp
+	All lines are terminated by the RETURN or NEW-LINE key, as is usual
+with Unix. Continuation lines are indicated by immediately preceeding the new-line with
+an underscore (_). The interrupt
+character is a rubout; this is usually intercepted by basic.
+An end-of-file
+is part of the information in a Unix file and is not indicated by a ^Z. An end-of-file
+from the terminal may be inidcated by a ^D.
+The pseudo-device \fIkb:\fR gives the standard input and output
+for basic.
+
+
+8.4)	System functions and statements
+
+.sp
+The rad$() function has been eliminated.
+.sp
+The wait option in terminal input is not yet supported.
+.sp
+A new statment has been added. The syntax is:
+.sp
+	(1)	shell
+.br
+or,
+.br
+	(2)	shell <string expression>
+
+In form (1) the Unix shell is invoked until an end-of-file, when control
+returns to basic. In form (2) the string expression is treated as a Unix command
+and executed. Control remains inside of basic. Note that these may occur in
+a program or in immediate mode.
+
+
+9.1)	File storage
+.sp
+A Unix basic+ filename is a Unix pathname of 64 or fewer letters.
+Program files must have an extension; ".bas" is the default.
+Compiled files also must have an extension; ".bac" is the default.
+Other than this, no extensions are used.
+.sp
+Problem names are limited to 10 characters. They are obtained in the
+obvious manner from Unix pathnames.
+
+9.2.1)	Recordsize option
+.sp
+Any even integer may be used as a recordsize.
+The default is 512.
+
+9.2.2)	Clustersizes
+.sp
+The clustersize option has been eliminated.
+
+9.7)
+.sp
+Update mode does not exist.
+
+
+11.8.1) Filesize
+.sp
+Filesize has been eliminated.
+All subsections of (11.11) are invalid.
+
+
+12) Device dependence
+
+	All files behave as well-mannered Unix files.
+
+
+13) sys() calls
+
+.in 20
+.ti 10
+sys(chr$(0)+chr$(n))
+Reset control-O on basic channel n.
+If n is omitted, 0 is assumed.
+Nothing of interest is returned.
+.sp
+.ti 10
+sys(chr$(2)+chr$(n))
+Enable echoing on basic channel n.
+If n is omitted, 0 is assumed.
+Nothing of interest is returned.
+.sp
+.ti 10
+sys(chr$(3)+chr$(n))
+Disable echoing on basic channel n.
+If n is omitted, 0 is assumed.
+Nothing of interest is returned.
+.sp
+.ti 10
+sys(chr$(4)+chr$(n))
+Next input operation on basic channel n is
+in odt (raw) mode. If n is omitted, 0 is assumed.
+Nothing of interest is returned.
+The same cautions given in the RSTS manual for odt
+mode apply.
+Note that under UNIX an interrupt does not cause an
+exit from a raw-mode input request.
+.sp
+.ti 10
+sys(chr$(5))
+Exit to the editor without a READY message
+.sp
+.ti 10
+sys(chr$(6)+chr$(-7))
+Enable interrupt error trap
+.sp
+.ti 10
+sys(chr$(6)+chr$(9)+chr$(m))
+Return error message text for error m.
+If m is omitted, zero is assumed.
+The first two bytes of the error message are null.
+(In RSTS they were the job and keyboard numbers.)
+.sp
+.ti 10
+sys(chr$(6)+chr$(60))
+Exit to UNIX
+.sp
+.ti 10
+sys(chr$(6)+chr$(61))
+Fork. The child process receives a null string value;
+the parent does not.
+.sp
+.ti 10
+sys(chr$(7)+c$)
+c$ is made the core-common string.
+.sp
+.ti 10
+sys(chr$(8))
+The core-common string is returned.
+.sp
+.ti 10
+sys(chr$(9))
+Exit to editor and set up Noname.
+.sp 2
+.sh FILES
+/usr/lib/basic.errf
+.sh DIAGNOSTICS
+self-explanatory
+.sh "SEE ALSO"
+trbas(I)
+.sh BUGS

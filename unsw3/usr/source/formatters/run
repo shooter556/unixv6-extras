@@ -1,0 +1,11 @@
+echoall
+
+chdir    eqn	;	run
+
+chdir ../neqn	;	run
+
+chdir ../roff	;	run
+
+chdir ../tbl	;	run
+
+chdir ../troff	;	run

@@ -1,0 +1,28 @@
+SYMS(I) 			3/21/75 			SYMS(I)
+
+NAME
+	syms - list symbols of an object file or archive
+
+SYNOPSIS
+	syms [-cgudnr] filename ...
+
+DESCRIPTION
+	syms lists symbols in an object file or archive, sorted by type;
+	e.g. local/global/common and text/data bss.  The program
+	is similar to "nm", but can accept archives as well as
+	single object files.  It also has two extra flags: d and g.
+
+	Options are:
+	 c   list c-type globals only (those that begin with underscore)
+	 g   list global symbols only
+	 u   list undefined symbols only
+	 d   list defined symbols only
+	 n   sort symbols alphabetically by name, rather than by value
+	 r   sort in descending, rather than ascending order
+
+FILES
+
+BUGS
+
+AUTHOR
+	Steve Zucker

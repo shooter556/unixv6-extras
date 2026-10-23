@@ -1,0 +1,1167 @@
+	.title	space war
+	.enabl	ama
+	.mcall	gtsym$
+	.list	me
+	.macro	div32,rx,ry
+	asr	rx
+	ror	ry
+	asr	rx
+	ror	ry
+	asr	rx
+	ror	ry
+	asr	rx
+	ror	ry
+	.endm
+	.macro	mul32,rx,ry
+	asl	ry
+	rol	rx
+	asl	ry
+	rol	rx
+	asr	ry
+	rol	rx
+	asr	ry
+	rol	rx
+	asr	ry
+	rol	rx
+	.endm
+	.nlist	me
+	gtsym$
+
+midlx	=	1000
+midly	=	0600
+
+ticks	=	50.	;clock ticks/second
+
+;
+; dataaq	active body count?
+; dataaz	player #1 dfile
+; subaaa	tstpri/tstbrx?
+;
+zero	=	.
+;
+;
+jmp	start
+;
+;
+
+pwrvec	=	024
+
+.=	zero+1000
+
+stack	=	.
+
+start:	jmp	go
+gent:	.word	1		;if nonzero then gentleman's rules
+sunmas:	.word	72000		;sun's mass (gravitational field)
+thrust:	.word	77000		;total rocket thrust factor
+omega:	.word	1600		;delta turn angle
+databe:	.word	74000
+	1000
+sunrad:	.word	4		;sun's radius (for collision sensing)
+gogo:	reset
+	mov	#stack,sp
+	mov	#gogo,@#pwrvec
+	mov	#br7,@#pwrvec+2
+	clr	@#ps
+	mov	#6,comets	;;comets??
+	mov	comets,gents
+	mov	#3,r5		;;players???
+	mov	r5,ships	;player count
+	mov	#dlist,r0
+	mov	#dataaz,r1
+10$:	mov	#djmp,(r0)+
+	mov	r1,(r0)+
+	add	#10,r1
+	mov	#<"  >,(r1)+	;initialize players score
+	mov	#<"  >,(r1)+
+	mov	#<" 0>,(r1)+
+	add	#22,r1
+	mov	r0,(r1)		;connect up djmp
+	add	#26,r1
+	clr	(r1)		;clear out score
+	add	#160,r1		;next player
+	dec	r5
+	bgt	10$
+	mov	r0,vdlist
+newgam:	mov	#point!int7,r2
+	mov	#stars,r3
+12$:	mov	r2,(r3)+
+	mov	#8.,r5		;8 stars of each intensity
+14$:	jsr	pc,random
+				;this algorithm will be repeated.
+	asr	r1		;first get rid of non-random bit
+	mov	r1,r0
+	asr	r0
+	asr	r0
+	sub	r0,r1		;now r1 has 0.75 of original value
+	asr	r1
+	asr	r1
+	asr	r1
+	asr	r1
+	asr	r1		;then divide by 32
+				;this results in a random number
+				;between +/-577 (octal)
+	add	#midlx,r1
+	bic	#^c<maxx>,r1
+	bis	#intx,r1
+	mov	r1,(r3)+
+	jsr	pc,random
+	asr	r1
+	mov	r1,r0
+	asr	r0
+	asr	r0
+	sub	r0,r1
+	asr	r1
+	asr	r1
+	asr	r1
+	asr	r1
+	asr	r1
+	add	#midly,r1
+	bic	#^c<maxx>,r1
+	mov	r1,(r3)+
+	dec	r5
+	bgt	14$
+	sub	#200,r2		;one intensity step
+	cmp	r2,#<point!int2>	;minimum intensity
+	bge	12$
+	mov	vdlist,r0
+	clr	switch
+	mov	ships,r5	;player count
+	mov	#dataaz+70,r3
+16$:	mov	#<"99>,-34.(r3)	;initialze torpedoes
+	mov	#99.,(r3)+
+	clr	(r3)		;torpedoe tube timer
+	mov	-68.(r3),12(r3)
+	add	#24,r3
+	mov	#4,r4
+18$:	add	rseed,(r3)
+	bic	#177600,(r3)+
+	dec	r4
+	bgt	18$
+	mov	r3,r2
+	add	#-94.,r2
+	mov	#4,r4
+20$:	mov	(r2)+,(r3)+
+	dec	r4
+	bgt	20$
+	clr	(r3)+		;ship id = 0
+	mov	r0,(r3)+
+	mov	#djmp,(r0)+
+	mov	r3,(r0)+	;connect to dlist
+	mov	r3,r2
+	mov	#point,(r2)+	;generate ship's location
+	clr	(r2)+
+	clr	(r2)+
+	mov	#shortv!int6,(r2)+
+	clr	(r2)+		;torpedoe tube
+	clr	(r2)+
+	mov	#<shortv!int6!blkon>,(r2)+
+	clr	(r2)+		;jet
+	mov	#<shortv!int7!blkoff>,(r2)+
+	mov	r3,r1
+	add	#-61.,r1
+22$:	mov	#intx,(r2)+
+	tstb	(r1)+		;generate area for ship outline
+	beq	24$
+	bpl	22$
+				;	0 end of list
+				;	+ intensify
+				;	- don't intensify
+	clr	-2(r2)
+	br	22$
+24$:	mov	#djmp,-2(r2)
+	mov	r0,(r2)		;connect back to dlist
+	mov	r0,-(sp)
+	mov	r5,-(sp)
+	mov	-30.(r3),r0	;get the initial angle
+	jsr	pc,rotate	;rotate the ship to match
+	mov	(sp)+,r5
+	mov	(sp)+,r0
+	add	#174,r3		;next ship
+	dec	r5
+	bgt	16$
+	mov	r0,dataah
+	mov	#go,r3
+	mov	comets,r5	;comet count
+	bgt	26$
+	jmp	42$		;none?
+26$:	mov	r0,-(sp)
+28$:	mov	#4,r4
+30$:	clr	(r3)+		;initialize velocity
+	dec	r4
+	bgt	30$
+	mov	#2,r2
+32$:	jsr	pc,random
+	asr	r1
+	mov	r1,(r3)+	;initialize position
+	clr	(r3)+
+	dec	r2
+	bgt	32$
+	jsr	pc,random
+	mov	#2,(r3)+	;comet id = 2
+	mov	(sp)+,r0
+	mov	r0,(r3)+
+	mov	#djmp,(r0)+
+	mov	r3,(r0)+	;connect to dlist
+	mov	r0,-(sp)
+	mov	r5,-(sp)
+	mov	r3,-(sp)
+	mov	#point,(r3)+
+	clr	(r3)+
+	clr	(r3)+
+	mov	#shortv,(r3)+
+	mov	(pc)+,(r3)+
+	gt$rel	-7,-15
+	mov	#char!int5,(r3)+
+	mov	#<'*>,(r3)+
+	mov	#djmp,(r3)+
+	mov	r0,(r3)+	;connect back to dlist
+	mov	(sp),r3
+	jsr	pc,tstsun	;generated in sun?
+	bgt	34$
+	mov	(sp)+,r3
+	br	38$		;if already hit by sun, don't bother
+				;(what about dlist?)
+34$:	jsr	pc,subaak
+	mov	r1,r4
+	mov	#1000,r0
+	clr	r1
+	jsr	pc,divide
+	clc
+	ror	r1
+	adc	r1
+	mov	r1,-(sp)
+				;comet size?
+	mov	sunmas,r4
+	jsr	pc,subaah
+	asr	r0
+	ror	r1
+	jsr	pc,subaak
+	mov	r1,r0
+	mov	(sp)+,r1
+	mov	r0,-(sp)
+	mov	2(sp),r3
+	mov	-8.(r3),r4
+	neg	r4
+	mov	-12.(r3),r5
+	jsr	pc,subaag
+	mul32	r0,r1
+	mul32	r2,r3
+	asl	r1
+	adc	r0
+	asl	r3
+	adc	r2
+	mov	r0,r4
+	mov	r2,r5
+	mov	(sp)+,r1
+	jsr	pc,subaag
+	div32	r0,r1
+	div32	r2,r3
+	tst	rseed
+	bpl	36$
+	neg	r0
+	neg	r2
+	neg	r1
+	sbc	r0
+	neg	r3
+	sbc	r3
+36$:	mov	(sp)+,r4
+	mov	r1,-18.(r4)
+	mov	r3,-14.(r4)
+	mov	r4,r3
+	mov	r0,-20.(r3)
+	mov	r2,-16.(r3)
+38$:	add	#34,r3
+	mov	(sp)+,r5
+	dec	r5
+	ble	40$
+	jmp	28$
+40$:	mov	(sp)+,r0
+42$:	mov	r0,fdlist	;point to free part of dlist
+	mov	r3,fspace	;and space for matching dfiles
+	mov	#30.,r5		;generate some null dlist entries
+44$:	mov	#djmp,(r0)+
+	tst	(r0)+
+	mov	r0,-2(r0)	;insert null pointer
+	dec	r5
+	bgt	44$
+	mov	#dnop,(r0)+	;non-djmp to allow end of dlist test
+	mov	#djmp,(r0)+
+	mov	#dfile,(r0)	;link back to start
+;
+; now get to work.  all dfiles generated at this point, so
+; startup display may be run.
+;
+	mov	#intclx,@#lkv	;connect startup clock
+	mov	#br6,@#lkv+2
+	mov	#intdsx,@#gtstpv ;and startup display processor
+	mov	#br2,@#gtstpv+2
+	mov	#ticks,tictoc
+	movb	#<'3>,cntdwn	;countdown from here
+	mov	vdlist,r0	;want to put a special dfile in here
+	mov	#djmp,(r0)+
+	mov	(r0),-(sp)	;so we take out the normal one
+	mov	#dfilex,(r0)	;and insert our own (first)
+	mov	#<statsa!sinof!ital0!sync>,dfilex
+	mov	#dfilex,@#dpc	;and start the display
+	mov	#100,@#lks	;and then the clock
+46$:	wait			;wait for count-down to finish
+	tst	dfilex
+	bne	46$
+	mov	vdlist,r0	;all finished.  so, we can now put
+	mov	#djmp,(r0)+	;the normal first dlist entry back
+	mov	(sp)+,(r0)	;in (it was saved you know)
+	mov	#1,tictoc	;quick kick for generation of ships
+	mov	#intclk,@#lkv	;normal clock
+	mov	#intdst,@#gtstpv ;and display processor
+	mov	#<statsa!sinof!lplite!ital0!sync>,dfile
+	mov	ships,surviv	;they are all still alive!
+	clr	dataaq
+	mov	#dfile,@#dpc	;all ready, so start display
+	mov	#100,@#lks	;and clock
+48$:	wait
+	cmp	surviv,#1	;only 1 surviver?
+	bgt	48$		;no. more than one.
+	blt	50$		;maybe they are all dead
+	cmp	ships,#1	;did we only start off with one?
+	beq	48$		;yes. carry on
+50$:	tst	dataaq
+	bgt	48$
+	mov	#intdsx,@#gtstpv ;put the startup display file back in
+	clr	@#lks		;and stop the clock
+	com	dfilex		;make a halt?
+	mov	#dstop,dfile
+52$:	wait
+	tst	dfilex
+	bne	52$
+	tst	surviv		;were there any survivors at all?
+	ble	56$		;no.
+	mov	vdlist,r0	;lets find the surviver
+54$:	tst	(r0)+		;skip "djmp"
+	mov	(r0)+,r3
+	cmp	r0,r3		;null djmp?
+	beq	54$		;yes.  this one got wiped
+	inc	-44.(r3)	;survived. assumed to be ship.
+	mov	-44.(r3),r1	;get the upped score
+	mov	#-84.,r2	;and where to display it
+	add	r3,r2
+	mov	#6,r5		;and the number of digits
+	jsr	pc,$print	;and print it all out
+56$:	jmp	newgam		;now let someone else play
+	.page
+intclk:	mov	@#swr,switch	;switch register buffer
+	dec	tictoc
+	bgt	10$
+	jsr	r5,subaaa
+	.word	br3,	zaaafm
+10$:	rti
+;
+; if pre-interrupt priority .ge. test val then return,
+; else set to higher priority and jump to routine.
+; requires 2 arguments -
+;	1. test priority
+;	2. routine address
+;
+subaaa:	clr	-(sp)
+	mov	6(sp),(sp)	;interrupt priority on stack
+	bic	#^c<br7>,(sp)
+	cmp	(sp)+,(r5)+	;is it too low?
+	bge	10$		;no
+	mov	-2(r5),@#ps	;yes. set higher
+	mov	(r5),r5		;and make jump
+	rts	r5
+10$:	tst	(r5)+
+	rts	r5
+zaaafm:	mov	#3,tictoc
+	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	r2,-(sp)
+	mov	r3,-(sp)
+	mov	r4,-(sp)
+	mov	r5,-(sp)
+	mov	vdlist,r2
+10$:	cmp	(r2)+,#djmp	;end of djmp list?
+	bne	40$		;yes.
+	mov	(r2)+,r3
+	cmp	r3,r2		;ignore null djmps. (somebody got wiped)
+	beq	10$
+	mov	r2,-(sp)
+	movb	-4(r3),r2
+	tstb	-3(r3)		;is body dying?
+	beq	20$
+	add	#6,r2
+20$:	jsr	pc,@30$(r2)
+	mov	(sp)+,r2
+	br	10$		;try for next on list
+30$:	.word	subaas		;still surviving ships,
+	.word	subaat		;comets
+	.word	subaau		;and torpedoes
+	.word	subaav		;these are the dying ones.
+	.word	subaaw
+	.word	subaax
+40$:	mov	(sp)+,r5
+	mov	(sp)+,r4
+	mov	(sp)+,r3
+	mov	(sp)+,r2
+	mov	(sp)+,r1
+	mov	(sp)+,r0
+	jsr	r5,subaaa
+	.word	br2,	zaaafn
+	rti
+; ship
+subaav:	cmpb	-3(r3),#1
+	beq	zaaaay
+	cmpb	-3(r3),#-64.
+	beq	zaaaay
+	incb	-3(r3)
+	bmi	zaaaaz
+	beq	zaaadb
+	cmpb	-3(r3),#64.
+	beq	zaaadc
+	mov	#databd,r4
+	mov	#10,r0
+zaaabc:	bitb	#1,-3(r3)
+	bne	zaaaay
+	mov	#10,r5
+	add	r3,r5
+zaaadd:	add	(r4)+,(r5)+
+	tst	(r5)+
+	dec	r0
+	bgt	zaaadd
+	bitb	#6,-3(r3)
+	bne	zaaaay
+	sub	#200,6(r3)
+zaaaay:	jmp	subaat
+zaaadc:	jsr	r5,subaaf
+	.byte	-64.
+	.even
+	br	zaaaaz
+zaaadb:	tstb	-41.(r3)
+	beq	zaaaba
+	decb	-3(r3)
+	br	zaaaaz
+zaaaba:	dec	dataaq
+zaaabb:	mov	-2(r3),r4	;dfile's entry in dlist
+	add	#4,r4
+	mov	r4,-2(r4)	;disconnect dfile
+zaaaaz:	rts	pc
+; comet
+subaaw:	cmpb	-3(r3),#1
+	beq	zaaaay
+	incb	-3(r3)
+	cmpb	-3(r3),#64.
+	beq	zaaabb
+	mov	#databd+40,r4
+	mov	#4,r0
+	br	zaaabc
+; torp
+subaau:	dec	-22.(r3)
+	bgt	10$		;torpedoe still active?
+	incb	-3(r3)		;about time too.
+	mov	#<point!int7>,(r3)
+10$:	jmp	positn
+; torp
+subaax:	incb	-3(r3)
+	cmpb	-3(r3),#32.	;have we died away yet?
+	bgt	20$
+	bitb	#3,-3(r3)	;time to fade a bit more?
+	bne	10$
+	sub	#200,(r3)	;down 1 brightness level
+10$:	jmp	positn
+20$:	mov	-24.(r3),r4	;tell parent space-ship that we
+	decb	-41.(r4)	;finally died away
+	br	zaaabb
+; ship
+subaas:	dec	-40.(r3)	;how long since torpedoe was fired?
+	bgt	10$		;not long enough
+	clr	-40.(r3)	;it should be loaded by now
+	tstb	-42.(r3)	;unless of cource we are out of
+	beq	10$		;torpedoes.
+	bis	#intx,10(r3)	;intensify torpedoes
+10$:	mov	-110.(r3),-(sp)	;get this guy's switch register mask
+	clr	r0		;initialize turn angle
+	bit	(sp),switch	;calculate turning movement
+	beq	15$
+	add	omega,r0	;turn counter-clockwise
+15$:	clc
+	ror	(sp)
+	bit	(sp),switch
+	beq	20$
+	sub	omega,r0	;turn clockwise
+20$:	tst	r0
+	beq	22$
+	add	-30.(r3),r0
+	mov	r0,-30.(r3)
+	jsr	pc,rotate	;and rotate ship to match
+	br	25$
+22$:	bit	(sp),switch
+	bne	24$
+	bis	#1400,20(r3)
+	br	25$
+24$:	bic	#1400,20(r3)
+25$:	asr	(sp)
+	bit	(sp),switch	;any thrust?
+	beq	30$		;no
+				;increase velocities
+	add	-26.(r3),-18.(r3)
+	adc	-20.(r3)
+	add	-22.(r3),-14.(r3)
+	adc	-16.(r3)
+	add	-28.(r3),-20.(r3)
+	add	-24.(r3),-16.(r3)
+	bis	#intx,16(r3)	;intensify jet
+	br	35$
+30$:	bic	#intx,16(r3)	;no thrust - turn jet off
+35$:	asr	(sp)
+	bit	(sp),switch	;firing torpedoes?
+	beq	50$		;no
+	bit	#intx,10(r3)	;is there one in tube yet?
+	beq	50$		;no
+	cmpb	-41.(r3),#15.	;yes. but can only remotely control
+	bge	50$		;a limited number
+	mov	fdlist,r4	;now look for a free dfile to
+				;generate the torpedoe in
+40$:	cmp	(r4)+,#djmp	;end of dlist?
+	bne	50$		;yes. no slots available
+	mov	(r4)+,r5
+	cmp	r5,r4		;is this slot already full?
+	bne	40$		;yes. can't use
+	bic	#intx,10(r3)	;turn off torpedoe tube glow
+	mov	#15.,-40.(r3)	;no more torpedoes for this long
+	incb	-41.(r3)	;now this ship owns 1 more active torp.
+	mov	r3,-(sp)
+	sub	#4,r4
+	mov	r4,r5
+	sub	fdlist,r5	;calculate where the dfile goes
+	asl	r5
+	asl	r5
+	asl	r5
+	asl	r5		;each chunk is 64. bytes long
+	add	fspace,r5
+	mov	r3,(r5)+
+	mov	#150.,(r5)+	;torpedoe's lifetime
+	mov	r3,r0
+	add	#-38.,r0
+	add	#-20.,r3	;veloc
+	mov	#4,r1
+45$:	mov	(r3)+,(r5)
+	add	(r0)+,(r5)+
+				;veloc incr?
+	mov	(r3)+,(r5)+
+	dec	r1
+	bgt	45$
+	mov	#4,(r5)+	;torp id = 4
+	mov	r4,(r5)+
+	mov	r5,r0
+	mov	#point!int5,(r5)+
+	mov	#<intx!midlx>,(r5)+
+	mov	#<midly>,(r5)+
+	mov	#djmp,(r5)+
+	mov	r4,(r5)		;connect back to dlist
+	add	#4,(r5)
+	mov	r0,2(r4)	;actually connect to dlist when ready
+	mov	(sp)+,r3
+	decb	-42.(r3)	;one less torpedoe
+	movb	-42.(r3),r1
+	mov	r3,r2
+	add	#-74.,r2	;display it here
+	mov	#2,r5		;digits
+	jsr	pc,$print
+50$:	tst	(sp)+		;fall thru to comets
+subaat:	jsr	pc,tstsun	;collided with sun?
+	bgt	10$
+	tstb	-3(r3)		;not if we're already dying
+	bne	positn
+	jsr	r5,subaaf
+	.byte	1
+	.even
+	br	positn		;don't test for other deaths
+10$:	mov	r3,-(sp)
+	jsr	pc,subaak
+	mov	r1,r4
+	mov	#stack,r0
+	clr	r1
+	jsr	pc,divide
+	clc
+; gravity??????
+	ror	r1
+	adc	r1
+	mov	r1,-(sp)
+	mov	-12.(r3),r4
+	mov	-8.(r3),r5
+	jsr	pc,subaag
+	mul32	r0,r1
+	mul32	r2,r3
+	asl	r1
+	adc	r0
+	asl	r3
+	adc	r2
+	mov	(sp)+,r4
+	mov	r2,-(sp)
+	mov	r0,-(sp)
+				;drag in
+	mov	sunmas,r1
+	neg	r1
+	jsr	pc,subaah
+	asl	r1
+	adc	r0
+	mov	r0,r1
+	mov	r4,r0
+	mov	(sp)+,r4
+	mov	(sp)+,r5
+	mov	r0,-(sp)
+	jsr	pc,subaag
+	asl	r1
+	adc	r0
+	asl	r3
+	adc	r2
+	mov	r0,r4
+	mov	r2,r5
+	mov	(sp)+,r1
+	jsr	pc,subaag
+	div32	r0,r1
+	asr	r0
+	ror	r1
+	div32	r2,r3
+	asr	r2
+	ror	r3
+	mov	(sp)+,r4	;add accel
+	add	r1,-18.(r4)
+	adc	-20.(r4)
+	add	r3,-14.(r4)
+	adc	-16.(r4)
+	mov	r4,r3
+	add	r0,-20.(r3)
+	add	r2,-16.(r3)
+				;update position
+positn:	add	-18.(r3),-10.(r3)
+	adc	-12.(r3)
+	add	-14.(r3),-6.(r3)
+	adc	-8.(r3)
+	mov	-20.(r3),r0
+	add	-12.(r3),r0
+	rol	r0
+	asr	r0
+	mov	r0,-12.(r3)
+	neg	r0
+	asr	r0
+	asr	r0
+	add	-12.(r3),r0
+	add	#<midlx*32.>,r0
+	asr	r0
+	asr	r0
+	asr	r0
+	asr	r0
+	asr	r0
+	adc	r0		;round it up
+	bic	#^c<maxx>,r0	;don't want intensity bit trouble
+	bic	#<maxx>,2(r3)
+	bis	r0,2(r3)	;update the dfile x position
+	mov	-16.(r3),r0
+	add	-8.(r3),r0
+	rol	r0
+	asr	r0
+	mov	r0,-8.(r3)
+	neg	r0
+	asr	r0
+	asr	r0
+	add	-8.(r3),r0
+	add	#<midly*32.>,r0
+	asr	r0
+	asr	r0
+	asr	r0
+	asr	r0
+	asr	r0
+	adc	r0		;round up
+	bic	#^c<maxx>,r0
+	mov	r0,4(r3)	;update dfile y position
+	rts	pc
+rotate:	add	#400,r0		;round upwards
+	mov	r0,r1
+	swab	r1
+	bic	#^c<76>,r1	;get 5 low order bits of 7 bit angle
+	asl	r1		;and select double word
+	rol	r0
+	rol	r0
+	rol	r0
+	rol	r0
+	mov	r0,r5
+	bic	#^c<6>,r5	;and now the quadrant
+	bit	#2,r5
+	bne	10$
+; quad 0,1
+	mov	databj(r1),-26.(r3)	;veloc incr.
+	mov	databj+2(r1),-22.(r3)
+	mov	databm(r1),-28.(r3)
+	mov	databm+2(r1),-24.(r3)
+	mov	databk(r1),-34.(r3)	;torpedoe veloc incr
+	mov	databk+2(r1),-32.(r3)
+	mov	databl(r1),-38.(r3)
+	mov	databl+2(r1),-36.(r3)
+	bit	#4,r5
+	beq	17$
+; quad 1
+	neg	-28.(r3)
+	neg	-26.(r3)
+	sbc	-28.(r3)
+	neg	-34.(r3)
+	neg	-38.(r3)
+	br	13$
+; quad 2,3
+10$:	mov	databj(r1),-22.(r3)
+	mov	databj+2(r1),-26.(r3)
+	mov	databm(r1),-24.(r3)
+	mov	databm+2(r1),-28.(r3)
+	mov	databk(r1),-32.(r3)
+	mov	databk+2(r1),-34.(r3)
+	mov	databl(r1),-36.(r3)
+	mov	databl+2(r1),-38.(r3)
+	bit	#4,r5
+	bne	13$
+; quad 2
+	neg	-28.(r3)
+	neg	-26.(r3)
+	sbc	-28.(r3)
+	neg	-34.(r3)
+	neg	-38.(r3)
+	br	17$
+; quad 1,3
+13$:	neg	-24.(r3)
+	neg	-22.(r3)
+	sbc	-24.(r3)
+	neg	-32.(r3)
+	neg	-36.(r3)
+17$:	mov	60$(r5),r5	;quadrant?
+	asl	r1
+	asl	r1		;32. * 32. byte chunks
+	asl	r1
+	add	#shiplist-2,r1
+	mov	r3,-(sp)
+	mov	r3,r4
+	add	#-64.,r4
+	add	#10,r3		;torp tube
+	clr	-(sp)
+	clr	-(sp)
+20$:	mov	r3,-(sp)
+	movb	(r4)+,r3
+	beq	57$		;end of display?
+	bpl	23$
+	neg	r3		;absolute value
+23$:	add	r3,r1
+	jmp	(r5)
+27$:	movb	(r1),r0		; x	quad 0
+	movb	1(r1),r2	; y
+	br	43$
+30$:	movb	(r1),r2		; y	quad 1
+	movb	1(r1),r0	;-x
+	neg	r0
+	br	43$
+33$:	movb	(r1),r0		;-x	quad 2
+	movb	1(r1),r2	;-y
+	neg	r0
+	br	40$
+37$:	movb	(r1),r2		;-y	quad 3
+	movb	1(r1),r0	; x
+40$:	neg	r2
+43$:	sub	r3,r1
+	mov	(sp)+,r3
+	sub	(sp),r0
+	add	r0,(sp)
+	sub	2(sp),r2
+	add	r2,2(sp)
+	tst	r2
+	bge	47$
+	neg	r2		;absolute value
+	bis	#<misvy>,r2	;and sign
+47$:	tst	r0
+	bge	50$
+	neg	r0		;absolute value
+	bis	#<misvy>,r0	;and sign
+50$:	swab	r0
+	asr	r0
+	bis	r0,r2		;join x  y pieces
+53$:	tst	(r3)+		;data or command?
+	bmi	53$		;command
+	mov	-(r3),r0
+	bic	#^c<intx>,r0	;save intensify flag
+	bis	r0,r2
+	mov	r2,(r3)+	;new data with old intensify flag
+	br	20$
+57$:	tst	(sp)+
+	tst	(sp)+
+	tst	(sp)+
+	mov	(sp)+,r3
+	rts	pc
+60$:	27$	;quadrant	0
+	30$	;		1
+	33$	;		2
+	37$	;		3
+tstsun:	mov	-12.(r3),r1
+	mov	r1,r4
+	jsr	pc,subaah	;calc. x**2
+	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	-8.(r3),r1
+	mov	r1,r4
+	jsr	pc,subaah	;calc. y**2
+	add	(sp)+,r1
+	adc	r0
+	add	(sp)+,r0	;now have: x**2+y**2
+	cmp	r0,sunrad	;within sun's radius yet?
+	rts	pc
+;
+; test for collission or torpedoe hit.
+;
+zaaafn:	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	r2,-(sp)
+	mov	r3,-(sp)
+	mov	r4,-(sp)
+	mov	r5,-(sp)
+	mov	vdlist,r5	;start of adjustable dlist
+5$:	cmp	(r5)+,#djmp
+	beq	7$
+	mov	(sp)+,r5
+	mov	(sp)+,r4
+	mov	(sp)+,r3
+	mov	(sp)+,r2
+	mov	(sp)+,r1
+	mov	(sp)+,r0
+	rti
+7$:	mov	(r5)+,r3	;null djmp?
+	cmp	r3,r5
+	beq	5$		;yes
+	mov	r5,-(sp)
+	movb	-4(r3),-(sp)	;get id
+	tstb	-3(r3)		;alive?
+	beq	15$		;yes
+	cmpb	-4(r3),#4	;torpedoe?
+	beq	10$		;yes. dying torpedoes are useless
+	cmpb	-3(r3),#2	;how dead?
+	blos	13$
+10$:	tst	(sp)+
+	tst	(sp)+
+	br	5$
+13$:	comb	1(sp)		;mark as a dying body
+15$:	cmp	(r5)+,#djmp	;anything left to collide with?
+	beq	20$
+17$:	tst	(sp)+
+	mov	(sp)+,r5
+	br	5$
+20$:	mov	(r5)+,r4
+	cmp	r4,r5
+	beq	15$
+	tstb	-3(r4)
+	beq	23$
+	cmpb	-3(r4),#2	;two dying bodies can't collide
+	bhi	15$
+	tst	(sp)
+	bmi	15$
+23$:	mov	-12.(r3),r0	;difference in position (hi end)
+	sub	-12.(r4),r0
+	mov	-8.(r3),r2
+	sub	-8.(r4),r2
+	jsr	pc,maxr0r2
+	movb	-4(r4),r1
+	tstb	(sp)
+	beq	35$
+	add	(sp),r1
+	bic	#-64.,r1
+	cmp	r0,databo(r1)
+	bgt	15$
+25$:	tst	(sp)
+	bmi	27$
+	jsr	r5,subaaf
+	.byte	1
+	.even
+27$:	tstb	-3(r4)
+	bne	30$
+	mov	r3,r2
+	mov	r4,r3
+	jsr	r5,subaaf
+	.byte	1
+	.even
+	mov	r2,r3
+	tst	(sp)
+	bmi	15$
+	comb	1(sp)
+	cmp	r1,#10
+	bne	15$
+	mov	#-20.,r0
+	mov	r0,r2
+	add	r3,r0
+	add	r4,r2
+	add	(r0),(r2)
+	asr	(r2)
+	mov	(r2)+,(r0)+
+	cmp	(r2)+,(r0)+
+	add	(r0),(r2)
+	asr	(r2)
+	mov	(r2)+,(r0)+
+	br	17$
+30$:	movb	#-1,1(sp)
+	br	15$
+databo	=	.-4
+	1000
+	640
+	500
+35$:	cmp	r0,56$(r1)
+	bgt	15$
+	cmp	r0,53$(r1)
+	bgt	45$
+37$:	cmp	r1,#4
+	bne	25$
+	tst	(sp)
+	blt	25$
+	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	r2,-(sp)
+	mov	r3,-(sp)
+	mov	r4,-(sp)
+	mov	r5,-(sp)
+	mov	-24.(r4),r2
+	cmp	r2,r3
+	bne	40$
+38$:	dec	-44.(r2)
+	br	43$
+40$:	tst	gents		;all comets gone?
+	ble	41$
+	inc	-44.(r3)
+	mov	r2,-(sp)
+	mov	r3,r2
+	mov	#6,r5
+	add	#-84.,r2
+	jsr	pc,$print
+	mov	(sp)+,r2
+	br	38$
+41$:	inc	-44.(r2)
+43$:	mov	-44.(r2),r1
+	add	#-84.,r2
+	mov	#6,r5		;had a kill?
+	jsr	pc,$print	;new score
+	mov	(sp)+,r5
+	mov	(sp)+,r4
+	mov	(sp)+,r3
+	mov	(sp)+,r2
+	mov	(sp)+,r1
+	mov	(sp)+,r0
+	br	25$
+45$:	jsr	pc,subaad
+	cmp	r0,60$(r1)
+	ble	37$
+	tst	r1
+	beq	50$
+	jmp	15$
+50$:	mov	r4,r0
+	mov	r3,r4
+	mov	r0,r3
+	jsr	pc,subaad
+	mov	r4,r2
+	mov	r3,r4
+	mov	r2,r3
+	cmp	r0,60$
+	ble	25$
+	jmp	15$
+53$:	1000
+	1000
+	400
+56$:	4000
+	2400
+	2000
+60$:	5000
+	5000
+	4400
+subaad:	clr	-(sp)
+	mov	-12.(r3),r0
+	add	-34.(r3),r0
+	sub	-12.(r4),r0
+	mov	r0,-(sp)
+	mov	-8.(r3),r2
+	add	-32.(r3),r2
+	sub	-8.(r4),r2
+	mov	r2,-(sp)
+	jsr	pc,maxr0r2
+	mov	r0,4(sp)
+	mov	-32.(r3),r2
+	neg	r2
+	asl	r2
+	add	(sp)+,r2
+	mov	-34.(r3),r0
+	neg	r0
+	asl	r0
+	add	(sp)+,r0
+	jsr	pc,maxr0r2
+	add	(sp)+,r0
+	rts	pc
+;
+; absolute r0,r2 (15 bit num including sign)
+; r0 = max(r0,r2) + .5*min(r0,r2)
+;
+maxr0r2:asl	r0		;extend sign
+	asr	r0
+	bpl	10$
+	neg	r0		;absolute value
+10$:	asl	r2		;extend sign
+	asr	r2
+	bpl	20$
+	neg	r2		;absolute value
+20$:	cmp	r0,r2
+	ble	30$
+	asr	r2		;halve
+	br	40$
+30$:	asr	r0		;halve
+40$:	add	r2,r0		;total
+	rts	pc
+subaaf:	cmpb	-4(r3),#4	;torpedoe?
+	beq	10$		;yes. skip (unkillable)
+	mov	@#ps,-(sp)	;save ps
+	mov	#br7,@#ps	;and inhibit interrupts
+	movb	(r5)+,-3(r3)	;;;
+	inc	r5		;;;
+	inc	dataao		;;;
+	mov	#dstop,dfile	;;;start kill
+	mov	(sp)+,@#ps	;;;reset priority
+	rts	r5
+10$:	mov	#point!int7,(r3)
+	movb	(r5)+,-3(r3)
+	inc	r5
+	rts	r5
+intdst:	mov	r0,-(sp)
+	mov	r1,-(sp)
+	mov	r2,-(sp)
+	mov	r3,-(sp)
+	mov	r4,-(sp)
+	mov	r5,-(sp)
+5$:	mov	vdlist,r4	;start of adjustable dlist
+10$:	cmp	r4,fdlist	;test start of torpedoe area
+	bge	25$
+	cmp	#djmp,(r4)+	;is it this dfile?
+	bne	25$		;no.
+	mov	(r4)+,r3	;maybe. get the djmp addr
+	cmp	r3,r4
+	beq	10$		;no. null djmp
+	cmpb	#1,-3(r3)	;killed?
+	beq	15$
+	cmpb	#-64.,-3(r3)	;already dying?
+	bne	10$
+	mov	r3,r5
+	br	55$
+15$:	movb	-4(r3),r5
+	jmp	@20$(r5)
+20$:	.word	40$	;ship
+	.word	60$	;comet
+25$:	mov	#br7,@#ps
+	tst	dataao
+	bgt	35$
+30$:	mov	#<statsa!sinof!lplite!ital0!sync>,dfile
+	mov	#dfile,@#dpc	;restart display
+	mov	(sp)+,r5
+	mov	(sp)+,r4
+	mov	(sp)+,r3
+	mov	(sp)+,r2
+	mov	(sp)+,r1
+	mov	(sp)+,r0
+	rti
+35$:	mov	#br2,@#ps
+	br	5$
+40$:	dec	surviv
+	inc	dataaq
+	mov	#databb,r0
+	mov	#20,r2
+45$:	mov	r3,r5
+	add	#6,r5
+	mov	#shortv!int7,(r5)+
+	clr	@#dsr
+50$:	mov	(r0)+,(r5)+
+	dec	r2
+	bgt	50$
+55$:	mov	#djmp,(r5)+
+	mov	-2(r3),(r5)
+	add	#4,(r5)
+	mov	#br7,@#ps
+	incb	-3(r3)
+	dec	dataao
+	ble	30$
+	mov	#br2,@#ps
+	br	10$
+60$:	mov	#databd+20,r0
+	mov	#10,r2
+	dec	gents		;comet shot ....
+	br	45$
+subaag:	mov	r5,-(sp)
+	neg	(sp)
+	mov	r4,-(sp)
+	neg	(sp)
+	mov	r5,-(sp)
+	mov	#15.,r5		;bit count
+	clr	r2
+	clr	r3
+	clr	r0
+	ror	r1		;startoff without sign trouble
+	bcc	30$
+	clc
+	br	33$
+10$:	bcs	37$
+13$:	add	(sp),r2
+	bvc	17$
+	ror	r2
+	br	20$
+17$:	asr	r2
+20$:	ror	r3
+	add	r4,r0
+	bvc	27$
+	ror	r0
+	br	30$
+23$:	asr	r2
+	ror	r3
+27$:	asr	r0
+30$:	ror	r1		;get next bit
+	dec	r5		;all done yet?
+	blt	60$		;yes
+	bcc	23$
+	asr	r2
+	ror	r3
+	asr	r0
+33$:	ror	r1
+	dec	r5		;all done?
+	blt	57$
+	bcc	13$
+37$:	add	4(sp),r2
+	bvc	40$
+	ror	r2
+	br	43$
+40$:	asr	r2
+43$:	ror	r3
+	add	2(sp),r0
+	bvc	50$
+	ror	r0
+	br	53$
+47$:	asr	r2
+	ror	r3
+50$:	asr	r0
+53$:	ror	r1
+	dec	r5		;end of loop?
+	blt	60$
+	bcs	47$
+	asr	r2
+	ror	r3
+	asr	r0
+	ror	r1
+	dec	r5		;all done?
+	bge	10$
+	add	(sp),r2
+	add	r4,r0
+	br	60$
+57$:	add	4(sp),r2
+	add	2(sp),r0
+60$:	mov	(sp)+,r5
+	tst	(sp)+
+	tst	(sp)+
+	rts	pc
+; multiply?
+subaah:	mov	r5,-(sp)
+	mov	r4,-(sp)
+	neg	(sp)
+	mov	#15.,r5		;bit count
+	clr	r0		;clear hi end
+	ror	r1

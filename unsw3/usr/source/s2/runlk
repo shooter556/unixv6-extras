@@ -1,0 +1,16 @@
+echoall
+cc -s -O mail.c -lP ; cp a.out /bin/mail
+cc -s -O pp.c -lP ; cp a.out /bin/pp
+cc -s -O passwd.c -lP ; cp a.out /bin/passwd
+cc -s -O restor.c ; cp a.out /etc/restor
+cc -s -O rmtree.c ; cp a.out /etc/rmtree
+cc -n -s -O sh.c ; cp a.out /bin/sh
+cc -s -O stty.c ; cp a.out /bin/stty
+cc -s -O su.c -lP ; cp a.out /etc/su
+cc -s -O who.c -lP ; cp a.out /bin/who
+cc -s -O shutdown.c ; cp a.out /etc/shutdown
+cc -s -O slp.c ; cp a.out /usr/bin/slp
+cc -s -O rmdir.c ; cp a.out /bin/rmdir
+cc -s -O prof.c ; cp a.out /usr/bin/prof
+cc -s -O mv.c ; cp a.out /bin/mv
+cc -s -O pud.c -lP ; cp a.out /etc/pud

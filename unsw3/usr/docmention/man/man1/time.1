@@ -1,0 +1,23 @@
+.th TIME I 8/16/73
+.sh NAME
+time \*- time a command
+.sh SYNOPSIS
+.bd time
+command
+.sh DESCRIPTION
+The
+given command is executed; after it is complete,
+.it time
+prints the elapsed time during the command, the time
+spent in the system, and the time spent in execution
+of the command.
+.s3
+The execution time can depend on what kind of memory
+the program happens to land in;
+the user time in MOS is often half what it is in core.
+.s3
+The times are printed on the diagnostic output stream.
+.s3
+The times are given in hours, minutes, seconds and fractions
+of a second (to the nearest 1/50 th)
+.sh BUGS

@@ -1,0 +1,43 @@
+abort(III) generate an IOT fault
+abs, fabs(III) absolute value
+alloc, free(III) core allocator
+atan, atan2(III) arc tangent function
+atof(III) convert ASCII to floating
+atoi(III) convert ASCII to integer
+crypt(III) password encoding
+ctime, ijtime(III) convert date and time to ASCII
+ecvt, fcvt(III) output conversion
+end, etext, edata(III) last locations in program
+envsave, envrest(III) execute non-local goto
+exp(III) exponential function
+floor, ceil(III) floor and ceiling functions
+fmod(III) floating modulo function
+fptrap(III) floating point interpreter
+gamma(III) log gamma function
+getarg, iargc(III) get command arguments from Fortran
+getc, getw, fopen(III) buffered input
+getchar(III) read character
+getpw(III) get name from UID
+hmul(III) high-order product
+ierror(III) catch Fortran errors
+ldiv, lrem(III) long division
+locv(III) long output conversion
+log(III) natural logarithm
+mktemp(III) create temporary file name
+monitor(III) prepare execution profile
+nargs(III) argument count
+nlist(III) get entries from name list
+perror, sys\*_errlist, sys\*_nerr, errno(III) system error messages
+pow(III) floating exponentiation
+printf(III) formatted print
+prints(III) print string
+putc, putw, fcreat, fflush(III) buffered output
+putchar, flush(III) write character
+qsort(III) quicker sort
+rand, srand(III) random number generator
+reset, setexit(III) execute non-local goto
+setfil(III) specify Fortran file name
+sin, cos(III) trigonometric functions
+skill(III) send a signal to a set of processes
+sqrt(III) square root function
+ttyn(III) return name of current typewriter

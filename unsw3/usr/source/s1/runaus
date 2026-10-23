@@ -1,0 +1,13 @@
+run ar
+run chown
+run copy
+run date
+run du
+run find
+run getty
+run glob
+run init
+run ipatch
+run log
+run lpr
+run ls

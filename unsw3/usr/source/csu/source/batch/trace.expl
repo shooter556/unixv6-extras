@@ -1,0 +1,57 @@
+	the monitors status word is at error$
+	its low byte contains the error exit
+	code	0	no error
+		1	page limit
+		2	line length limit
+		3	attempt to read past eof
+		4	program tracing buffer
+			full
+		5	invalid location for location-
+			trace
+		6	location tracing buffer
+			full
+		377	users iot instruction
+
+	the high byte bits contain information on
+	the current status of tracing.
+
+
+	7   6	5   4	3   2	1   0
+			3   2	1   0 location tracing on
+			3   2	1
+			3   2	1 location tracing info present
+			3   2
+			3   2 program tracing on
+			3
+			3 program tracing info present
+
+	the tracing buffers are laid out as follows
+	location tracing:
+	ltbuf$:	.blkw	100.
+	the next free address in ltbuf$ is contained in
+	lbfpt$, which is at the end of ltbuf$.
+	the current location being traced is in locat$
+	and its last value in oval$.
+
+	when tracing is turned on 4 words are put in ltbuf$
+	1	177777
+	2	address of location
+	3	current pc
+	4	locations current value
+	every time the location changes steps 3 and 4 are put
+	into the buffer untill it is turned off at which
+	a 177777 and the current pc are put in.
+
+	program tracing:
+	ptbuf$:	.blkw	100.
+	the next free location in the buffer is pointed
+	to by pbfpt$ which exists at the end of ptbuf$
+	the last instruction executed is in lstin$ and its
+	address is in lstad$.
+
+	when  pton  is called two words are put in the
+	buffer, a 177777 and then the address of the pton call.
+	then each time a jump occurs the pc before and after the
+	jump are put in the buffer. no special mark is made
+	when tracing is turned off, however the jsr pc,ptoff will
+	be recorded.

@@ -1,0 +1,364 @@
+.po 20
+.pl 88
+.ll 80
+.de hd
+.tl '''M6800 assembler manual - %'
+'sp 4
+..
+.de fo
+'bp
+..
+.wh -7 fo
+.ul
+.ce 7
+THE UNIX MOTOROLA M6800 ASSEMBLER REFERENCE MANUAL
+.sp 3
+Jon Rowson
+.sp 1
+Computer Systems Laboratory
+.br
+Queen Mary College
+.br
+University of London
+.br
+Mile End Road
+.br
+London E1 4NS
+.wh 0 hd
+.sp 4
+.ul
+0. INTRODUCTION
+.sp 1
+The UNIX Motorola M6800 assembler is a two-pass assembler
+which assembles source programs into Motorola Mikbug
+loader format and produces a formatted listing.
+The input format of the source program should be that described in the
+M6800 Microprocessor Programming Manual with the additions and differences
+described here.
+.sp 2
+.ul
+1. USAGE
+.sp 1
+The assembler should be called as follows:
+.ti +15
+.sp 1
+.it mas
+file1 ... fileN
+.sp 1
+The assembler will assemble the concatentation of the given file
+arguments as though they were one input file.
+.sp 1
+The object file, in Mikbug loader format, is left in the file
+.it "m.out"
+and the listing in
+.it "m.lst"
+of the current working directory.
+.sp 1
+The object code can easily be examined by
+simply printing the file
+.it "m.out."
+The code is easily readable as the object file is in `bcd' format.
+.sp 1
+The only valid characters in a source program are ``tab'',
+``newline'' and the characters with an ASCII code of X'20'
+through X'7A' inclusive.
+.sp 2
+.ul
+2. FIELDS
+.sp 1
+As described in the M6800 Programming manual, there are
+several fields in a source program, each of which is
+separated from the other by spaces or tabs.
+Multiple tabs and spaces are equivalent to a single space.
+.sp 1
+Lower and upper case characters in the mnemonic operator field
+(including the accumulator symbol if any) are identical.
+Everywhere else they are distinct unless indicated.
+.sp 1
+The label field may be separated from the mnemonic operator
+field by `:' if desired.  In addition, labels may appear
+on a line by themselves.
+.sp 2
+.ul
+3. LEXICAL TOKENS
+.sp 2
+.ul
+3.1 Identifiers
+.br
+An identifier consists of a sequence of alphanumeric characters,
+including `$' and `_' (``dollar'' and ``underscore'')
+as alphanumeric, of which the first may not be numeric.
+Only the first 6 characters are significant.
+In a segmented source program an identifier may not consist
+solely of the segmentation character (see 
+.it "4.5"
+below).
+.sp 2
+.ul
+3.2 Temporary symbols
+.br
+A temporary symbol consists of a digit (`0' through `9')
+followed by `f' or `b'.  See Section 5 for more.
+.sp 2
+.ul
+3.3 Numeric constants
+.br
+These are rather different from those described in the manual.
+.sp 1
+All numbers are assumed to be decimal unless preceded by:
+.sp 1
+.ti +15
+x' (or X')	for hexadecimal
+.br
+.ti +15
+o' (or O')	for octal
+.br
+.ti +15
+b' (or B')	for binary
+.sp 1
+A closing quote to a number in the form above
+(e.g. x'ffff') is optional.
+.sp 1
+The hexadecimal digits `A' through `F' may be in lower case.
+.sp 2
+.ul
+3.4 Character constants
+.br
+To store the characters ``newline'', ``tab'', ``space''
+and ``null'' in character constants and in the FCC directive use:
+.sp 1
+.in +15
+``\\n''	for ``newline''
+.br
+``\\t''	for ``tab''
+.br
+``\\s''	for ``space''
+.br
+``\\0''	for `null''
+.in -15
+.sp 1
+Within the FCC directive, use ``\\/'' for `/'.
+.sp 1
+Note that character constants may be used anywhere an expression
+or number is allowed (this is indeterminable from the Motorola
+manual).
+.sp 1
+Character constants may only be one character in length, even
+when a 16-bit operand is expected.
+.sp 2
+.ul
+4. SEGMENTATION
+.sp 1
+The segmentation implemented in this assembler provides a means
+of logically splitting the source program.  The boundaries
+between multiple input files are not automatically assumed
+to be segment boundaries.
+.sp 1
+Segmentation is achieved by use of the directive SEG.
+The first character of the first (or only) file of a segmented
+program must be `#'.
+This should be followed by the SEG directive.  In this first
+occurrence only it is necessary to specify the segmentation character
+as follows:
+.sp 1
+.ti +8
+either a) SEG -C
+.br
+.ti +12
+or b) SEG C
+.sp 1
+where
+.it C
+is an alphanumeric character (including `$' and `_').
+.sp 1
+a) defines that all identifiers beginning with
+.it C
+are global and all others local, and
+.sp 1
+b) that all identifiers beginning with
+.it C
+are local and all others global.
+.sp 1
+Subsequent SEG calls effectively clear the symbol table
+of all local symbols.
+Subject to certain selectable options (see Section 7),
+the listing will contain a local symbol table at the
+end of each segment.
+.sp 1
+.it "NOTE:"
+in a segmented program it is illegal to use an identifier
+consisting solely of the segmentation character
+.it "C."
+.sp 1
+There is no restriction on jumping over segment boundaries
+even to temporary labels.
+.sp 2
+.ul
+5. LABELS
+.sp 1
+Labels are either identifiers or numeric labels represented
+by a single digit (`0' through `9').
+.sp 1
+A numeric label defines a temporary symbol
+.it nf
+or
+.it nb
+where
+.it n
+is the digit of the label.
+These work as expected.
+.sp 1
+Multiply defined labels cause an error on pass 1.
+.sp 2
+.ul
+6. EXTENDED BRANCH INSTRUCTIONS
+.sp 1
+The following symbols may be followed by an expression
+representing an address (as for address mode A-8
+of the reference manual).
+.sp 1
+.in +15
+.ul
+jcc     jcs
+.br
+.ul
+jeq     jge
+.br
+.ul
+jgt     jhi
+.br
+.ul
+jle     jls
+.br
+.ul
+jlt     jmi
+.ul
+.br
+jne     jpl
+.ul
+.br
+jvc     jvs
+.ul
+.br
+jbs     jbr
+.in -15
+.sp 1
+For all these symbols except
+.it jbs
+and
+.it jbr
+the assembler will generate the corresponding
+branch instruction (formed by replacing the initial `j'
+with a `b') if the target is within range.
+Otherwise the appropriate inverse branch over a
+.it jmp
+instruction to the target will be generated.
+.sp 1
+In the case of the symbols
+.it jbs
+and
+.it jbr
+either a
+.it jsr
+or
+.it bsr
+(for
+.it "jbs)"
+or a
+.it jmp
+or
+.it bra
+(for
+.it "jbr)"
+instruction to the target address will be generated.
+.sp 1
+If the target address is undefined at the end
+of pass 1 or at an ORG directive, then the longer form of the jump
+will always be generated.
+.sp 2
+.ul
+7. OTHER ASSEMBLER DIRECTIVES
+.sp 1
+The following directives are ignored:
+.sp 1
+.ti +15
+END, SPC, NAM
+.sp 2
+.ul
+7.1 FCC
+.br
+Use of the FCC directive in the form
+.sp 1
+.ti +15
+FCC 17,couldntbebothered
+.sp 1
+is not permitted.
+.sp 2
+.ul
+7.2 RMB and ZMB
+.br
+The RMB directive operates exactly as described in the Motorola
+manual and reserves the specified number of bytes.
+The contents after loading are undefined.
+.sp 1
+ZMB may be used in precisely the same manner as RMB, but
+will explicitly zeroize the reserved locations.
+.sp 2
+.ul
+7.3 PAG
+.br
+Causes a new page to be started in the listing file.
+.sp 2
+.ul
+7.4 OPT
+.br
+The following format statements (in upper or lower case)
+are recognized after
+the OPT directive:
+.sp 1
+.in +15
+.ti -8
+FCCOFF  limits the listing of the code generated by the FCC
+directive to one line only.
+.br
+.ti-8
+FCCON   causes the full code generated by FCC directives
+to be listed.
+.br
+.ti -8
+SYMOFF  suppresses the printing of all subsequent symbol
+tables (if any).
+.br
+.ti -8
+SYMON   causes any subsequent symbol tables to be printed.
+.in -15
+.sp 1
+Because a local symbol table is generated at the end of each
+segment and a global symbol table at the end of the listing,
+the ability to switch the listing of symbol tables on
+and off is not superfluous.
+.sp 1
+The default options are FCCON and SYMON.
+.sp 2
+.ul
+8. DIAGNOSTICS
+.sp 1
+When syntatic or semantic errors occur, a self-explanatory
+error message is output indicating the line-number and file
+in which the error occurred.
+Errors in pass 1 cause the cancellation of pass 2.
+.sp 1
+The only errors that are detected in pass 2
+are undefined
+symbols and branch instructions whose targets are
+out of range.
+If either of these errors occurs, the listing and object
+files are still produced.
+.sp 1
+For undefined symbols, a `U' appears in column 1
+of the listing against each reference to the symbol.
+The error is also indicated in the symbol table, if any.
+The value of an undefined symbol is taken to be zero.
+.sp 1
+For out-of-range branch instructions a `B' appears in column 1,
+and a zero relative address is generated.

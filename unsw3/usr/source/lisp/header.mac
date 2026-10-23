@@ -1,0 +1,296 @@
+	.nlist
+; L I S P / 11
+dcore	=	3.	;initial allocation in kw.
+cincr	=	16.	;free cell units/ gobble
+nfiles	=	10.	;maximum number of files
+
+r0=%0
+r1=%1
+r2=%2
+r3=%3
+r4=%4
+r5=%5
+sp=%6
+pc=%7
+f0=%0
+f1=%1
+f2=%2
+f3=%3
+f4=%4
+f5=%5
+
+
+	.macro	.hiseg
+	.psect	hiseg
+	.endm
+	.macro	.loseg
+	.psect	loseg
+	.endm
+	.enabl	lc
+	.macro	calli	r,d
+	.if	nb	<d>
+	.if	idn	<d>,<#0>
+	clr	r0
+	.iff
+	mov	d,r0
+	.endc
+	.endc
+	jsr	pc,r
+	.endm
+	.macro	callc	r,d
+	.if	nb	<d>
+	.if	idn	<d>,<#0>
+	clrb	r0
+	.iff
+	movb	d,r0
+	.endc
+	.endc
+	jsr	pc,r
+	.endm
+	.macro	reti
+	rts	pc
+	.endm
+	.macro	text	txt,comment
+	.globl	..text
+	mov	#txt,-(sp)
+	jsr	pc,..text
+	.endm
+	.macro	error	txt,comment
+	.globl	..error
+	mov	#txt,-(sp)
+	jsr	pc,..error
+	.endm
+	.macro	jeq	n,?v
+	bne	v
+	jmp	n
+v:
+	.endm	jeq
+	.macro	jne	n,?v
+	beq	v
+	jmp	n
+v:
+	.endm	jne
+	.macro	jgt	n,?v
+	ble	v
+	jmp	n
+v:
+	.endm	jgt
+	.macro	jlt	n,?v
+	bge	v
+	jmp	n
+v:
+	.endm	jlt
+	.macro	jge	n,?v
+	blt	v
+	jmp	n
+v:
+	.endm	jge
+	.macro	jle	n,?v
+	bgt	v
+	jmp	n
+v:
+	.endm	jle
+	.macro	jcs	n,?v
+	bcs	v
+	jmp	n
+v:
+	.endm
+	.macro	jcc	n,?v
+	bcc	v
+	jmp	n
+v:
+	.endm
+	.macro	fail	code,?v
+	bcc	v
+	code
+v:
+	.endm	fail
+
+	.macro	succd	code,?v
+	bcs	v
+	code
+v:
+	.endm
+
+
+	.macro	entry	name
+	.globl	name
+name:	
+	.endm	entry
+
+
+
+
+h.symb	=	0
+h.int	=	2
+h.real	=	4
+h.stri	=	6
+h.expr	=	10
+h.fexpr	=	12
+h.lexpr	=	14
+h.nexpr	=	16
+h.sexpr	=	20
+h.macro	=	22
+h.subr	=	24
+h.fsubr	=	26
+h.lsubr	=	30
+h.nsubr	=	32
+h.ssubr	=	34
+
+t.symb	=	h.symb*400+1
+t.int	=	h.int*400+1
+t.real	=	h.real*400+1
+t.strin	=	h.stri*400+1
+t.expr	=	h.expr*400+1
+t.fexpr	=	h.fexpr*400+1
+t.lexpr	=	h.lexpr*400+1
+t.nexpr	=	h.nexpr*400+1
+t.sexpr	=	h.sexpr*400+1
+t.macro	=	h.macro*400+1
+t.subr	=	h.subr*400+1
+t.fsubr	=	h.fsubr*400+1
+t.lsubr	=	h.lsubr*400+1
+t.nsubr	=	h.nsubr*400+1
+t.ssubr	=	h.ssubr*400+1
+
+
+	.macro	global	n
+	.irp	m,<n>
+	.globl	m
+	.endm
+	.endm	global
+
+;a macro to define the standard calling sequence
+
+	.macro	call	name,alist
+	.irp	m,<alist>
+	push	m
+	.endm
+	.globl	name
+	mov	#name,-(sp)
+	.globl	.call
+	jsr	pc,.call
+	.endm	call
+
+	.macro	save	n
+	.if	nb	n
+	tst	(sp)+
+	mov	(sp)+,n
+	.iff
+	cmp	(sp)+,(sp)+
+	.endc
+	.endm	save
+
+sysreg=400
+sysnod=1000
+syslnk=1400
+sysbnd=2000
+
+;macro to move node onto stack
+
+	.macro	push	node
+	mov	node,-(sp)
+	mov	#sysnod+2,-(sp)
+	.endm
+
+;macro to return value
+
+	.macro	return	value
+	.if	nb	value
+	push	value
+	.endc
+	jmp	s$ret
+	.endm	return
+
+	.macro	freturn
+	jmp	f$ret
+	.endm	freturn
+
+	.macro	creturn
+	jmp	c$ret
+	.endm	creturn
+
+
+
+;define function declaration
+
+	.macro	func	name,alist,locals,regs
+v1=0
+v2=0
+v3=0
+v4=0
+v5=0
+
+	.hiseg
+	v6=.
+	.loseg
+	.irp	n,<alist>
+	v1=v1+1
+	.endm
+	.irp	n,<locals>
+	v2=v2+1
+	.endm
+	.if	nb	<regs>
+	v3=regs
+	.endc
+	v4=12+<2*v3>
+	.irp	n,<alist>
+	v5=v5+1
+	n=v4+<4*<v1-v5>>
+	.endm
+	v5=0
+	.irp	n,<locals>
+	n=-2+<-2*v5>
+	v5=v5+1
+	.endm
+	v3=12-<2*v3>
+name:	.word	v3
+	.byte	v2
+	.byte	v1
+	.word	v6
+	.globl	name
+	.hiseg
+	.endm	func
+
+	.macro	asciz	txt
+	.irpc	wchar	<txt>
+	.if	ge	''wchar-'A
+	.if	le	''wchar-'Z
+	.byte	''wchar + 40
+	.iff
+	.byte	''wchar
+	.endc
+	.iff
+	.byte	''wchar
+	.endc
+	.endm
+	.byte	0
+	.endm
+
+	.macro	movf	fsrc,fdst
+	.ntype	v9,fsrc
+	.if	le	v9-3.
+	stf	fsrc,fdst
+	.iff
+	ldf	fsrc,fdst
+	.endc
+	.endm
+	.macro	movif	isrc,fdst
+	ldcif	isrc,fdst
+	.endm
+	.macro	movof	osrc,fdst
+	ldcdf	osrc,fdst
+	.endm
+	.macro	movfi	fsrc,idst
+	stcfi	fsrc,idst
+	.endm
+	.macro	movfo	fsrc,odst
+	stcfd	fsrc,odst
+	.endm
+
+	.globl	putc, getc, getcore, rnonul, s$ret, f$ret, smode
+	.globl	peek2, cbuff, ibuff, peekc, c$ret
+	.globl	gopen, exit, ichan, ochan, newlin, sout, msgfil
+	.globl	delete,openi, openo, close, typcon
+	.globl	msgout, sin, igc
+	.globl	con.0, con.1, con.n1

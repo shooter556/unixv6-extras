@@ -1,0 +1,95 @@
+.th NROFF I 1976
+.sh NAME
+nroff  \*-  format text
+.sh SYNOPSIS
+.bd nroff
+[ options ] [ files ]
+.sh DESCRIPTION
+.it Nroff
+formats text according to control lines embedded
+in the text files.
+.it Nroff
+reads the standard input if
+no file
+arguments are given.
+An argument of just ``\-'' refers to the standard input.
+.s3
+The options, which may appear in any order so long as they
+appear before the files, are:
+.s3
+.ft I
+.lp +9 8
+option	meaning
+.ft R
+.s3
+.lp +9 8
+\fB-o\fIlist\fR	Print only pages whose page numbers appear
+in \fIlist,\fR which consists of comma-separated numbers and number ranges.
+A number range has the form \fIN-M\fR and means pages \fIN\fR through \fIM\fR;
+a initial \fI-N\fR means from the beginning to page \fIN\fR;
+and a final \fIN-\fR means from \fIN\fR to the end.
+.s3
+.lp +9 8
+\fB-n\fIN-\fR	Number first generated page \fIN\fR.
+.s3
+.lp +9 8
+\fB-s\fIN\fR	Stop every \fIN\fR pages.
+\fINroff\fR will halt prior to every \fIN\fR pages
+(default \fIN\fR=1)
+to allow paper loading or changing, and will resume upon receipt of a newline.
+.s3
+.lp +9 8
+\fB-m\fIname\fR	Prepends the macro file \fB/usr/lib/tmac.\fIname\fR to
+the input \fIfiles\fR.
+.s3
+.lp +9 8
+\fB-r\fIaN\fR	Register \fIa\fR (one character) is set to \fIN\fR.
+.s3
+.lp +9 8
+\fB-i\fR	Read standard input after the input files are exhausted.
+.s3
+.lp +9 8
+\fB-q\fR	Invoke the simultaneous
+input-output mode of the \fBrd\fR request.
+.s3
+.lp +9 8
+\fB-T\fIname\fR	Specifies the name of the output terminal
+type.
+Currently defined names are \fB37\fR
+for the (default) Model 37 teletype, \fBtn300\fR for the
+GE TermiNet 300 (or any terminal without half-line capabilities),
+\fB300S\fR for the DASI-300S, \fB300\fR for the DASI-300, and
+\fB450\fR for the DASI-450 (Diablo Hyterm).
+.s3
+.lp +9 8
+\fB-e\fR	Produce equally-spaced words in adjusted lines,
+using full terminal resolution.
+.i0
+.dt
+.s3
+Each option is invoked as a separate argument; for example,
+.s3
+	\fBnroff -o\fI4,8-10 \fB-T\fI300S \fB-m\fIabc file1 file2\fR
+.s3
+requests formatting of pages 4,8,9 and 10 of a document contained in files
+named \fIfile1\fR and \fIfile2\fR, specifies the output terminal as a
+DASI-300S, and invokes the macro package \fIabc\fR.
+.s3
+.it Nroff
+may be used as a filter.
+.sh FILES
+.dt
+/usr/lib/suftab	suffix hyphenation tables
+.br
+/tmp/ta#	temporary
+.br
+/usr/lib/tmac.*	standard macro files
+.br
+.sh "SEE ALSO"
+NROFF User's Manual
+(internal memorandum).
+.br
+neqn (I),
+col (I),
+tbl (I)
+.sh BUGS
