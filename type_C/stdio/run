@@ -1,0 +1,23 @@
+: run -- build the UNSW standard I/O library libS.a
+: usage -- sh run  in this directory, as root, after ar is installed
+: see ../READ_ME for details
+
+echo step 1 -- compile
+cc -I. -c -O *.c
+as doprnt.s
+mv a.out doprnt.o
+: ftell needs the UNSW tell system call, which V6 does not have
+: strlen is already in perror.o of libc.a, a second one is multiply defined
+rm ftell.o strlen.o stest.o
+
+echo step 2 -- build libS.a, every member before the members it uses
+if -r libS.a rm libS.a
+ar r libS.a calloc.o clrerr.o fgets.o fprintf.o fputs.o freopen.o fseek.o gcvt.o getpw.o fopen.o gets.o getw.o intss.o printf.o puts.o putw.o rdwr.o rew.o scanf.o doscan.o filbuf.o setbuf.o sprintf.o doprnt.o strcat.o strcmp.o strcpy.o strout.o flsbuf.o stuff.o system.o ungetc.o error.o data.o
+rm *.o
+
+echo step 3 -- compile and run stest with the new library
+echo the next line must be: stdio ok
+cc -I. -O stest.c libS.a
+a.out >stest.out
+cat stest.out
+rm a.out stest.out

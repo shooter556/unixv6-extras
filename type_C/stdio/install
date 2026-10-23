@@ -1,0 +1,15 @@
+: install -- install libS.a and stdio.h
+: usage -- sh install  as root, only after run printed: stdio ok
+
+cp libS.a /lib/libS.a
+chmod 644 /lib/libS.a
+if ! -r /usr/include mkdir /usr/include
+cp stdio.h /usr/include/stdio.h
+chmod 644 /usr/include/stdio.h
+ls -l /lib/libS.a /usr/include/stdio.h
+
+echo the next line must be: stdio ok
+cc -O stest.c -lS
+a.out >stest.out
+cat stest.out
+rm a.out stest.out
