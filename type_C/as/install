@@ -1,0 +1,13 @@
+: install -- install the assembler built by run
+: usage -- sh install  as root, only after run reported no differences
+: the V6 originals are saved in /usr/tcboot/orig
+
+if ! -r /usr/tcboot/orig mkdir /usr/tcboot/orig
+if ! -r /usr/tcboot/orig/as cp /bin/as /usr/tcboot/orig/as
+if ! -r /usr/tcboot/orig/as2 cp /lib/as2 /usr/tcboot/orig/as2
+
+: remove before copying so that a busy or sticky text is not overwritten
+rm /bin/as /lib/as2
+cp as1 /bin/as
+cp as2 /lib/as2
+ls -l /bin/as /lib/as2
