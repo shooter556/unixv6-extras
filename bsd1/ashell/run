@@ -2,11 +2,23 @@
 : usage -- sh run  in this directory, as root
 : see ../READ_ME for details
 
-echo step 1 -- fix the uid in a copy of sh.c
+echo step 1 -- fix the uid and the diagnostic output in a copy of sh.c
 : the V6 getuid returns the effective uid in the high byte,
-: and xid makes gid and uid, so they never match
+: and xid makes gid and uid, so they never match.
+: V6 init opens only 0 and 1 for login, so make 2 first, as the V6 sh
+: does, before gethome asks ttyn about it, and getpw closes /etc/passwd
 ed sh.c
+/settimes();/i
+	if ((f = dup(1)) != 2)
+		close(f);
+.
 /uid = getuid();/s/getuid()/getuid() \& 0377/
+/if (pbufc <= 0)/+1c
+					{ close(pwf); return (1); }
+.
+/if (xid(buf) == uid)/+1c
+			{ close(pwf); return (0); }
+.
 /return (i << 8 | uid);/s/i << 8 | uid/uid/
 w xsh.c
 q
