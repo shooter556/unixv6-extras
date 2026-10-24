@@ -123,9 +123,13 @@ with no open or visual mode.
 
 The sources are sethome.c, ttytype.c and tset.c from s6, and
 ttycap from etc, all unchanged.  ttytype.v6 is new: the ttytype
-in etc is the one for the Berkeley terminals.  It has one line,
-8vt, for the console /dev/tty8.  Add a line for each other
-terminal before install, as described in the file.
+in etc is the one for the Berkeley terminals.  It gives the type
+vt to the console /dev/tty8 and to /dev/tty0 to tty7, the lines
+of a DC11 as SIMH makes them with "set dci lines=8" for telnet.
+Change it for other terminals before install, as described in
+the file.  A terminal that is not in it gets the type uk
+(unknown), and ex then says "Visual requires addressible
+cursor".
 
 run compiles the three programs with -lX, so ../tools must be
 installed first, and makes xttycap: the ttycap of the tape with a
