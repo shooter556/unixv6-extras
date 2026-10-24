@@ -44,7 +44,8 @@ of ashell, so it comes first.  Put
 in .profile in your home directory; ashell has only chdir.
 
 The sources come from the ashell directory of the tape.  run
-fixes the uid in a copy of sh.c (see NOTES), compiles with
+fixes the uid and file descriptor 2 in a copy of sh.c (see
+NOTES), compiles with
 cc -f -n -O and -lS (calloc, strcpy, strcat and strcmp come from
 libS), and runs ashtest with the new ashell.  It must print
 
@@ -342,6 +343,16 @@ NOTES
   match: gethome fails, sleeps 15 seconds, fails again, and home
   becomes ".".  run masks the uid to 8 bits and makes xid return
   the uid only.
+
+- V6 init opens the terminal for login as file descriptors 0 and
+  1 only, and the V6 sh makes 2 itself with dup(1).  ashell came
+  from a system where all three are open.  As a login shell, its
+  gethome asked ttyn(2) for the terminal, got 'x', missed the
+  htmp entry and read /etc/passwd in getpw, which never closes
+  it, so /etc/passwd became file descriptor 2.  The prompt, the
+  messages and "logout" went there and were lost, though commands
+  worked.  run makes 2 with dup(1) first thing in main, and makes
+  getpw close /etc/passwd.
 
 - ${name:default} gives "Undefined variable" when name is not
   set: in dolvbl the ':' case falls through to the check for an
