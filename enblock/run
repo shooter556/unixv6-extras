@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Making enblock"
+cc -std=gnu89 -w -o enblock enblock.c
