@@ -70,19 +70,23 @@ BEFORE YOU START
 				keeps a copy of every library it
 				converts in ar/save
 
-4. Getting the files in.  uxtp only makes the leaf directories,
-   so make type_C first.  For example, with the tape on tm0 and
-   type_C going into /usr/work:
+4. Getting the files in.  On the host, from the top of the
+   repository, write the tape with:
+
+	toolbox/mkv6tap.py type_C work.tap
+
+   The first file on the tape is a tar that runs on V6, so pull
+   it out with dd first, then let it extract everything (it makes
+   the directories itself).  For example, with the tape on tm0
+   and type_C going into /usr/work:
 
 	chdir /usr/work
-	mkdir type_C
-	tp xm0 makedirs.sh
-	sh makedirs.sh
-	tp xm0
+	dd if=/dev/mt0 of=tar bs=512 skip=1 count=49
+	chmod 755 tar
+	./tar x
 
-   On the host the tape is written with:
-
-	uxtp -r -s -o 0:0 work.tap type_C
+   mkv6tap.py prints the dd command with the right count.  Unlike
+   tp, the tape has no limit on the number of files.
 
 
 INSTALLING
